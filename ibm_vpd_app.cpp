@@ -938,8 +938,6 @@ static void populateDbus(T& vpdMap, nlohmann::json& js, const string& filePath)
             (find(ccinList.begin(), ccinList.end(), ccinFromVpd) ==
              ccinList.end()))
         {
-            cout << "CCIN " << ccinFromVpd << " not found, skip exposing port "
-                 << item["inventoryPath"] << "\n";
             continue;
         }
 
