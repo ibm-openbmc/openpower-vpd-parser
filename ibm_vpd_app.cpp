@@ -568,6 +568,28 @@ static void preAction(const nlohmann::json& json, const string& file)
             executePostFailAction(json, file);
         }
     }
+    else
+    {
+        // If the FRU is not there, clear the VINI/CCIN data.
+        // Enity manager probes for this keyword to look for this
+        // FRU, now if the data is persistent on BMC and FRU is
+        // removed this can lead to ambiguity. Hence clearing this
+        // Keyword if FRU is absent.
+        const auto& invPath =
+            json["frus"][file].at(0).value("inventoryPath", "");
+
+        if (!invPath.empty())
+        {
+            inventory::ObjectMap pimObjMap{
+                {invPath, {{"com.ibm.ipzvpd.VINI", {{"CC", Binary{}}}}}}};
+
+            common::utility::callPIM(move(pimObjMap));
+        }
+        else
+        {
+            throw std::runtime_error("Path empty in Json");
+        }
+    }
 }
 
 /**
