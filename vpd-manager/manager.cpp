@@ -522,7 +522,7 @@ void Manager::deleteFRUVPD(const sdbusplus::message::object_path path)
                               Argument::ARGUMENT_VALUE(objPath.c_str()));
     }
 
-    inventory::Path& vpdFilePath = std::get<0>(frus.find(path)->second);
+    inventory::Path& vpdFilePath = std::get<0>(frus.find(objPath)->second);
 
     string chipAddress =
         jsonFile["frus"][vpdFilePath].at(0).value("pcaChipAddress", "");
