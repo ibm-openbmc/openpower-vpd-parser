@@ -170,6 +170,16 @@ class Manager : public ServerObject<ManagerIface>
     void triggerVpdCollection(const nlohmann::json& singleFru,
                               const std::string& path);
 
+    /**
+     * @brief Restores and defaulted VPD on the system VPD EEPROM.
+     *
+     * This function will read the system VPD EEPROM and check if any of the
+     * keywords that need to be preserved across FRU replacements are defaulted
+     * in the EEPROM. If they are, this function will restore them from the
+     * value that is in the D-Bus cache.
+     */
+    void restoreSystemVpd();
+
     /** @brief Persistent sdbusplus DBus bus connection. */
     sdbusplus::bus::bus _bus;
 
