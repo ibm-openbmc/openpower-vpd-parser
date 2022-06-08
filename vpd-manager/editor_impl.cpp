@@ -6,6 +6,7 @@
 #include "ibm_vpd_utils.hpp"
 #include "ipz_parser.hpp"
 #include "parser_factory.hpp"
+#include "vpd_exceptions.hpp"
 
 #include <phosphor-logging/elog-errors.hpp>
 #include <xyz/openbmc_project/Common/error.hpp>
@@ -659,6 +660,11 @@ void EditorImpl::updateKeyword(const Binary& kwdData, uint32_t offset,
 #endif
 
         throw std::runtime_error(e.what());
+    }
+    else
+    {
+        throw openpower::vpd::exceptions::VpdDataException(
+            "Could not find start tag in VPD " + vpdFilePath);
     }
 }
 } // namespace editor
