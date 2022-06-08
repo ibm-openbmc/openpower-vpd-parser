@@ -77,6 +77,68 @@ string encodeKeyword(const string& kw, const string& encoding);
 string readBusProperty(const string& obj, const string& inf,
                        const string& prop);
 
+/** @brief A templated function to read D-Bus properties.
+ *
+ *  @param[in] service - Service path
+ *  @param[in] object - object path
+ *  @param[in] inf - interface
+ *  @param[in] prop - property whose value is fetched
+ *  @return The property value of its own type.
+ */
+template <typename T>
+T readDBusProperty(const string& service, const string& object,
+                   const string& inf, const string& prop)
+{
+    T retVal{};
+    try
+    {
+        auto bus = sdbusplus::bus::new_default();
+        auto properties =
+            bus.new_method_call(service.c_str(), object.c_str(),
+                                "org.freedesktop.DBus.Properties", "Get");
+        properties.append(inf);
+        properties.append(prop);
+        auto result = bus.call(properties);
+        result.read(retVal);
+    }
+    catch (const sdbusplus::exception::SdBusError& e)
+    {
+        std::cerr << e.what();
+    }
+    return retVal;
+}
+
+/** @brief A templated method to get all D-Bus properties
+ *
+ * @param[in] service - Service path
+ * @param[in] object - Object path
+ * @param[in] inf - Interface
+ *
+ * @return All properties under the given interface.
+ */
+template <typename T>
+T getAllDBusProperty(const std::string& service, const std::string& object,
+                     const std::string& inf)
+{
+    T retVal{};
+    try
+    {
+        auto bus = sdbusplus::bus::new_default();
+        auto allProperties =
+            bus.new_method_call(service.c_str(), object.c_str(),
+                                "org.freedesktop.DBus.Properties", "GetAll");
+        allProperties.append(inf);
+
+        auto result = bus.call(allProperties);
+        result.read(retVal);
+    }
+    catch (const sdbusplus::exception::SdBusError& e)
+    {
+        std::cerr << e.what();
+    }
+    return retVal;
+}
+
 /**
  * @brief API to create PEL entry
  * The api makes synchronous call to phosphor-logging create api.
