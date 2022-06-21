@@ -126,7 +126,7 @@ void Manager::restoreSystemVpd()
     {
         auto vpdVector = getVpdDataInVector(jsonFile, systemVpdFilePath);
         const auto& inventoryPath =
-            jsonFile[systemVpdFilePath][0]["inventoryPath"]
+            jsonFile["frus"][systemVpdFilePath][0]["inventoryPath"]
                 .get_ref<const nlohmann::json::string_t&>();
 
         parser = ParserFactory::getParser(vpdVector, (pimPath + inventoryPath));

@@ -579,18 +579,8 @@ void EditorImpl::updateKeyword(const Binary& kwdData, uint32_t offset,
 
         if (objPath.empty())
         {
-            // this should not fail as we have already read the vpdFilePath
-            // above.
-            if (jsonFile.contains(vpdFilePath))
-            {
-                objPath = jsonFile[vpdFilePath][0]["inventoryPath"]
-                              .get_ref<const nlohmann::json::string_t&>();
-            }
-            else
-            {
-                throw std::runtime_error(
-                    "Json does not contain given vpd file path");
-            }
+            objPath = jsonFile["frus"][vpdFilePath][0]["inventoryPath"]
+                          .get_ref<const nlohmann::json::string_t&>();
         }
 
 #else
