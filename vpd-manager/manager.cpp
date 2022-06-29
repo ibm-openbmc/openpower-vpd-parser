@@ -453,12 +453,28 @@ void Manager::performVPDRecollection()
         if ((jsonFile["frus"][item].at(0)).find("preAction") !=
             jsonFile["frus"][item].at(0).end())
         {
-            if (!executePreAction(jsonFile, item))
+            try
             {
-                // if the FRU has preAction defined then its execution should
-                // pass to ensure bind/unbind of data.
-                // preAction execution failed. should not call bind/unbind.
-                log<level::ERR>("Pre-Action execution failed for the FRU");
+                if (!executePreAction(jsonFile, item))
+                {
+                    // if the FRU has preAction defined then its execution
+                    // should pass to ensure bind/unbind of data.
+                    // preAction execution failed. should not call
+                    // bind/unbind.
+                    log<level::ERR>(
+                        "Pre-Action execution failed for the FRU",
+                        entry("ERROR=%s",
+                              ("Inventory path: " + inventoryPath).c_str()));
+                    continue;
+                }
+            }
+            catch (const GpioException& e)
+            {
+                log<level::ERR>(e.what());
+                PelAdditionalData additionalData{};
+                additionalData.emplace("DESCRIPTION", e.what());
+                createPEL(additionalData, PelSeverity::WARNING,
+                          errIntfForGpioError, sdBus);
                 continue;
             }
             prePostActionRequired = true;
@@ -554,8 +570,18 @@ void Manager::collectFRUVPD(const sdbusplus::message::object_path path)
             // Check if device showed up (test for file)
             if (!filesystem::exists(vpdFilePath))
             {
-                // If not, then take failure postAction
-                executePostFailAction(jsonFile, vpdFilePath);
+                try
+                {
+                    // If not, then take failure postAction
+                    executePostFailAction(jsonFile, vpdFilePath);
+                }
+                catch (const GpioException& e)
+                {
+                    PelAdditionalData additionalData{};
+                    additionalData.emplace("DESCRIPTION", e.what());
+                    createPEL(additionalData, PelSeverity::WARNING,
+                              errIntfForGpioError, sdBus);
+                }
             }
             else
             {
