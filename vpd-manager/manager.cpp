@@ -649,9 +649,16 @@ void Manager::deleteFRUVPD(const sdbusplus::message::object_path path)
     }
     else
     {
-        inventory::ObjectMap objectMap = {
-            {objPath,
-             {{"xyz.openbmc_project.Inventory.Item", {{"Present", false}}}}}};
+        // Set present property of FRU as false as it has been removed.
+        // CC data for FRU is also removed as
+        // a) FRU is not there so CC does not make sense.
+        // b) Sensors dependent on Panel uses CC data.
+        inventory::InterfaceMap interfaces{
+            {"xyz.openbmc_project.Inventory.Item", {{"Present", false}}},
+            {"com.ibm.ipzvpd.VINI", {{"CC", Binary{}}}}};
+
+        inventory::ObjectMap objectMap;
+        objectMap.emplace(objPath, move(interfaces));
 
         common::utility::callPIM(move(objectMap));
     }
