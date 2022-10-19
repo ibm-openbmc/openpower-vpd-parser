@@ -2,10 +2,8 @@
 
 #include "manager.hpp"
 
-#include "bios_handler.hpp"
 #include "common_utility.hpp"
 #include "editor_impl.hpp"
-#include "gpioMonitor.hpp"
 #include "ibm_vpd_utils.hpp"
 #include "ipz_parser.hpp"
 #include "parser_factory.hpp"
@@ -16,7 +14,6 @@
 #include <phosphor-logging/elog-errors.hpp>
 #include <xyz/openbmc_project/Common/error.hpp>
 
-using namespace openpower::vpd::manager;
 using namespace openpower::vpd::constants;
 using namespace openpower::vpd::inventory;
 using namespace openpower::vpd::manager::editor;
@@ -34,16 +31,48 @@ namespace vpd
 {
 namespace manager
 {
-Manager::Manager(sdbusplus::bus::bus&& bus, const char* busName,
-                 const char* objPath, const char* /*iFace*/) :
-    ServerObject<ManagerIface>(bus, objPath),
-    _bus(std::move(bus)), _manager(_bus, objPath)
+Manager::Manager(std::shared_ptr<boost::asio::io_context>& ioCon,
+                 std::shared_ptr<sdbusplus::asio::dbus_interface>& iFace,
+                 std::shared_ptr<sdbusplus::asio::connection>& conn) :
+    ioContext(ioCon),
+    interface(iFace), conn(conn)
 {
-    _bus.request_name(busName);
-    sd_bus_default(&sdBus);
+    interface->register_method(
+        "WriteKeyword",
+        [this](const sdbusplus::message::object_path& path,
+               const std::string& recordName, const std::string& keyword,
+               const Binary& value) {
+            this->writeKeyword(path, recordName, keyword, value);
+        });
+
+    interface->register_method(
+        "GetFRUsByUnexpandedLocationCode",
+        [this](const std::string& locationCode,
+               const uint16_t nodeNumber) -> inventory::ListOfPaths {
+            return this->getFRUsByUnexpandedLocationCode(locationCode,
+                                                         nodeNumber);
+        });
+
+    interface->register_method(
+        "GetFRUsByExpandedLocationCode",
+        [this](const std::string& locationCode) -> inventory::ListOfPaths {
+            return this->getFRUsByExpandedLocationCode(locationCode);
+        });
+
+    interface->register_method(
+        "GetExpandedLocationCode",
+        [this](const std::string& locationCode,
+               const uint16_t nodeNumber) -> std::string {
+            return this->getExpandedLocationCode(locationCode, nodeNumber);
+        });
+
+    interface->register_method("PerformVPDRecollection",
+                               [this]() { this->performVPDRecollection(); });
+
+    initManager();
 }
 
-void Manager::run()
+void Manager::initManager()
 {
     try
     {
@@ -53,14 +82,10 @@ void Manager::run()
         listenAssetTag();
 
         // Create an instance of the BIOS handler
-        BiosHandler biosHandler{_bus, *this};
+        biosHandler = std::make_shared<BiosHandler>(conn, *this);
 
-        auto event = sdeventplus::Event::get_default();
-        GpioMonitor gpioMon1(jsonFile, event);
-
-        _bus.attach_event(event.get(), SD_EVENT_PRIORITY_IMPORTANT);
-        cout << "VPD manager event loop started\n";
-        event.loop();
+        // instantiate gpioMonitor class
+        gpioMon = std::make_shared<GpioMonitor>(jsonFile, ioContext);
     }
     catch (const std::exception& e)
     {
@@ -168,9 +193,9 @@ void Manager::restoreSystemVpd()
 
 void Manager::listenHostState()
 {
-    static std::shared_ptr<sdbusplus::bus::match::match> hostState =
-        std::make_shared<sdbusplus::bus::match::match>(
-            _bus,
+    static std::shared_ptr<sdbusplus::bus::match_t> hostState =
+        std::make_shared<sdbusplus::bus::match_t>(
+            *conn,
             sdbusplus::bus::match::rules::propertiesChanged(
                 "/xyz/openbmc_project/state/host0",
                 "xyz.openbmc_project.State.Host"),
@@ -239,9 +264,9 @@ void Manager::hostStateCallBack(sdbusplus::message::message& msg)
 
 void Manager::listenAssetTag()
 {
-    static std::shared_ptr<sdbusplus::bus::match::match> assetMatcher =
-        std::make_shared<sdbusplus::bus::match::match>(
-            _bus,
+    static std::shared_ptr<sdbusplus::bus::match_t> assetMatcher =
+        std::make_shared<sdbusplus::bus::match_t>(
+            *conn,
             sdbusplus::bus::match::rules::propertiesChanged(
                 "/xyz/openbmc_project/inventory/system",
                 "xyz.openbmc_project.Inventory.Decorator.AssetTag"),
@@ -346,9 +371,9 @@ void Manager::processJSON()
     }
 }
 
-void Manager::writeKeyword(const sdbusplus::message::object_path path,
-                           const std::string recordName,
-                           const std::string keyword, const Binary value)
+void Manager::writeKeyword(const sdbusplus::message::object_path& path,
+                           const std::string& recordName,
+                           const std::string& keyword, const Binary& value)
 {
     try
     {
@@ -414,7 +439,7 @@ void Manager::writeKeyword(const sdbusplus::message::object_path path,
 }
 
 ListOfPaths
-    Manager::getFRUsByUnexpandedLocationCode(const LocationCode locationCode,
+    Manager::getFRUsByUnexpandedLocationCode(const LocationCode& locationCode,
                                              const NodeNumber nodeNumber)
 {
     ReaderImpl read;
@@ -422,13 +447,13 @@ ListOfPaths
 }
 
 ListOfPaths
-    Manager::getFRUsByExpandedLocationCode(const LocationCode locationCode)
+    Manager::getFRUsByExpandedLocationCode(const LocationCode& locationCode)
 {
     ReaderImpl read;
     return read.getFRUsByExpandedLocationCode(locationCode, fruLocationCode);
 }
 
-LocationCode Manager::getExpandedLocationCode(const LocationCode locationCode,
+LocationCode Manager::getExpandedLocationCode(const LocationCode& locationCode,
                                               const NodeNumber nodeNumber)
 {
     ReaderImpl read;

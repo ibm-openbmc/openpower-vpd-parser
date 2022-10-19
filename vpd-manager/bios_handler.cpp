@@ -27,9 +27,9 @@ void BiosHandler::checkAndListenPLDMService()
 {
     // Setup a match on NameOwnerChanged to determine when PLDM is up. In
     // the signal handler, call restoreBIOSAttribs
-    static std::shared_ptr<sdbusplus::bus::match::match> nameOwnerMatch =
-        std::make_shared<sdbusplus::bus::match::match>(
-            bus,
+    static std::shared_ptr<sdbusplus::bus::match_t> nameOwnerMatch =
+        std::make_shared<sdbusplus::bus::match_t>(
+            *conn,
             sdbusplus::bus::match::rules::nameOwnerChanged(
                 "xyz.openbmc_project.PLDM"),
             [this](sdbusplus::message::message& msg) {
@@ -82,9 +82,9 @@ void BiosHandler::checkAndListenPLDMService()
 
 void BiosHandler::listenBiosAttribs()
 {
-    static std::shared_ptr<sdbusplus::bus::match::match> biosMatcher =
-        std::make_shared<sdbusplus::bus::match::match>(
-            bus,
+    static std::shared_ptr<sdbusplus::bus::match_t> biosMatcher =
+        std::make_shared<sdbusplus::bus::match_t>(
+            *conn,
             sdbusplus::bus::match::rules::propertiesChanged(
                 "/xyz/openbmc_project/bios_config/manager",
                 "xyz.openbmc_project.BIOSConfig.Manager"),
