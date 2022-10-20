@@ -35,10 +35,7 @@ class Manager
     Manager(const Manager&) = delete;
     Manager& operator=(const Manager&) = delete;
     Manager(Manager&&) = delete;
-    ~Manager()
-    {
-        sd_bus_unref(sdBus);
-    }
+    ~Manager() = default;
 
     /** @brief Constructor.
      *  @param[in] ioCon - IO context.

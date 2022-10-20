@@ -212,7 +212,7 @@ void Manager::checkEssentialFrus()
 
         // implies the essential FRU is missing. Log PEL.
         if (res == "false")
-        {
+        { /*
             auto rc = sd_bus_call_method_async(
                 sdBus, NULL, loggerService, loggerObjectPath,
                 loggerCreateInterface, "Create", NULL, NULL, "ssa{ss}",
@@ -226,7 +226,7 @@ void Manager::checkEssentialFrus()
                 log<level::ERR>("Error calling sd_bus_call_method_async",
                                 entry("RC=%d", rc),
                                 entry("MSG=%s", strerror(-rc)));
-            }
+            } */
         }
     }
 }
@@ -496,10 +496,10 @@ void Manager::performVPDRecollection()
             catch (const GpioException& e)
             {
                 log<level::ERR>(e.what());
-                PelAdditionalData additionalData{};
+             /*   PelAdditionalData additionalData{};
                 additionalData.emplace("DESCRIPTION", e.what());
                 createPEL(additionalData, PelSeverity::WARNING,
-                          errIntfForGpioError, sdBus);
+                          errIntfForGpioError, sdBus);*/
                 continue;
             }
             prePostActionRequired = true;
@@ -602,10 +602,10 @@ void Manager::collectFRUVPD(const sdbusplus::message::object_path path)
                 }
                 catch (const GpioException& e)
                 {
-                    PelAdditionalData additionalData{};
+                   /* PelAdditionalData additionalData{};
                     additionalData.emplace("DESCRIPTION", e.what());
                     createPEL(additionalData, PelSeverity::WARNING,
-                              errIntfForGpioError, sdBus);
+                              errIntfForGpioError, sdBus); */
                 }
             }
             else
