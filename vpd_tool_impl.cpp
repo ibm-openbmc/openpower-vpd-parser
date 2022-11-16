@@ -134,7 +134,7 @@ json VpdTool::getVINIProperties(string invPath)
                 kwVal.emplace(kw, printableVal);
             }
         }
-        catch (const sdbusplus::exception_t& e)
+        catch (const sdbusplus::exception::exception& e)
         {
             if (string(e.name()) ==
                 string("org.freedesktop.DBus.Error.UnknownObject"))
@@ -169,7 +169,7 @@ void VpdTool::getExtraInterfaceProperties(const string& invPath,
                 output.emplace(kw, *str);
             }
         }
-        catch (const sdbusplus::exception_t& e)
+        catch (const sdbusplus::exception::exception& e)
         {
             if (std::string(e.name()) ==
                 std::string("org.freedesktop.DBus.Error.UnknownObject"))
@@ -530,7 +530,20 @@ void VpdTool::readKwFromHw(const uint32_t& startOffset)
     {
         throw std::runtime_error("Invalid File");
     }
-    Impl obj(completeVPDFile);
+
+    const std::string& inventoryPath =
+        jsonFile["frus"][fruPath][0]["inventoryPath"];
+
+    uint32_t offset = 0;
+    for (const auto& item : jsonFile["frus"][fruPath])
+    {
+        if (item.find("offset") != item.end())
+        {
+            offset = item["offset"];
+        }
+    }
+    Impl obj(completeVPDFile, (constants::pimPath + inventoryPath),
+             fruPath, offset);
     std::string keywordVal = obj.readKwFromHw(recordName, keyword);
 
     if (!keywordVal.empty())
@@ -591,16 +604,21 @@ void VpdTool::printFixSystemVPDOption(UserOption option)
 
 int VpdTool::fixSystemVPD()
 {
-    std::string outline(191, '=');
     cout << "\nRestorable record-keyword pairs and their data on BMC & "
-            "System Backplane.\n\n"
-         << outline << std::endl;
+            "System Backplane.\n ";
+
+    cout << "\n|==============================================================="
+            "=======================================|"
+         << endl;
 
     cout << left << setw(6) << "S.No" << left << setw(8) << "Record" << left
-         << setw(9) << "Keyword" << left << setw(75) << "Data On BMC" << left
-         << setw(75) << "Data On System Backplane" << left << setw(14)
-         << "Data Mismatch\n"
-         << outline << std::endl;
+         << setw(9) << "Keyword" << left << setw(30) << "Data On BMC" << left
+         << setw(30) << "Data On System Backplane" << left << setw(14)
+         << "Data Mismatch";
+
+    cout << "\n|==============================================================="
+            "=======================================|"
+         << endl;
 
     int num = 0;
 
@@ -622,7 +640,9 @@ int VpdTool::fixSystemVPD()
     js = json::parse(inventoryJson);
 
     vpdVector = getVpdDataInVector(js, constants::systemVpdFilePath);
-    ParserInterface* parser = ParserFactory::getParser(vpdVector);
+    ParserInterface* parser = ParserFactory::getParser(
+        vpdVector, constants::pimPath + std::string(constants::SYSTEM_OBJECT),
+        constants::systemVpdFilePath, 0);
     auto parseResult = parser->parse();
     ParserFactory::freeParser(parser);
 
@@ -751,13 +771,14 @@ int VpdTool::fixSystemVPD()
             }
             recKwData.push_back(
                 make_tuple(++num, record, keyword, busStr, hwValStr, mismatch));
-
-            std::string splitLine(191, '-');
             cout << left << setw(6) << num << left << setw(8) << record << left
-                 << setw(9) << keyword << left << setw(75) << setfill(' ')
-                 << busStr << left << setw(75) << setfill(' ') << hwValStr
-                 << left << setw(14) << mismatch << '\n'
-                 << splitLine << endl;
+                 << setw(9) << keyword << left << setw(30) << setfill(' ')
+                 << busStr << left << setw(30) << setfill(' ') << hwValStr
+                 << left << setw(14) << mismatch;
+
+            cout << "\n|--------------------------------------------------"
+                    "----------------------------------------------------|"
+                 << endl;
         }
     }
     parseSVPDOptions(js);
@@ -775,9 +796,9 @@ void VpdTool::parseSVPDOptions(const nlohmann::json& json)
 
         int option = 0;
         cin >> option;
-
-        std::string outline(191, '=');
-        cout << '\n' << outline << endl;
+        cout << "\n|==========================================================="
+                "===========================================|"
+             << endl;
 
         if (json.find("frus") == json.end())
         {
@@ -850,22 +871,28 @@ void VpdTool::parseSVPDOptions(const nlohmann::json& json)
             {
                 do
                 {
-                    cout << '\n' << outline << endl;
+                    cout << "\n|==============================================="
+                            "=================================================="
+                            "=====|"
+                         << endl;
 
                     cout << left << setw(6) << "S.No" << left << setw(8)
                          << "Record" << left << setw(9) << "Keyword" << left
-                         << setw(75) << setfill(' ') << "Data On BMC" << left
-                         << setw(75) << setfill(' ')
+                         << setw(30) << setfill(' ') << "Data On BMC" << left
+                         << setw(30) << setfill(' ')
                          << "Data On System Backplane" << left << setw(14)
                          << "Data Mismatch" << endl;
 
                     cout << left << setw(6) << get<0>(data) << left << setw(8)
                          << get<1>(data) << left << setw(9) << get<2>(data)
-                         << left << setw(75) << setfill(' ') << get<3>(data)
-                         << left << setw(75) << setfill(' ') << get<4>(data)
+                         << left << setw(30) << setfill(' ') << get<3>(data)
+                         << left << setw(30) << setfill(' ') << get<4>(data)
                          << left << setw(14) << get<5>(data);
 
-                    cout << '\n' << outline << endl;
+                    cout << "\n|==============================================="
+                            "=================================================="
+                            "=====|"
+                         << endl;
 
                     if (get<5>(data) == "NO")
                     {
@@ -885,7 +912,11 @@ void VpdTool::parseSVPDOptions(const nlohmann::json& json)
                     }
 
                     cin >> option;
-                    cout << '\n' << outline << endl;
+
+                    cout << "\n|==============================================="
+                            "=================================================="
+                            "=====|"
+                         << endl;
 
                     EditorImpl edit(constants::systemVpdFilePath, json,
                                     get<1>(data), get<2>(data));
@@ -910,7 +941,10 @@ void VpdTool::parseSVPDOptions(const nlohmann::json& json)
                                 "System Backplane (Value should be in ASCII or "
                                 "in HEX(prefixed with 0x)) : ";
                         cin >> value;
-                        cout << '\n' << outline << endl;
+                        cout << "\n|==========================================="
+                                "=============================================="
+                                "=============|"
+                             << endl;
 
                         edit.updateKeyword(toBinary(value), 0, true);
                         cout << "\nData updated successfully.\n";
