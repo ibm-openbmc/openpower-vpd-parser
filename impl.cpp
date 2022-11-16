@@ -84,8 +84,32 @@ int Impl::vhdrEccCheck() const
                           lengths::VHDR_RECORD_LENGTH,
                           const_cast<uint8_t*>(&vpdPtr[offsets::VHDR_ECC]),
                           lengths::VHDR_ECC_LENGTH);
-
-    if (l_status != VPD_ECC_OK)
+    if (l_status == VPD_ECC_CORRECTABLE_DATA)
+    {
+        try
+        {
+            if (vpdFileStream.is_open())
+            {
+                vpdFileStream.seekp(vpdStartOffset + offsets::VHDR_RECORD,
+                                    std::ios::beg);
+                vpdFileStream.write(
+                    reinterpret_cast<const char*>(&vpd[offsets::VHDR_RECORD]),
+                    lengths::VHDR_RECORD_LENGTH);
+            }
+            else
+            {
+                std::cerr << "File not open";
+                rc = eccStatus::FAILED;
+            }
+        }
+        catch (const std::fstream::failure& e)
+        {
+            std::cout << "Error while operating on file with exception:"
+                      << e.what();
+            rc = eccStatus::FAILED;
+        }
+    }
+    else if (l_status != VPD_ECC_OK)
     {
         rc = eccStatus::FAILED;
     }
@@ -122,8 +146,31 @@ int Impl::vtocEccCheck() const
     auto l_status = vpdecc_check_data(
         const_cast<uint8_t*>(&vpdPtr[vtocOffset]), vtocLength,
         const_cast<uint8_t*>(&vpdPtr[vtocECCOffset]), vtocECCLength);
-
-    if (l_status != VPD_ECC_OK)
+    if (l_status == VPD_ECC_CORRECTABLE_DATA)
+    {
+        try
+        {
+            if (vpdFileStream.is_open())
+            {
+                vpdFileStream.seekp(vpdStartOffset + vtocOffset, std::ios::beg);
+                vpdFileStream.write(
+                    reinterpret_cast<const char*>(&vpdPtr[vtocOffset]),
+                    vtocLength);
+            }
+            else
+            {
+                std::cerr << "File not open";
+                rc = eccStatus::FAILED;
+            }
+        }
+        catch (const std::fstream::failure& e)
+        {
+            std::cout << "Error while operating on file with exception "
+                      << e.what();
+            rc = eccStatus::FAILED;
+        }
+    }
+    else if (l_status != VPD_ECC_OK)
     {
         rc = eccStatus::FAILED;
     }
@@ -163,7 +210,32 @@ int Impl::recordEccCheck(Binary::const_iterator iterator) const
     auto l_status = vpdecc_check_data(
         const_cast<uint8_t*>(&vpdPtr[recordOffset]), recordLength,
         const_cast<uint8_t*>(&vpdPtr[eccOffset]), eccLength);
-    if (l_status != VPD_ECC_OK)
+    if (l_status == VPD_ECC_CORRECTABLE_DATA)
+    {
+        try
+        {
+            if (vpdFileStream.is_open())
+            {
+                vpdFileStream.seekp(vpdStartOffset + recordOffset,
+                                    std::ios::beg);
+                vpdFileStream.write(
+                    reinterpret_cast<const char*>(&vpdPtr[recordOffset]),
+                    recordLength);
+            }
+            else
+            {
+                std::cerr << "File not open";
+                rc = eccStatus::FAILED;
+            }
+        }
+        catch (const std::fstream::failure& e)
+        {
+            std::cout << "Error while operating on file with exception "
+                      << e.what();
+            rc = eccStatus::FAILED;
+        }
+    }
+    else if (l_status != VPD_ECC_OK)
     {
         rc = eccStatus::FAILED;
     }

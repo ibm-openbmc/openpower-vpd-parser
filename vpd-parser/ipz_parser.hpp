@@ -31,9 +31,16 @@ class IpzVpdParser : public ParserInterface
 
     /**
      * @brief Constructor
+     * @param[in] - VpdVector - vpd buffer
+     * @param[in] - path - Inventory Path
+     * @param[in] - vpdFilePath - VPD H/w path
+     * @param[in] - vpdStartOffset - VPD starting offset
      */
-    IpzVpdParser(const Binary& VpdVector, const std::string& path) :
-        vpd(VpdVector), inventoryPath(path)
+    IpzVpdParser(const Binary& VpdVector, const std::string& path,
+                 const std::string& vpdFilePath, uint32_t vpdStartOffset) :
+        vpd(VpdVector),
+        inventoryPath(path), vpdFilePath(vpdFilePath),
+        vpdStartOffset(vpdStartOffset)
     {
     }
 

@@ -4,6 +4,7 @@
 #include "store.hpp"
 
 #include <cstddef>
+#include <fstream>
 
 namespace openpower
 {
@@ -68,10 +69,24 @@ class Impl
      *
      *  @param[in] vpdBuffer - Binary VPD
      *  @param[in] path - To call out FRU in case of any PEL.
+     *  @param[in] vpdFilePath - VPD File Path
+     *  @param[in] vpdStartOffset - Start offset of VPD.
      */
-    Impl(const Binary& vpdBuffer, const std::string& path) :
-        vpd(vpdBuffer), inventoryPath(path), out{}
+    Impl(const Binary& vpdBuffer, const std::string& path,
+         const std::string& vpdFilePath, uint32_t vpdStartOffset) :
+        vpd(vpdBuffer),
+        inventoryPath(path), vpdFilePath(vpdFilePath),
+        vpdStartOffset(vpdStartOffset), out{}
     {
+        try
+        {
+            vpdFileStream.open(vpdFilePath,
+                               std::ios::in | std::ios::out | std::ios::binary);
+        }
+        catch (const std::fstream::failure& e)
+        {
+            std::cout << e.what();
+        }
     }
 
     /** @brief Run the parser on binary VPD
@@ -172,6 +187,15 @@ class Impl
 
     /** Inventory path to call out FRU if required */
     const std::string inventoryPath;
+
+    /** Eeprom hardware path */
+    inventory::Path vpdFilePath;
+
+    /** VPD Offset **/
+    uint32_t vpdStartOffset;
+
+    /** File stream for VPD */
+    std::fstream vpdFileStream;
 
     /** @brief parser output */
     Parsed out;
