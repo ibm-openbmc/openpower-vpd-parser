@@ -502,8 +502,8 @@ void VpdTool::readKeyword()
     }
     catch (const json::exception& e)
     {
-        json output = json::object({});
-        json kwVal = json::object({});
+        std::cout << "Keyword Value: " << keyword << std::endl;
+        std::cout << e.what() << std::endl;
     }
 }
 
@@ -689,7 +689,7 @@ void VpdTool::readKwFromHw(const uint32_t& startOffset)
 
     json output = json::object({});
     json kwVal = json::object({});
-    kwVal.emplace(keyword, keywordVal);
+    kwVal.emplace(keyword, getPrintableValue(keywordVal));
 
     output.emplace(fruPath, kwVal);
 
@@ -831,7 +831,7 @@ int VpdTool::fixSystemVPD()
                 }
             }
 
-            if (keyword != "SE")
+            if (keyword != "SE") // SE to display in Hex string only
             {
                 ostringstream hwValStream;
                 hwValStream << "0x";
@@ -845,7 +845,7 @@ int VpdTool::fixSystemVPD()
 
                 if (const auto value = get_if<Binary>(&kwValue))
                 {
-                    busStr = byteArrayToHexString(*value);
+                    busStr = hexString(*value);
                 }
                 if (busStr != hwValStr)
                 {
