@@ -246,7 +246,7 @@ json VpdTool::getVINIProperties(string invPath)
 
             if (auto vec = get_if<Binary>(&response))
             {
-                string printableVal = getPrintableValue(*vec);
+                string printableVal = getPrintableValue<Binary>(*vec);
                 kwVal.emplace(kw, printableVal);
             }
         }
@@ -526,7 +526,7 @@ void VpdTool::readKeyword()
         string printableVal{};
         if (auto vec = get_if<Binary>(&response))
         {
-            printableVal = getPrintableValue(*vec);
+            printableVal = getPrintableValue<Binary>(*vec);
         }
         kwVal.emplace(keyword, printableVal);
 
@@ -713,7 +713,7 @@ void VpdTool::readKwFromHw(const uint32_t& startOffset)
 
     json output = json::object({});
     json kwVal = json::object({});
-    kwVal.emplace(keyword, keywordVal);
+    kwVal.emplace(keyword, getPrintableValue<string>(keywordVal));
 
     output.emplace(fruPath, kwVal);
 
@@ -880,7 +880,7 @@ int VpdTool::fixSystemVPD()
             {
                 if (const auto value = get_if<Binary>(&kwValue))
                 {
-                    busStr = getPrintableValue(*value);
+                    busStr = getPrintableValue<Binary>(*value);
                 }
                 if (busStr != hardwareValue)
                 {
