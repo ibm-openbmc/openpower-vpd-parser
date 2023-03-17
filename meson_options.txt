@@ -2,3 +2,6 @@ option('BUSNAME', type : 'string', value : 'com.ibm.VPD.Manager',description : '
 option('OBJPATH', type : 'string', value : '/com/ibm/VPD/Manager', description : 'OBJECT PATH FOR THE SERVICE')
 option('IFACE', type : 'string', value : 'com.ibm.VPD.Manager', description : 'INTERFACE NAME')
 option('tests', type: 'feature', value : 'enabled', description: 'Build tests')
+option('VPD_SYMLIMK_PATH',type: 'string', value: '/var/lib/vpd', description: 'Directory to hold VPD runtime files')
+option('SYSTEM_VPD_FILE_PATH', type : 'string', value : '/sys/bus/i2c/drivers/at24/8-0050/eeprom',description : 'EEPROM PATH OF SYSTEM VPD')
+option('JSON_ABSOLUTE_PATH_PREFIX',type: 'string', value: '/usr/share/vpd', description: 'Directory to hold VPD runtime files')

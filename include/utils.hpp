@@ -14,7 +14,6 @@ namespace vpd
  */
 namespace utils
 {
-
 /**
  * @brief An API to get Map of service and interfaces for an object path.
  *

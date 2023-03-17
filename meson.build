@@ -62,6 +62,8 @@ conf_data = configuration_data()
 conf_data.set_quoted('BUSNAME', get_option('BUSNAME'))
 conf_data.set_quoted('OBJPATH', get_option('OBJPATH'))
 conf_data.set_quoted('IFACE', get_option('IFACE'))
+conf_data.set_quoted('SYSTEM_VPD_FILE_PATH', get_option('SYSTEM_VPD_FILE_PATH'))
+conf_data.set_quoted('JSON_ABSOLUTE_PATH_PREFIX', get_option('JSON_ABSOLUTE_PATH_PREFIX'))
 configure_file(output: 'config.h',
             configuration : conf_data)
 
