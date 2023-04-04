@@ -240,36 +240,31 @@ static void populateFruSpecificInterfaces(const T& map,
         }
         if constexpr (is_same<T, KeywordVpdMap>::value)
         {
-            if (auto keywordValue = get_if<Binary>(&kwVal.second))
+            if (get_if<Binary>(&kwVal.second))
             {
-                Binary vec((*keywordValue).begin(),
-                           (*keywordValue).end());
+                Binary vec(get_if<Binary>(&kwVal.second)->begin(),
+                           get_if<Binary>(&kwVal.second)->end());
                 prop.emplace(move(kw), move(vec));
             }
-            else if (auto keywordValue = get_if<std::string>(&kwVal.second))
-            {
-                Binary vec((*keywordValue).begin(),
-                           (*keywordValue).end());
-                prop.emplace(move(kw), move(vec));
-            }
-            else if(auto keywordValue = get_if<size_t>(&kwVal.second))
+            else
             {
                 if (kw == "MemorySizeInKB")
                 {
                     inventory::PropertyMap memProp;
-                    memProp.emplace(move(kw), ((*keywordValue)));
-                    interfaces.emplace(
+                    auto memVal = get_if<size_t>(&kwVal.second);
+                    if (memVal)
+                    {
+                        memProp.emplace(move(kw),
+                                        ((*memVal) * CONVERT_MB_TO_KB));
+                        interfaces.emplace(
                             "xyz.openbmc_project.Inventory.Item.Dimm",
                             move(memProp));
+                    }
+                    else
+                    {
+                        cerr << "MemorySizeInKB value not found in vpd map\n";
+                    }
                 }
-                else
-                {
-                    cerr<<"Unknown Keyword["<< kw <<"] found ";
-                }
-            }
-            else
-            {
-                cerr<<"Unknown Variant found ";
             }
         }
         else
@@ -367,7 +362,10 @@ static void populateInterfaces(const nlohmann::json& js,
                 {
                     if (!kw.empty() && vpdMap.count(kw))
                     {
-                        if (auto kwValue = get_if<Binary>(&vpdMap.at(kw)))
+                        auto kwValue = get_if<Binary>(&vpdMap.at(kw));
+                        auto uintValue = get_if<size_t>(&vpdMap.at(kw));
+
+                        if (kwValue)
                         {
                             auto prop =
                                 string((*kwValue).begin(), (*kwValue).end());
@@ -376,22 +374,9 @@ static void populateInterfaces(const nlohmann::json& js,
 
                             props.emplace(busProp, encoded);
                         }
-                        else if (auto kwValue = get_if<std::string>(&vpdMap.at(kw)))
-                        {
-                            auto prop =
-                                string((*kwValue).begin(), (*kwValue).end());
-
-                            auto encoded = encodeKeyword(prop, encoding);
-
-                            props.emplace(busProp, encoded);
-                        }
-                        else if(auto uintValue = get_if<size_t>(&vpdMap.at(kw)))
+                        else if (uintValue)
                         {
                             props.emplace(busProp, *uintValue);
-                        }
-                        else
-                        {
-                            std::cerr <<" Unknown Keyword [" << kw << "] Encountered";
                         }
                     }
                 }
@@ -507,17 +492,17 @@ static void preAction(const nlohmann::json& json, const string& file)
             {
                 // Now bind the device
                 string bind = json["frus"][file].at(0).value("devAddress", "");
-                cout << "Binding device " << bind << std::endl;
+                cout << "Binding device " << bind << endl;
                 string bindCmd = string("echo \"") + bind +
                                  string("\" > /sys/bus/i2c/drivers/at24/bind");
-                cout << bindCmd << std::endl;
+                cout << bindCmd << endl;
                 executeCmd(bindCmd);
 
                 // Check if device showed up (test for file)
                 if (!fs::exists(file))
                 {
                     cerr << "EEPROM " << file
-                         << " does not exist. Take failure action" << std::endl;
+                         << " does not exist. Take failure action" << endl;
                     // If not, then take failure postAction
                     executePostFailAction(json, file);
                 }
@@ -528,7 +513,7 @@ static void preAction(const nlohmann::json& json, const string& file)
                 cerr << "VPD inventory JSON missing basic informations of "
                         "preAction "
                         "for this FRU : ["
-                     << file << "]. Executing executePostFailAction." << std::endl;
+                     << file << "]. Executing executePostFailAction." << endl;
 
                 // Take failure postAction
                 executePostFailAction(json, file);
@@ -1436,7 +1421,7 @@ int main(int argc, char** argv)
         if (!fs::exists(file))
         {
             cout << "Device path: " << file
-                 << " does not exist. Spurious udev event? Exiting." << std::endl;
+                 << " does not exist. Spurious udev event? Exiting." << endl;
             return 0;
         }
 
@@ -1460,7 +1445,7 @@ int main(int argc, char** argv)
             if ("xyz.openbmc_project.State.Chassis.PowerState.On" ==
                 getPowerState())
             {
-                cout << "This VPD cannot be read when power is ON" << std::endl;
+                cout << "This VPD cannot be read when power is ON" << endl;
                 return 0;
             }
         }
@@ -1468,8 +1453,8 @@ int main(int argc, char** argv)
         // Check if this VPD should be recollected at all
         if (!needsRecollection(js, file))
         {
-            cout << "Skip VPD recollection for: " << file << std::endl;
-            //return 0;
+            cout << "Skip VPD recollection for: " << file << endl;
+            return 0;
         }
 
         try
