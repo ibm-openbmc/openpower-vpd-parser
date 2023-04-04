@@ -121,10 +121,8 @@ static void
 
     Binary vpdVector{};
 
-    uint32_t vpdStartOffset = 0;
     vpdVector = getVpdDataInVector(js, constants::systemVpdFilePath);
-    ParserInterface* parser = ParserFactory::getParser(
-        vpdVector, invPath, constants::systemVpdFilePath, vpdStartOffset);
+    ParserInterface* parser = ParserFactory::getParser(vpdVector, invPath);
     auto parseResult = parser->parse();
     ParserFactory::freeParser(parser);
 
@@ -689,17 +687,7 @@ void VpdTool::readKwFromHw(const uint32_t& startOffset)
     const std::string& inventoryPath =
         jsonFile["frus"][fruPath][0]["inventoryPath"];
 
-    uint32_t vpdStartOffset = 0;
-    for (const auto& item : jsonFile["frus"][fruPath])
-    {
-        if (item.find("offset") != item.end())
-        {
-            vpdStartOffset = item["offset"];
-        }
-    }
-
-    Impl obj(completeVPDFile, (constants::pimPath + inventoryPath), fruPath,
-             vpdStartOffset);
+    Impl obj(completeVPDFile, (constants::pimPath + inventoryPath));
     std::string keywordVal = obj.readKwFromHw(recordName, keyword);
 
     if ((keyword[0] == '#') && (!keywordVal.empty()))

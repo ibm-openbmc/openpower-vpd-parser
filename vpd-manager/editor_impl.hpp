@@ -171,9 +171,6 @@ class EditorImpl
     void makeDbusCall(const std::string& object, const std::string& interface,
                       const std::string& property, const std::variant<T>& data);
 
-    /** @brief Method to check the record's Data using ECC */
-    void checkRecordData();
-
     // path to the VPD file to edit
     inventory::Path vpdFilePath;
 

@@ -24,9 +24,9 @@ namespace parser
 {
 namespace factory
 {
-interface::ParserInterface* ParserFactory::getParser(
-    const Binary& vpdVector, const std::string& inventoryPath,
-    const std::string& vpdFilePath, uint32_t vpdStartOffset)
+interface::ParserInterface*
+    ParserFactory::getParser(const Binary& vpdVector,
+                             const std::string& inventoryPath)
 {
     vpdType type = vpdTypeCheck(vpdVector);
 
@@ -34,8 +34,7 @@ interface::ParserInterface* ParserFactory::getParser(
     {
         case IPZ_VPD:
         {
-            return new IpzVpdParser(vpdVector, inventoryPath, vpdFilePath,
-                                    vpdStartOffset);
+            return new IpzVpdParser(vpdVector, inventoryPath);
         }
 
         case KEYWORD_VPD:
