@@ -62,13 +62,15 @@ conf_data = configuration_data()
 conf_data.set_quoted('BUSNAME', get_option('BUSNAME'))
 conf_data.set_quoted('OBJPATH', get_option('OBJPATH'))
 conf_data.set_quoted('IFACE', get_option('IFACE'))
+conf_data.set_quoted('SYSTEM_VPD_FILE_PATH', get_option('SYSTEM_VPD_FILE_PATH'))
 configure_file(output: 'config.h',
             configuration : conf_data)
 
 vpd_manager_SOURCES = ['src/main.cpp',
                        'src/manager.cpp',
                        'src/logger.cpp',
-                       'src/utils.cpp']
+                       'src/utils.cpp',
+                       'src/handler.cpp']
 
 vpd_manager_dependencies = [sdbusplus]
 

@@ -36,5 +36,11 @@ using DbusVariantType = std::variant<
  using MapperGetObject =
     std::vector<std::pair<std::string, std::vector<std::string>>>;
 
+using ParsedVPD = std::unordered_map<std::string,
+                                  std::unordered_map<std::string, std::string>>;
+using BinaryVector = std::vector<uint8_t>;
+using kwdVpdValueTypes = std::variant<size_t, BinaryVector, std::string>;
+using KeywordVpdMap = std::unordered_map<std::string, kwdVpdValueTypes>;
+
 } // namespace types
 } // namespace vpd

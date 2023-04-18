@@ -2,3 +2,4 @@ option('BUSNAME', type : 'string', value : 'com.ibm.VPD.Manager',description : '
 option('OBJPATH', type : 'string', value : '/com/ibm/VPD/Manager', description : 'OBJECT PATH FOR THE SERVICE')
 option('IFACE', type : 'string', value : 'com.ibm.VPD.Manager', description : 'INTERFACE NAME')
 option('tests', type: 'feature', value : 'enabled', description: 'Build tests')
+option('SYSTEM_VPD_FILE_PATH', type : 'string', value : '/sys/bus/i2c/drivers/at24/8-0050/eeprom',description : 'EEPROM PATH OF SYSTEM VPD')

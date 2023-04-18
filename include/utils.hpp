@@ -77,5 +77,18 @@ void writeDbusProperty(const std::string& serviceName,
                        const std::string& property,
                        const types::DbusVariantType& propertyValue);
 
+/**
+ * @brief API to get power state of chassis.
+ *
+ * The API reads power state of a chassis from D-Bus. The information is
+ * required to detect if system VPD collection is possible at this stage.
+ *
+ * Note: Empty string returned in case of failure. Caller responsibility to
+ * handle as required.
+ *
+ * @return Power state of the chassis.
+ */
+std::string getChassisPowerState();
+
 } // namespace utils
 } // namespace vpd

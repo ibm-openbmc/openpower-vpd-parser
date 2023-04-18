@@ -106,5 +106,22 @@ void writeDbusProperty(const std::string& serviceName,
         throw std::runtime_error("Dbus write failed");
     }
 }
+
+std::string getChassisPowerState()
+{
+    types::DbusVariantType returnValue = readDbusProperty(
+        "xyz.openbmc_project.State.Chassis",
+        "/xyz/openbmc_project/state/chassis0",
+        "xyz.openbmc_project.State.Chassis", "CurrentPowerState");
+
+    if (auto powerState = get_if<std::string>(&returnValue))
+    {
+        return *powerState;
+    }
+
+    // return empty string in case of any failure.
+    return std::string{};
+}
+
 } // namespace utils
 } // namespace vpd
