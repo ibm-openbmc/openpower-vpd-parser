@@ -417,8 +417,8 @@ void VpdTool::readKeyword()
     }
     catch (const json::exception& e)
     {
-        json output = json::object({});
-        json kwVal = json::object({});
+        std::cout << "Keyword Value: " << keyword << std::endl;
+        std::cout << e.what() << std::endl;
     }
 }
 
@@ -560,7 +560,7 @@ void VpdTool::readKwFromHw()
     {
         json output = json::object({});
         json kwVal = json::object({});
-        kwVal.emplace(keyword, keywordVal);
+        kwVal.emplace(keyword, getPrintableValue(keywordVal));
 
         output.emplace(fruPath, kwVal);
 

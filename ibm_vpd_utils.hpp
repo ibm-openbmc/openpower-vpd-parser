@@ -7,6 +7,7 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <optional>
+#include <variant>
 
 using namespace std;
 
@@ -275,21 +276,21 @@ inline string createBindUnbindDriverCmnd(const string& devNameAddr,
 /**
  * @brief Get Printable Value
  *
- * Checks if the vector value has non printable characters.
+ * Checks if the value has non printable characters.
  * Returns hex value if non printable char is found else
  * returns ascii value.
  *
- * @param[in] vector - Reference of the Binary vector
+ * @param[in] kwVal - Reference of the input data, Keyword value
  * @return printable value - either in hex or in ascii.
  */
-string getPrintableValue(const Binary& vec);
+std::string getPrintableValue(const std::variant<Binary, std::string>& kwVal);
 
 /**
- * @brief Convert byte array to hex string.
- * @param[in] vec - byte array
+ * @brief Convert array to hex string.
+ * @param[in] kwVal - input data, Keyword value
  * @return hexadecimal string of bytes.
  */
-string byteArrayToHexString(const Binary& vec);
+std::string hexString(const std::variant<Binary, std::string>& kwVal);
 
 /**
  * @brief Return presence of the FRU.
