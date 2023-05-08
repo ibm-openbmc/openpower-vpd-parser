@@ -22,77 +22,6 @@ using namespace openpower::vpd::parser;
 using namespace openpower::vpd::parser::factory;
 using namespace openpower::vpd::parser::interface;
 
-std::string VpdTool::getKwName()
-{
-    if (keyword[0] == '#')
-    {
-        return (string("PD_") + keyword[1]);
-    }
-    else if (isdigit(keyword[0]))
-    {
-        return (string("N_") + keyword[1]);
-    }
-    return keyword;
-}
-
-int VpdTool::dataFileToBinary(Binary& data)
-{
-    std::cout << "Size of vector before: " << data.size() << std::endl;
-    std::ifstream file(value, std::ios::binary);
-    std::cout << "\n opened file in bin mode" << std::endl;
-    const int bufferSize = 1024;
-    uint8_t buffer[bufferSize];
-    while (file.read(reinterpret_cast<char*>(buffer), bufferSize))
-    {
-        std::cout << "\n reading from file and storing it into vector "
-                  << std::endl;
-        data.insert(data.end(), buffer, buffer + file.gcount());
-    }
-    std::cout << "\n storing remaining bytes " << std::endl;
-
-    data.insert(data.end(), buffer, buffer + file.gcount());
-    std::cout << "\n closing file " << std::endl;
-    file.close();
-    std::cout << "\nfile sloced" << std::endl;
-    std::cout << "Size of vector after: " << data.size() << std::endl;
-    std::cout << "\ncontents " << std::endl;
-    for (size_t i = 0; i < data.size(); i++)
-    {
-        std::cout << data[i] << " ";
-    }
-
-#if 0
-data.resize(65504);
-std::filestream file;
-file.open(value, std::ios::in | std::ios::binary);
-file.seekg(startOffset, std::ios_base::cur);
-file.read(reinterpret_cast<char*>(&data[0]), 65504));
-data.resize(file.gcount());
-file.clear(std::ios_base::eofbit);
-#endif
-    return 0;
-}
-
-int VpdTool::byteStringToFile(const std::string& inputStr)
-{
-    std::string filePath = "/tmp/output.bin";
-    std::ofstream outFile(filePath, std::ios::out | std::ios::binary);
-
-    if (outFile.is_open())
-    {
-        outFile.write(inputStr.c_str(), inputStr.length());
-        outFile.close();
-        std::cout << keyword << " value written to file " << filePath
-                  << " successfully." << std::endl;
-    }
-    else
-    {
-        std::cerr << "Error opening file " << filePath << std::endl;
-        return 1;
-    }
-    return 0;
-}
-
 static void
     getVPDInMap(const std::string& vpdPath,
                 std::unordered_map<std::string, DbusPropertyMap>& vpdMap,
@@ -509,32 +438,13 @@ void VpdTool::readKeyword()
 
 int VpdTool::updateKeyword()
 {
-    std::cout << "\nCalling updateKeyword api " << std::endl;
-
-    Binary val;
-    if (std::filesystem::exists(value))
-    {
-        std::cout << "\n file exisit" << std::endl;
-        if (dataFileToBinary(val) != 0)
-        {
-            std::cout << "\nKeyword " << keyword << " update failed."
-                      << std::endl;
-            return 1;
-        }
-    }
-    else
-    {
-        val = toBinary(value);
-    }
-
-    std::string kw = getKwName();
-
+    Binary val = toBinary(value);
     auto bus = sdbusplus::bus::new_default();
     auto properties =
         bus.new_method_call(BUSNAME, OBJPATH, IFACE, "WriteKeyword");
     properties.append(static_cast<sdbusplus::message::object_path>(fruPath));
     properties.append(recordName);
-    properties.append(kw);
+    properties.append(keyword);
     properties.append(val);
     auto result = bus.call(properties);
 
@@ -595,31 +505,13 @@ void VpdTool::forceReset(const nlohmann::basic_json<>& jsObject)
 int VpdTool::updateHardware(const uint32_t offset)
 {
     int rc = 0;
-    Binary val;
-    if (std::filesystem::exists(value))
-    {
-        std::cout << "\n input file exisit" << std::endl;
-        if (dataFileToBinary(val) != 0)
-        {
-            std::cout << "\n returned back from dataFiletOBIN API" << std::endl;
-            std::cout << "\nKeyword " << keyword << " update failed."
-                      << std::endl;
-            return 1;
-        }
-    }
-    else
-    {
-        std::cout << "\n Given value is not a filepath." << std::endl;
-        val = toBinary(value);
-    }
-
+    const Binary& val = static_cast<const Binary&>(toBinary(value));
     ifstream inventoryJson(INVENTORY_JSON_SYM_LINK);
     try
     {
         auto json = nlohmann::json::parse(inventoryJson);
         EditorImpl edit(fruPath, json, recordName, keyword);
-        std::cout << "\n calling updateKeyword editor api with the val"
-                  << std::endl;
+
         edit.updateKeyword(val, offset, false);
     }
     catch (const json::parse_error& ex)
@@ -666,34 +558,23 @@ void VpdTool::readKwFromHw(const uint32_t& startOffset)
              vpdStartOffset);
     std::string keywordVal = obj.readKwFromHw(recordName, keyword);
 
-    if ((keyword[0] == '#') && (!keywordVal.empty()))
+    if (!keywordVal.empty())
     {
-        if (byteStringToFile(keywordVal) != 0)
-        {
-            std::cout << "\nError writing the keyword value to file. So "
-                         "printing the value on console.";
-        }
-        else
-        {
-            return;
-        }
+        json output = json::object({});
+        json kwVal = json::object({});
+        kwVal.emplace(keyword, getPrintableValue(keywordVal));
+
+        output.emplace(fruPath, kwVal);
+
+        debugger(output);
     }
-    if (keywordVal.empty())
+    else
     {
         std::cerr << "The given keyword " << keyword << " or record "
                   << recordName
                   << " or both are not present in the given FRU path "
                   << fruPath << std::endl;
-        return;
     }
-
-    json output = json::object({});
-    json kwVal = json::object({});
-    kwVal.emplace(keyword, getPrintableValue(keywordVal));
-
-    output.emplace(fruPath, kwVal);
-
-    debugger(output);
 }
 
 void VpdTool::printFixSystemVPDOption(UserOption option)
