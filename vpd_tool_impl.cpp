@@ -537,21 +537,41 @@ void VpdTool::readKwFromHw()
     Binary completeVPDFile;
     completeVPDFile.resize(65504);
     fstream vpdFileStream;
+    std::string inventoryPath;
+
     vpdFileStream.open(fruPath,
                        std::ios::in | std::ios::out | std::ios::binary);
-
     vpdFileStream.seekg(startOffset, ios_base::cur);
     vpdFileStream.read(reinterpret_cast<char*>(&completeVPDFile[0]), 65504);
     completeVPDFile.resize(vpdFileStream.gcount());
     vpdFileStream.clear(std::ios_base::eofbit);
 
+    if (jsonFile["frus"].contains(fruPath))
+    {
+        uint32_t vpdStartOffset = 0;
+
+        for (const auto& item : jsonFile["frus"][fruPath])
+        {
+            if (item.find("offset") != item.end())
+            {
+                vpdStartOffset = item["offset"];
+                break;
+            }
+        }
+
+        if ((startOffset != vpdStartOffset))
+        {
+            std::cerr << "Invalid offset, please correct the offset" << endl;
+            std::cerr << "Recommended Offset is: " << vpdStartOffset << endl;
+            return;
+        }
+        inventoryPath = jsonFile["frus"][fruPath][0]["inventoryPath"];
+    }
+
     if (completeVPDFile.empty())
     {
         throw std::runtime_error("Invalid File");
     }
-
-    const std::string& inventoryPath =
-        jsonFile["frus"][fruPath][0]["inventoryPath"];
 
     Impl obj(completeVPDFile, (constants::pimPath + inventoryPath));
     std::string keywordVal = obj.readKwFromHw(recordName, keyword);
