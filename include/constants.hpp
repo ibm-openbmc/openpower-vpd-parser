@@ -5,13 +5,20 @@ namespace vpd
 {
 namespace constants
 {
-static constexpr auto FORMAT_11S_LEN = 3;
-static constexpr auto MEMORY_VPD_DATA_START = 416;
-static constexpr int IPZ_DATA_START = 11;
-static constexpr uint8_t KW_VAL_PAIR_START_TAG = 0x84;
-static constexpr int KW_VPD_DATA_START = 0;
+static constexpr uint8_t IPZ_DATA_START_AT = 11;
+static constexpr uint8_t IPZ_DATA_START_TAG = 0x84;
+static constexpr uint8_t IPZ_RECORD_END_TAG = 0x78;
+
+static constexpr uint8_t KW_VPD_DATA_START_AT = 0;
 static constexpr uint8_t KW_VPD_START_TAG = 0x82;
+static constexpr uint8_t ALT_KW_VPD_START_TAG = 0x90;
+static constexpr uint8_t KW_VPD_END_TAG = 0x78;
+static constexpr uint8_t KW_VAL_PAIR_END_TAG = 0x79;
+
+static constexpr auto MEMORY_VPD_DATA_START_AT = 416;
 static constexpr auto MEMORY_VPD_START_TAG = "11S";
+static constexpr auto FORMAT_11S_LEN = 3;
+
 static constexpr auto SPD_BYTE_2 = 2;
 static constexpr auto SPD_BYTE_3 = 3;
 static constexpr auto SPD_BYTE_4 = 4;
@@ -39,5 +46,6 @@ static constexpr auto UUID_TIME_HIGH_END = 18;
 static constexpr auto UUID_CLK_SEQ_END = 23;
 static constexpr auto MAC_ADDRESS_LEN_BYTES = 6;
 
+static constexpr auto TWO_BYTES = 2;
 } // namespace constants
 } // namespace vpd
