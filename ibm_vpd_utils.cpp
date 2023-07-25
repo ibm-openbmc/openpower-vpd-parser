@@ -672,14 +672,6 @@ const std::string getKwVal(const Parsed& vpdMap, const std::string& rec,
         {
             kwVal = findKwd->second;
         }
-        else
-        {
-            std::cout << "Keyword not found" << std::endl;
-        }
-    }
-    else
-    {
-        std::cerr << "Record not found" << std::endl;
     }
 
     return kwVal;
