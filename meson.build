@@ -117,11 +117,8 @@ common_SOURCES =['common_utility.cpp',
 
 if get_option('ibm-parser').enabled()
         libgpiodcxx = dependency('libgpiodcxx')
-        ibm_read_vpd_SOURCES = ['ibm_vpd_app.cpp',
-                                'vpd-manager/editor_impl.cpp',
+        ibm_read_vpd_SOURCES = ['ibm_vpd_app.cpp'
                                ]+common_SOURCES
-
-        vpd_tool_INCLUDE = include_directories('vpd-parser/', 'vpd-manager')
 
         ibm_vpd_exe = executable(
                                 'ibm-read-vpd',
@@ -132,7 +129,7 @@ if get_option('ibm-parser').enabled()
                                         libgpiodcxx,
                                 ],
                                 link_with : libvpdecc,
-                                include_directories : vpd_tool_INCLUDE,
+                                include_directories : 'vpd-parser/',
                                 install: true,
                                 cpp_args : '-DIPZ_PARSER'
                             )
@@ -142,6 +139,7 @@ if get_option('ibm-parser').enabled()
                             'vpd-manager/editor_impl.cpp',
                            ]+common_SOURCES
 
+        vpd_tool_INCLUDE = include_directories('vpd-parser/', 'vpd-manager')
 
         vpd_tool_exe = executable(
                                  'vpd-tool',
