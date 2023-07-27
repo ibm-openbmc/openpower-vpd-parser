@@ -30,13 +30,13 @@ enum vpdType
  */
 static vpdType vpdTypeCheck(const types::BinaryVector& vpdVector)
 {
-    if (vpdVector[constants::IPZ_DATA_START] ==
-        constants::KW_VAL_PAIR_START_TAG)
+    if (vpdVector[constants::IPZ_DATA_START_AT] ==
+        constants::KW_VPD_START_TAG)
     {
         return vpdType::IPZ_VPD;
     }
 
-    if (vpdVector[constants::KW_VPD_DATA_START] == constants::KW_VPD_START_TAG)
+    if (vpdVector[constants::KW_VPD_DATA_START_AT] == constants::KW_VPD_START_TAG)
     {
         return vpdType::KEYWORD_VPD;
     }
@@ -59,7 +59,7 @@ static vpdType vpdTypeCheck(const types::BinaryVector& vpdVector)
     std::string is11SFormat;
     for (uint8_t i = 0; i < constants::FORMAT_11S_LEN; i++)
     {
-        is11SFormat += vpdVector[constants::MEMORY_VPD_DATA_START + i];
+        is11SFormat += vpdVector[constants::MEMORY_VPD_DATA_START_AT + i];
     }
 
     if (((vpdVector[constants::SPD_BYTE_3] &
