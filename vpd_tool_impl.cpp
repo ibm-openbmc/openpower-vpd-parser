@@ -972,51 +972,46 @@ void VpdTool::parseSVPDOptions(const nlohmann::json& json)
 
                         EditorImpl edit(constants::systemVpdFilePath, json,
                                         get<1>(data), get<2>(data));
+                        string value;
 
-                        if (option == VpdTool::BMC_DATA_FOR_CURRENT)
+                        switch (option)
                         {
-                            edit.updateKeyword(toBinary(get<3>(data)), 0, true);
-                            cout << "\nData updated successfully.\n";
-                            break;
-                        }
-                        else if (option ==
-                                 VpdTool::SYSTEM_BACKPLANE_DATA_FOR_CURRENT)
-                        {
-                            edit.updateKeyword(toBinary(get<4>(data)), 0, true);
-                            cout << "\nData updated successfully.\n";
-                            break;
-                        }
-                        else if (option == VpdTool::NEW_VALUE_ON_BOTH)
-                        {
-                            string value;
-                            cout << "\nEnter the new value to update both on "
-                                    "BMC & "
-                                    "System Backplane (Value should be in "
-                                    "ASCII or "
-                                    "in HEX(prefixed with 0x)) : ";
-                            cin >> value;
-                            cout << '\n' << outline << endl;
+                            case VpdTool::BMC_DATA_FOR_CURRENT:
+                                edit.updateKeyword(toBinary(get<3>(data)), 0,
+                                                   true);
+                                cout << "\nData updated successfully.\n";
+                                break;
+                            case VpdTool::SYSTEM_BACKPLANE_DATA_FOR_CURRENT:
+                                edit.updateKeyword(toBinary(get<4>(data)), 0,
+                                                   true);
+                                cout << "\nData updated successfully.\n";
+                                break;
+                            case VpdTool::NEW_VALUE_ON_BOTH:
+                                cout << "\nEnter the new value to update both "
+                                        "on "
+                                        "BMC & "
+                                        "System Backplane (Value should be in "
+                                        "ASCII or "
+                                        "in HEX(prefixed with 0x)) : ";
+                                cin >> value;
+                                cout << '\n' << outline << endl;
 
-                            edit.updateKeyword(toBinary(value), 0, true);
-                            cout << "\nData updated successfully.\n";
-                            break;
-                        }
-                        else if (option == VpdTool::SKIP_CURRENT)
-                        {
-                            cout << "\nSkipped the above record-keyword pair. "
-                                    "Continue to the next available pair.\n";
-                            break;
-                        }
-                        else if (option == VpdTool::EXIT)
-                        {
-                            cout << "\nExit successfully\n";
-                            exit(0);
-                        }
-                        else
-                        {
-                            cout
-                                << "\nProvide a valid option. Retrying for the "
-                                   "current record-keyword pair\n";
+                                edit.updateKeyword(toBinary(value), 0, true);
+                                cout << "\nData updated successfully.\n";
+                                break;
+                            case VpdTool::SKIP_CURRENT:
+                                cout
+                                    << "\nSkipped the above record-keyword "
+                                       "pair. "
+                                       "Continue to the next available pair.\n";
+                                break;
+                            case VpdTool::EXIT:
+                                cout << "\nExit successfully\n";
+                                exit(0);
+                            default:
+                                cout << "\nProvide a valid option. Retrying "
+                                        "for the "
+                                        "current record-keyword pair\n";
                         }
                     } while (1);
                 }
@@ -1026,7 +1021,6 @@ void VpdTool::parseSVPDOptions(const nlohmann::json& json)
                 exit(0);
             default:
                 cout << "\nProvide a valid option. Retry.";
-                continue;
         }
     } while (true);
 }
