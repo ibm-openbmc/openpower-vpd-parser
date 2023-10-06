@@ -192,7 +192,7 @@ install_data(
     install_dir: udev_dir / 'rules.d')
 
 package_datadir = join_paths('share', 'vpd')
-install_subdir('ibm_vpd/fru/', install_dir: package_datadir, strip_directory: true)
+install_subdir('config/ibm/', install_dir: package_datadir, strip_directory: true)
 
 else
         FRUGEN = '$srcdir/extra-properties.py -e' + get_option('FRU_YAML')
