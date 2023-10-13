@@ -32,7 +32,7 @@ using namespace openpower::vpd::utils::interface;
 
 using InvalidArgument =
     sdbusplus::xyz::openbmc_project::Common::Error::InvalidArgument;
-using Argument = xyz::openbmc_project::Common::InvalidArgument;
+using Argument = xyz::openbmc_project::common::_InvalidArgument;
 using LocationNotFound = sdbusplus::com::ibm::VPD::Error::LocationNotFound;
 
 bool ReaderImpl::isValidLocationCode(const LocationCode& locationCode) const
