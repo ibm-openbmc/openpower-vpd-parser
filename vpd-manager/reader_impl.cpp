@@ -6,15 +6,12 @@
 
 #include <com/ibm/VPD/error.hpp>
 #include <phosphor-logging/elog-errors.hpp>
+#include <phosphor-logging/elog.hpp>
 #include <xyz/openbmc_project/Common/error.hpp>
 
 #include <algorithm>
 #include <map>
 #include <vector>
-
-#ifdef ManagerTest
-#include "reader_test.hpp"
-#endif
 
 namespace openpower
 {
@@ -29,6 +26,7 @@ using namespace phosphor::logging;
 using namespace openpower::vpd::inventory;
 using namespace openpower::vpd::constants;
 using namespace openpower::vpd::utils::interface;
+using namespace sdbusplus::xyz::openbmc_project::Common::Error;
 
 using InvalidArgument =
     sdbusplus::xyz::openbmc_project::Common::Error::InvalidArgument;
