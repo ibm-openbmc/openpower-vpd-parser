@@ -326,8 +326,8 @@ kwdVpdMap isdimmVpdParser::readKeywords(Binary::const_iterator& iterator)
         auto fruNumber = getDDR4FruNumber(partNumber, iterator);
         auto serialNumber = getDDR4SerialNumber(iterator);
         auto ccin = getDDR4CCIN(fruNumber);
-	// Per defect PE00MHKW PN value is made same as FN value
-	auto displayPartNumber = fruNumber;
+        // Per defect PE00MHKW PN value is made same as FN value
+        auto displayPartNumber = fruNumber;
         keywordValueMap.emplace("PN", move(displayPartNumber));
         keywordValueMap.emplace("FN", move(fruNumber));
         keywordValueMap.emplace("SN", move(serialNumber));
