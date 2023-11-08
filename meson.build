@@ -168,7 +168,7 @@ udev_dir = dependency('udev').get_variable(
 
 rules = ['rules/70-ibm-vpd-parser.rules']
 
-install_data(rules, install_dir: udev_dir/'rules.d')
+install_data(rules, install_mode: 'rw-r--r--', install_dir: udev_dir/'rules.d')
 
 services = ['service_files/system-vpd.service',
             'service_files/ibm-vpd-parser@.service',
