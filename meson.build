@@ -105,3 +105,6 @@ vpd_manager_exe = executable(
                 install : true,
                 cpp_args : '-DECC_CHECK'
                 )
+
+package_datadir = join_paths('share', 'vpd')
+install_subdir('configuration/ibm/', install_mode: 'rwxr-xr-x', install_dir: package_datadir, strip_directory: true)
