@@ -84,16 +84,28 @@ libvpdecc = shared_library(
     install: true,
 )
 
-vpd_manager_SOURCES = ['src/main.cpp',
-                       'src/manager.cpp',
-                       'src/logger.cpp',
-                       'src/utils.cpp',
-                       'src/parser_factory.cpp',
-                       'src/ipz_parser.cpp',
-                       'src/worker.cpp',
-		       'src/keyword_vpd_parser.cpp']
+common_SOURCES = ['src/logger.cpp',
+                  'src/utils.cpp',
+                  'src/parser_factory.cpp',
+                  'src/ipz_parser.cpp',
+                  'src/keyword_vpd_parser.cpp',
+                  'src/parser.cpp',
+                  'src/worker.cpp']
 
-vpd_manager_dependencies = [sdbusplus]
+vpd_manager_SOURCES = ['src/manager_main.cpp',
+                    'src/manager.cpp',
+                    ] + common_SOURCES
+
+parser_dependencies = [sdbusplus]
+
+parser_build_arguments = []
+if get_option('ibm_system').enabled()
+    parser_build_arguments += ['-IBM_SYSTEM']
+endif
+
+if get_option('use_json').enabled()
+    parser_build_arguments += ['-DPARSER_USE_JSON'] 
+endif
 
 vpd_manager_exe = executable(
                 'vpd-manager',
@@ -101,10 +113,22 @@ vpd_manager_exe = executable(
                 include_directories : ['include/', 'configuration/'],
                 link_with : libvpdecc,
                 dependencies : [
-                                vpd_manager_dependencies,
+                                parser_dependencies,
                                 ],
                 install : true,
-                cpp_args : '-DECC_CHECK'
+                cpp_args : parser_build_arguments,
+                )
+
+vpd_parser_SOURCES = ['src/vpd_parser_main.cpp',
+                     ]+ common_SOURCES
+
+vpd_parser_exe = executable(
+                'vpd-parser',
+                vpd_parser_SOURCES,
+                include_directories : ['include/', 'configuration/'],
+                link_with : libvpdecc,
+                dependencies : parser_dependencies,
+                install : true,
                 )
 
 package_datadir = join_paths('share', 'vpd')

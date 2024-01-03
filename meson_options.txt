@@ -9,3 +9,5 @@ option('JSON_ABSOLUTE_PATH_PREFIX', type: 'string', value: '/usr/share/vpd/',  d
 option('SYSTEM_VPD_FILE_PATH', type: 'string', value: '/sys/bus/i2c/drivers/at24/8-0050/eeprom',  description: 'EEPROM path of system VPD.')
 option('VPD_SYMLIMK_PATH', type: 'string', value: '/var/lib/vpd',  description: 'Symlink folder for VPD invnetory JSONs')
 option('PIM_PATH_PREFIX', type: 'string', value: '/xyz/openbmc_project/inventory', description: 'Prefix for PIM inventory paths.')
+option('ibm_system', type: 'feature', value : 'disabled', description: 'Enable code specific to IBM systems.')
+option('use_json', type: 'feature', value : 'disabled', description: 'enable when json is passed to vpd_parser_app along with vpd file')

@@ -29,6 +29,8 @@ class ParserFactory
      *
      * The method is used to get object of respective parser class based on the
      * type of VPD extracted from VPD vector passed to the API.
+     * To detect respective parser from VPD vector, add logic into the API
+     * vpdTypeCheck.
      *
      * Note: API throws DataException in case vpd type check fails for any
      * unknown type. Caller responsibility to handle the exception.

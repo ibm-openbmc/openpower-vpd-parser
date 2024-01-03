@@ -100,7 +100,6 @@ static uint16_t readUInt16LE(types::BinaryVector::const_iterator iterator)
     return lowByte;
 }
 
-#ifdef ECC_CHECK
 bool IpzVpdParser::vhdrEccCheck()
 {
     auto vpdPtr = m_vpdVector.cbegin();
@@ -239,7 +238,6 @@ bool IpzVpdParser::recordEccCheck(types::BinaryVector::const_iterator iterator)
 
     return false;
 }
-#endif
 
 void IpzVpdParser::checkHeader(types::BinaryVector::const_iterator itrToVPD)
 {
@@ -257,12 +255,10 @@ void IpzVpdParser::checkHeader(types::BinaryVector::const_iterator itrToVPD)
         throw(DataException("VHDR record not found"));
     }
 
-#ifdef ECC_CHECK
     if (!vhdrEccCheck())
     {
         throw(EccException("ERROR: VHDR ECC check Failed"));
     }
-#endif
 }
 
 auto IpzVpdParser::readTOC(types::BinaryVector::const_iterator& itrToVPD)
@@ -285,12 +281,10 @@ auto IpzVpdParser::readTOC(types::BinaryVector::const_iterator& itrToVPD)
         throw(DataException("VTOC record not found"));
     }
 
-#ifdef ECC_CHECK
     if (vtocEccCheck())
     {
         throw(EccException("ERROR: VTOC ECC check Failed"));
     }
-#endif
 
     // VTOC record name is good, now read through the TOC, stored in the PT
     // PT keyword; vpdBuffer is now pointing at the first character of the
@@ -327,7 +321,6 @@ types::RecordOffsetList
         // Get record offset
         recordOffsets.push_back(readUInt16LE(itrToPT));
 
-#ifdef ECC_CHECK
         std::string recordName(itrToPT, itrToPT + Length::RECORD_NAME);
 
         try
@@ -368,7 +361,6 @@ types::RecordOffsetList
             createPEL(additionalData, PelSeverity::WARNING,
                       errIntfForInvalidVPD, nullptr);*/
         }
-#endif
 
         // Jump record size, record length, ECC offset and ECC length
         std::advance(itrToPT,
@@ -477,14 +469,8 @@ std::string
     return {};
 }
 
-/**
- * @brief API to read keyword and its value under a record.
- *
- * @param[in] iterator - pointer to the start of keywords under the record.
- * @return keyword-value map of keywords under that record.
- */
-static types::IPZVpdMap::mapped_type
-    readKeywords(types::BinaryVector::const_iterator& itrToKwds)
+types::IPZVpdMap::mapped_type
+    IpzVpdParser::readKeywords(types::BinaryVector::const_iterator& itrToKwds)
 {
     types::IPZVpdMap::mapped_type kwdValueMap{};
     while (true)
@@ -525,7 +511,6 @@ static types::IPZVpdMap::mapped_type
         }
 
         // Pointing to keyword data now
-#ifndef ECC_CHECK
         if (supportedKeywords.end() != supportedKeywords.find(kwdName))
         {
             // Keyword is of interest to us
@@ -533,12 +518,12 @@ static types::IPZVpdMap::mapped_type
                 readKwData(kwdName, kwdDataLength, itrToKwds);
             kwdValueMap.emplace(std::move(kwdName), std::move(kwdValue));
         }
-#else
+
         // support all the Keywords
         auto stop = std::next(itrToKwds, kwdDataLength);
         std::string kwdata(itrToKwds, stop);
         kwdValueMap.emplace(std::move(kwdName), std::move(kwdata));
-#endif
+
         // Jump past keyword data length
         std::advance(itrToKwds, kwdDataLength);
     }
@@ -561,28 +546,22 @@ void IpzVpdParser::processRecord(auto recordOffset)
 
     std::string recordName(itrToVPDStart, itrToVPDStart + Length::RECORD_NAME);
 
-#ifndef ECC_CHECK
     if (recordName == "VINI" || recordName == "OPFR" || recordName == "OSYS")
     {
-#endif
         // If it's a record we're interested in, proceed to find
         // contained keywords and their values.
         std::advance(itrToVPDStart, Length::RECORD_NAME);
 
-#ifdef ECC_CHECK
-
         // Reverse back to RT Kw, in ipz vpd, to Read RT KW & value
         std::advance(itrToVPDStart, -(Length::KW_NAME + sizeof(types::KwSize) +
                                       Length::RECORD_NAME));
-#endif
+
         // Add entry for this record (and contained keyword:value pairs)
         // to the parsed vpd output.
         m_parsedVPDMap.emplace(std::move(recordName),
                                std::move(readKeywords(itrToVPDStart)));
 
-#ifndef ECC_CHECK
     }
-#endif
 }
 
 types::VPDMapVariant IpzVpdParser::parse()

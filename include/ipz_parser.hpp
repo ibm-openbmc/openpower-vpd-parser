@@ -138,6 +138,15 @@ class IpzVpdParser : public ParserInterface
                            types::BinaryVector::const_iterator itrToKwdData);
 
     /**
+     * @brief API to read keyword and its value under a record.
+     *
+     * @param[in] iterator - pointer to the start of keywords under the record.
+     * @return keyword-value map of keywords under that record.
+     */
+    types::IPZVpdMap::mapped_type
+        readKeywords(types::BinaryVector::const_iterator& itrToKwds);
+
+    /**
      * @brief API to process a record.
      *
      * @param[in] recordOffset - Offset of the record in VPD.

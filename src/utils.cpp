@@ -449,5 +449,34 @@ size_t getVPDOffset(const nlohmann::json& parsedJson,
     }
     return vpdOffset;
 }
+
+nlohmann::json getParsedJson(const std::string& pathToJson)
+{
+    if (pathToJson.empty())
+    {
+        throw std::runtime_error("Path to JSON is missing");
+    }
+
+    if (!std::filesystem::exists(pathToJson) ||
+        std::filesystem::is_empty(pathToJson))
+    {
+        throw std::runtime_error("Incorrect File Path or empty file");
+    }
+
+    std::ifstream jsonFile(pathToJson);
+    if (!jsonFile)
+    {
+        throw std::runtime_error("Failed to access Json path = " + pathToJson);
+    }
+
+    try
+    {
+        return nlohmann::json::parse(jsonFile);
+    }
+    catch (const nlohmann::json::parse_error& e)
+    {
+        throw std::runtime_error("Failed to parse JSON file");
+    }
+}
 } // namespace utils
 } // namespace vpd

@@ -96,7 +96,7 @@ std::string generateBadVPDFileName(const std::string& vpdFilePath);
 
 /**
  * @brief API which dumps the broken/bad vpd in a directory.
- * When the vpd is bad, this api places  the bad vpd file inside
+ * When the vpd is bad, this API places  the bad vpd file inside
  * "/tmp/bad-vpd" in BMC, in order to collect bad VPD data as a part of user
  * initiated BMC dump.
  *
@@ -164,7 +164,7 @@ inline std::vector<std::string> executeCmd(T&& path, Types... args)
 }
 
 /**
- * @brief An api to read value of a keyword.
+ * @brief An API to read value of a keyword.
  *
  * Note: Throws exception. Caller needs to handle.
  *
@@ -252,7 +252,7 @@ void getVpdDataInVector(std::fstream& vpdFileStream,
                         types::BinaryVector& vpdVector, size_t& vpdStartOffset);
 
 /**
- * @brief API to read VPD offset from json file.
+ * @brief API to read VPD offset from JSON file.
  *
  * @param[in] parsedJson - Parsed JSON file for the system.
  * @param[in] vpdFilePath - path to the VPD file.
@@ -261,5 +261,14 @@ void getVpdDataInVector(std::fstream& vpdFileStream,
 size_t getVPDOffset(const nlohmann::json& parsedJson,
                     const std::string& vpdFilePath);
 
+/**
+ * @brief API to parse respective JSON.
+ *
+ * Exception is thrown in case of JSON parse error.
+ *
+ * @param[in] pathToJson - Path to JSON.
+ * @return Parsed JSON.
+ */
+nlohmann::json getParsedJson(const std::string& pathToJson);
 } // namespace utils
 } // namespace vpd

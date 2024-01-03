@@ -6,6 +6,7 @@
 #include "constants.hpp"
 #include "exceptions.hpp"
 #include "logger.hpp"
+#include "parser.hpp"
 #include "parser_factory.hpp"
 #include "parser_interface.hpp"
 #include "utils.hpp"
@@ -35,17 +36,11 @@ Worker::Worker()
         std::filesystem::create_directories(VPD_SYMLIMK_PATH);
     }
 
-    std::ifstream inventoryJson(jsonToParse);
-    if (!inventoryJson)
-    {
-        throw(JsonException("Failed to access Json path", jsonToParse));
-    }
-
     try
     {
-        m_parsedJson = nlohmann::json::parse(inventoryJson);
+        m_parsedJson = utils::getParsedJson(jsonToParse);
     }
-    catch (const nlohmann::json::parse_error& ex)
+    catch (const std::exception& ex)
     {
         throw(JsonException("Json parsing failed", jsonToParse));
     }
@@ -254,39 +249,11 @@ void Worker::fillVPDMap(const std::string& vpdFilePath,
         throw std::runtime_error("Can't Find physical file");
     }
 
-    size_t vpdStartOffset = utils::getVPDOffset(m_parsedJson, vpdFilePath);
-
-    types::BinaryVector vpdVector;
-    std::fstream vpdFileStream;
-    vpdFileStream.exceptions(std::ifstream::badbit | std::ifstream::failbit);
-    utils::getVpdDataInVector(vpdFileStream, vpdFilePath, vpdVector,
-                              vpdStartOffset);
-
-    // Make sure we reset the EEPROM pointer to a "safe" location if it was
-    // DIMM SPD that we just read.
-    for (const auto& item : m_parsedJson["frus"][vpdFilePath])
-    {
-        if ((item.find("extraInterfaces") != item.end()) &&
-            (item["extraInterfaces"].find(
-                 "xyz.openbmc_project.Inventory.Item.Dimm") !=
-             item["extraInterfaces"].end()))
-        {
-            // moves the EEPROM pointer to 2048 'th byte.
-            vpdFileStream.seekg(2047, std::ios::beg);
-
-            // Read that byte and discard - to affirm the move
-            // operation.
-            char ch;
-            vpdFileStream.read(&ch, sizeof(ch));
-            break;
-        }
-    }
-
     try
     {
-        std::shared_ptr<ParserInterface> parser =
-            ParserFactory::getParser(vpdVector, vpdFilePath, vpdStartOffset);
-        vpdMap = parser->parse();
+        std::shared_ptr<Parser> vpdParser =
+            std::make_shared<Parser>(vpdFilePath, m_parsedJson);
+        vpdMap = vpdParser->parse();
     }
     catch (const std::exception& ex)
     {
@@ -324,7 +291,8 @@ void Worker::fillVPDMap(const std::string& vpdFilePath,
              */
 
             logging::logMessage(ex.what());
-            utils::dumpBadVpd(vpdFilePath, vpdVector);
+            // Need to decide once all error handling is implemented.
+            // utils::dumpBadVpd(vpdFilePath,vpdVector);
 
             // throw generic error from here to inform main caller about
             // failure.
@@ -400,7 +368,7 @@ void Worker::setDeviceTreeAndJson()
 {
     types::VPDMapVariant parsedVpdMap;
     fillVPDMap(SYSTEM_VPD_FILE_PATH, parsedVpdMap);
-    
+
     // Do we have the entry for device tree in parsed JSON?
     if (m_parsedJson.find("devTree") == m_parsedJson.end())
     {
@@ -858,7 +826,8 @@ void Worker::populateDbus(const types::VPDMapVariant& parsedVpdMap,
             processEmbeddedAndSynthesizedFrus(aFru, interfaces);
         }
 
-        objectInterfaceMap.emplace(std::move(fruObjectPath), std::move(interfaces));
+        objectInterfaceMap.emplace(std::move(fruObjectPath),
+                                   std::move(interfaces));
     }
 }
 

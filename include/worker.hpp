@@ -76,7 +76,7 @@ class Worker
     /**
      * @brief API to select system specific JSON.
      *
-     * The api based on the IM value of VPD, will select appropriate JSON for
+     * The API based on the IM value of VPD, will select appropriate JSON for
      * the system. In case no system is found corresponding to the extracted IM
      * value, error will be logged.
      *
