@@ -84,9 +84,10 @@ static vpdType vpdTypeCheck(const types::BinaryVector& vpdVector)
     return vpdType::INVALID_VPD_FORMAT;
 }
 
-std::shared_ptr<ParserInterface> ParserFactory::getParser(
-    const types::BinaryVector& vpdVector, const std::string& inventoryPath,
-    const std::string& vpdFilePath, uint32_t vpdStartOffset)
+std::shared_ptr<ParserInterface>
+    ParserFactory::getParser(const types::BinaryVector& vpdVector,
+                             const std::string& vpdFilePath,
+                             size_t vpdStartOffset)
 {
     if (vpdVector.empty())
     {
@@ -99,8 +100,8 @@ std::shared_ptr<ParserInterface> ParserFactory::getParser(
     {
         case vpdType::IPZ_VPD:
         {
-            return std::make_shared<IpzVpdParser>(vpdVector, inventoryPath,
-                                                  vpdFilePath, vpdStartOffset);
+            return std::make_shared<IpzVpdParser>(vpdVector, vpdFilePath,
+                                                  vpdStartOffset);
         }
 
         case vpdType::KEYWORD_VPD:

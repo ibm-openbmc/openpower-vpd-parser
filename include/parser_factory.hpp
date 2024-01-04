@@ -34,8 +34,6 @@ class ParserFactory
      * unknown type. Caller responsibility to handle the exception.
      *
      * @param[in] vpdVector - vpd file content to check for the type.
-     * @param[in] inventoryPath - InventoryPath to call out FRU in case PEL is
-     * logged by concrere parser class.
      * @param[in] vpdFilePath - FRU EEPROM path.
      * @param[in] vpdStartOffset - Offset from where VPD starts in the VPD file.
      *
@@ -43,7 +41,6 @@ class ParserFactory
      */
     static std::shared_ptr<ParserInterface>
         getParser(const types::BinaryVector& vpdVector,
-                  const std::string& inventoryPath,
-                  const std::string& vpdFilePath, uint32_t vpdStartOffset);
+                  const std::string& vpdFilePath, size_t vpdStartOffset);
 };
 } // namespace vpd

@@ -29,16 +29,14 @@ class IpzVpdParser : public ParserInterface
      * @brief Constructor.
      *
      * @param[in] vpdVector - VPD data.
-     * @param[in] inventoryPath - D-Bus path of the FRU.
-     * @param[in] vpdFilePath - VPD file path.
-     * @param[in] offset - Offset to the start of VPD in the file.
+     * @param[in] vpdFilePath - Path to VPD EEPROM.
+     * @param[in] vpdStartOffset - Offset from where VPD starts in the file.
+     * Defaulted to 0.
      */
     IpzVpdParser(const types::BinaryVector& vpdVector,
-                 const std::string& inventoryPath,
-                 const std::string& vpdFilePath, uint32_t offset) :
+                 const std::string& vpdFilePath, size_t vpdStartOffset = 0) :
         m_vpdVector(vpdVector),
-        m_inventoryPath(inventoryPath), m_vpdFilePath(vpdFilePath),
-        m_vpdStartOffset(offset)
+        m_vpdFilePath(vpdFilePath), m_vpdStartOffset(vpdStartOffset)
     {
         try
         {
@@ -149,19 +147,16 @@ class IpzVpdParser : public ParserInterface
     // Holds VPD data.
     const types::BinaryVector& m_vpdVector;
 
-    // Holds inventory path of the FRU.
-    const std::string& m_inventoryPath;
-
-    // Holds VPD EEPROM path
-    const std::string& m_vpdFilePath;
-
     // stores parsed VPD data.
     types::IPZVpdMap m_parsedVPDMap{};
 
-    // File stream to VPD file
+    // Holds the VPD file path
+    const std::string& m_vpdFilePath;
+
+    // Stream to the VPD file. Required to correct ECC
     std::fstream m_vpdFileStream;
 
-    // Offset to VPD.
-    uint32_t m_vpdStartOffset = 0;
+    // VPD start offset. Required for ECC correction.
+    size_t m_vpdStartOffset = 0;
 };
 } // namespace vpd

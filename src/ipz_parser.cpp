@@ -1,9 +1,12 @@
+#include "config.h"
+
 #include "ipz_parser.hpp"
 
 #include "constants.hpp"
 #include "exceptions.hpp"
 #include "utils.hpp"
 
+#include <nlohmann/json.hpp>
 #include <typeindex>
 
 #include "vpdecc/vpdecc.h"
@@ -606,52 +609,8 @@ types::VPDMapVariant IpzVpdParser::parse()
     }
     catch (const std::exception& e)
     {
-        if (typeid(e) == std::type_index(typeid(DataException)))
-        {
-            // TODO: Do what needs to be done in case of Data exception.
-            // Uncomment when PEL implementation goes in.
-            /* string errorMsg =
-                 "VPD file is either empty or invalid. Parser failed for [";
-             errorMsg += m_vpdFilePath;
-             errorMsg += "], with error = " + std::string(ex.what());
-
-             additionalData.emplace("DESCRIPTION", errorMsg);
-             additionalData.emplace("CALLOUT_INVENTORY_PATH",
-                                    INVENTORY_PATH + baseFruInventoryPath);
-             createPEL(additionalData, pelSeverity, errIntfForInvalidVPD,
-             nullptr);*/
-
-            // throw generic error from here to inform main caller about
-            // failure.
-            logging::logMessage(e.what());
-            throw std::runtime_error("Data Exception in IPZ parser for file " +
-                                     m_vpdFilePath);
-        }
-
-        if (typeid(e) == std::type_index(typeid(EccException)))
-        {
-            // TODO: Do what needs to be done in case of ECC exception.
-            // Uncomment when PEL implementation goes in.
-            /* additionalData.emplace("DESCRIPTION", "ECC check failed");
-             additionalData.emplace("CALLOUT_INVENTORY_PATH",
-                                    INVENTORY_PATH + baseFruInventoryPath);
-             createPEL(additionalData, pelSeverity, errIntfForEccCheckFail,
-                       nullptr);
-             */
-
-            logging::logMessage(e.what());
-            utils::dumpBadVpd(m_vpdFilePath, m_vpdVector);
-
-            // throw generic error from here to inform main caller about
-            // failure.
-            throw std::runtime_error("Ecc Exception in IPZ parser for file " +
-                                     m_vpdFilePath);
-        }
-
         logging::logMessage(e.what());
-        throw std::runtime_error(
-            "Generic exception occured in IPZ parser for file " +
-            m_vpdFilePath);
+        throw e;
     }
 }
 

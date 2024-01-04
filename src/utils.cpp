@@ -400,5 +400,54 @@ std::string getExpandedLocationCode(const std::string& unexpandedLocationCode,
     return expanded;
 }
 
+void getVpdDataInVector(std::fstream& vpdFileStream,
+                        const std::string& vpdFilePath,
+                        types::BinaryVector& vpdVector, size_t& vpdStartOffset)
+{
+    try
+    {
+        vpdFileStream.open(vpdFilePath,
+                           std::ios::in | std::ios::out | std::ios::binary);
+        auto vpdSizeToRead = std::min(std::filesystem::file_size(vpdFilePath),
+                                      static_cast<uintmax_t>(65504));
+        vpdVector.resize(vpdSizeToRead);
+
+        vpdFileStream.seekg(vpdStartOffset, std::ios_base::beg);
+        vpdFileStream.read(reinterpret_cast<char*>(&vpdVector[0]),
+                           vpdSizeToRead);
+
+        vpdVector.resize(vpdFileStream.gcount());
+        vpdFileStream.clear(std::ios_base::eofbit);
+    }
+    catch (const std::ifstream::failure& fail)
+    {
+        std::cerr << "Exception in file handling [" << vpdFilePath
+                  << "] error : " << fail.what();
+        std::cerr << "Stream file size = " << vpdFileStream.gcount()
+                  << std::endl;
+        throw;
+    }
+}
+
+size_t getVPDOffset(const nlohmann::json& parsedJson,
+                    const std::string& vpdFilePath)
+{
+    size_t vpdOffset = 0;
+    if (!vpdFilePath.empty())
+    {
+        if (parsedJson["frus"].contains(vpdFilePath))
+        {
+            for (const auto& item : parsedJson["frus"][vpdFilePath])
+            {
+                if (item.find("offset") != item.end())
+                {
+                    vpdOffset = item["offset"];
+                    break;
+                }
+            }
+        }
+    }
+    return vpdOffset;
+}
 } // namespace utils
 } // namespace vpd

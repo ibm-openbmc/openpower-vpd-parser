@@ -6,6 +6,7 @@
 
 #include <array>
 #include <iostream>
+#include <nlohmann/json.hpp>
 #include <source_location>
 #include <span>
 #include <string_view>
@@ -234,6 +235,31 @@ constexpr auto toHex(size_t aByte)
     constexpr auto map = "0123456789abcdef";
     return map[aByte];
 }
+
+/**
+ * @brief An API to get VPD in a vector.
+ *
+ * The vector is required by the respective parser to fill the VPD map.
+ * Note: API throws exception in case of failure. Caller needs to handle.
+ *
+ * @param[in] vpdFileStream - File stream to read VPDfrom path.
+ * @param[in] vpdFilePath - EEPROM path of the FRU.
+ * @param[out] vpdVector - VPD in vector form.
+ * @param[in] vpdStartOffset - Offset of VPD data in EEPROM.
+ */
+void getVpdDataInVector(std::fstream& vpdFileStream,
+                        const std::string& vpdFilePath,
+                        types::BinaryVector& vpdVector, size_t& vpdStartOffset);
+
+/**
+ * @brief API to read VPD offset from json file.
+ *
+ * @param[in] parsedJson - Parsed JSON file for the system.
+ * @param[in] vpdFilePath - path to the VPD file.
+ * @return Offset of VPD in VPD file.
+ */
+size_t getVPDOffset(const nlohmann::json& parsedJson,
+                    const std::string& vpdFilePath);
 
 } // namespace utils
 } // namespace vpd

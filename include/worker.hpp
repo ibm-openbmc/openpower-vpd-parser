@@ -114,20 +114,6 @@ class Worker
                     types::VPDMapVariant& parsedVpd);
 
     /**
-     * @brief An API to get VPD in a vector.
-     *
-     * The vector is required by the respective parser to fill the VPD map.
-     * Note: API throws exception in case of failure. Caller needs to handle.
-     *
-     * @param[in] vpdFilePath - EEPROM path of the FRU.
-     * @param[out] vpdVector - VPD in vector form.
-     * @param[in] vpdStartOffset - Offset of VPD data in EEPROM.
-     */
-    void getVpdDataInVector(const std::string& vpdFilePath,
-                            types::BinaryVector& vpdVector,
-                            size_t& vpdStartOffset);
-
-    /**
      * @brief AN API to populate DBus interfaces for a FRU.
      *
      * @param[in] parsedVpdMap - Parsed VPD as a map.

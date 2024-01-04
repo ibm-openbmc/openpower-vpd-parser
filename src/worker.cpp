@@ -239,36 +239,28 @@ std::string Worker::getHWVersion(const types::IPZVpdMap& parsedVpd) const
     return hwString.str();
 }
 
-void Worker::getVpdDataInVector(const std::string& vpdFilePath,
-                                types::BinaryVector& vpdVector,
-                                size_t& vpdStartOffset)
+void Worker::fillVPDMap(const std::string& vpdFilePath,
+                        types::VPDMapVariant& vpdMap)
 {
+    logging::logMessage(std::string("Parsing file = ") + vpdFilePath);
+
+    if (vpdFilePath.empty())
+    {
+        throw std::runtime_error("Invalid file path passed to fillVPDMap API.");
+    }
+
+    if (!std::filesystem::exists(vpdFilePath))
+    {
+        throw std::runtime_error("Can't Find physical file");
+    }
+
+    size_t vpdStartOffset = utils::getVPDOffset(m_parsedJson, vpdFilePath);
+
+    types::BinaryVector vpdVector;
     std::fstream vpdFileStream;
     vpdFileStream.exceptions(std::ifstream::badbit | std::ifstream::failbit);
-
-    try
-    {
-        vpdFileStream.open(vpdFilePath,
-                           std::ios::in | std::ios::out | std::ios::binary);
-        auto vpdSizeToRead = std::min(std::filesystem::file_size(vpdFilePath),
-                                      static_cast<uintmax_t>(65504));
-        vpdVector.resize(vpdSizeToRead);
-
-        vpdFileStream.seekg(vpdStartOffset, std::ios_base::beg);
-        vpdFileStream.read(reinterpret_cast<char*>(&vpdVector[0]),
-                           vpdSizeToRead);
-
-        vpdVector.resize(vpdFileStream.gcount());
-        vpdFileStream.clear(std::ios_base::eofbit);
-    }
-    catch (const std::ifstream::failure& fail)
-    {
-        std::cerr << "Exception in file handling [" << vpdFilePath
-                  << "] error : " << fail.what();
-        std::cerr << "Stream file size = " << vpdFileStream.gcount()
-                  << std::endl;
-        throw;
-    }
+    utils::getVpdDataInVector(vpdFileStream, vpdFilePath, vpdVector,
+                              vpdStartOffset);
 
     // Make sure we reset the EEPROM pointer to a "safe" location if it was
     // DIMM SPD that we just read.
@@ -289,53 +281,57 @@ void Worker::getVpdDataInVector(const std::string& vpdFilePath,
             break;
         }
     }
-}
 
-void Worker::fillVPDMap(const std::string& vpdFilePath,
-                        types::VPDMapVariant& vpdMap)
-{
-    logging::logMessage(std::string("Parsing file = ") + vpdFilePath);
-
-    if (vpdFilePath.empty())
+    try
     {
-        throw std::runtime_error("Invalid file path passed to fillVPDMap API.");
+        std::shared_ptr<ParserInterface> parser =
+            ParserFactory::getParser(vpdVector, vpdFilePath, vpdStartOffset);
+        vpdMap = parser->parse();
     }
-
-    if (!std::filesystem::exists(vpdFilePath))
+    catch (const std::exception& ex)
     {
-        throw std::runtime_error("Can't Find physical file");
-    }
-
-    size_t vpdStartOffset = 0;
-    std::string fruInventoryPath;
-
-    // check if offset present.
-    if (m_parsedJson["frus"].contains(vpdFilePath))
-    {
-        for (const auto& item : m_parsedJson["frus"][vpdFilePath])
+        if (typeid(ex) == std::type_index(typeid(DataException)))
         {
-            if (item.find("offset") != item.end())
-            {
-                vpdStartOffset = item["offset"];
-            }
+            // TODO: Do what needs to be done in case of Data exception.
+            // Uncomment when PEL implementation goes in.
+            /* string errorMsg =
+                 "VPD file is either empty or invalid. Parser failed for [";
+             errorMsg += m_vpdFilePath;
+             errorMsg += "], with error = " + std::string(ex.what());
+
+             additionalData.emplace("DESCRIPTION", errorMsg);
+             additionalData.emplace("CALLOUT_INVENTORY_PATH",
+                                    INVENTORY_PATH + baseFruInventoryPath);
+             createPEL(additionalData, pelSeverity, errIntfForInvalidVPD,
+             nullptr);*/
+
+            // throw generic error from here to inform main caller about
+            // failure.
+            logging::logMessage(ex.what());
+            throw std::runtime_error(
+                "Data Exception occurred for file path = " + vpdFilePath);
         }
 
-        fruInventoryPath =
-            m_parsedJson["frus"][vpdFilePath][0]["inventoryPath"];
-    }
-    else
-    {
-        throw std::runtime_error(std::string("File path missing in JSON.") +
-                                 vpdFilePath);
-    }
+        if (typeid(ex) == std::type_index(typeid(EccException)))
+        {
+            // TODO: Do what needs to be done in case of ECC exception.
+            // Uncomment when PEL implementation goes in.
+            /* additionalData.emplace("DESCRIPTION", "ECC check failed");
+             additionalData.emplace("CALLOUT_INVENTORY_PATH",
+                                    INVENTORY_PATH + baseFruInventoryPath);
+             createPEL(additionalData, pelSeverity, errIntfForEccCheckFail,
+                       nullptr);
+             */
 
-    types::BinaryVector vpdVector;
-    getVpdDataInVector(vpdFilePath, vpdVector, vpdStartOffset);
+            logging::logMessage(ex.what());
+            utils::dumpBadVpd(vpdFilePath, vpdVector);
 
-    std::shared_ptr<ParserInterface> parser = ParserFactory::getParser(
-        vpdVector, (PIM_PATH_PREFIX + fruInventoryPath), vpdFilePath,
-        vpdStartOffset);
-    vpdMap = parser->parse();
+            // throw generic error from here to inform main caller about
+            // failure.
+            throw std::runtime_error("Ecc Exception occurred for file path = " +
+                                     vpdFilePath);
+        }
+    }
 }
 
 void Worker::getSystemJson(std::string& systemJson,
