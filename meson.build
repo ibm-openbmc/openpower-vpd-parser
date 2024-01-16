@@ -100,7 +100,7 @@ parser_dependencies = [sdbusplus]
 
 parser_build_arguments = []
 if get_option('ibm_system').enabled()
-    parser_build_arguments += ['-IBM_SYSTEM']
+    parser_build_arguments += ['-DIBM_SYSTEM']
 endif
 
 if get_option('use_json').enabled()

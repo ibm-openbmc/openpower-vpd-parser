@@ -61,6 +61,13 @@ class Worker
      */
     void processAllFRU();
 
+    /**
+     * @brief An API to check if system VPD is already published.
+     *
+     * @return Status, true if system is already collected else false.
+     */
+    bool isSystemVPDOnDBus() const;
+
   private:
     /**
      * @brief An API to set appropriate device tree and JSON.
@@ -264,11 +271,6 @@ class Worker
      */
     void primeInventory(const types::IPZVpdMap& ipzVpdMap,
                         types::ObjectMap primeObjects);
-
-    /**
-     * @brief An API to check if system VPD is already published.
-     */
-    bool isSystemVPDOnDBus() const;
 
     // Parsed JSON file.
     nlohmann::json m_parsedJson{};
