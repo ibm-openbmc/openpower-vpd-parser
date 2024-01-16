@@ -40,6 +40,20 @@ class Manager
     ~Manager() = default;
 
   private:
+#ifdef IBM_SYSTEM
+    /**
+     * @brief API to detect system VPD collectuon status.
+     *
+     * System VPD is required to claim the bus for VPD-Manager, post which VPD
+     * for other FRUs should be collected. This API detects system VPD
+     * collection status and triggers VPD collection for rest of the FRUs.
+     *
+     * Note: Throws exceptionin case of any failure. Needs to be handled by the
+     * caller.
+     */
+    void setTimerForSystemVPDDetection();
+#endif
+
     // Shared pointer to asio context object.
     const std::shared_ptr<boost::asio::io_context>& m_ioContext;
 
