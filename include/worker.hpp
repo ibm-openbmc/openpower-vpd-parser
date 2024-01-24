@@ -3,6 +3,7 @@
 #include "types.hpp"
 
 #include <nlohmann/json.hpp>
+#include <tuple>
 
 namespace vpd
 {
@@ -31,13 +32,16 @@ class Worker
     /**
      * @brief Constructor.
      *
+     * In case the processing is not JSON based, no argument needs to be passed.
      * Constructor will also, based on symlink pick the correct JSON and
      * initialize the parsed JSON variable.
+     *
+     * @param[in] pathToConfigJSON - Path to the config JSON, if applicable.
      *
      * Note: Throws std::exception in case of construction failure. Caller needs
      * to handle to detect successful object creation.
      */
-    Worker();
+    Worker(std::string pathToConfigJson = std::string());
 
     /**
      * @brief Destructor
@@ -45,7 +49,7 @@ class Worker
     ~Worker() = default;
 
     /**
-     * @brief An API to perform initial setup before BUS name is claimed.
+     * @brief API to perform initial setup before manager claims Bus name.
      *
      * Before BUS name for VPD-Manager is claimed, fitconfig whould be set for
      * corret device tree, inventory JSON w.r.t system should be linked and
@@ -54,12 +58,16 @@ class Worker
     void performInitialSetup();
 
     /**
-     * @brief An API to process all FRUs.
+     * @brief API to process all FRUs presnt in config JSON file.
      *
-     * This API based on inventory JSON selected for the system will parse and
-     * publish their VPD over Dbus.
+     * This API based on config JSON passed/selected for the system, will
+     * trigger parser for multiple FRUs.
+     *
+     * Note: Config JSON file path should be passed to worker class constructor
+     * to make use of this API.
+     *
      */
-    void processAllFRU();
+    void collectFrusFromJson();
 
     /**
      * @brief An API to check if system VPD is already published.
@@ -68,7 +76,34 @@ class Worker
      */
     bool isSystemVPDOnDBus() const;
 
+    /**
+     * @brief An API to populate DBus interfaces for a FRU.
+     *
+     * Note: Call this API to populate D-Bus. Also caller should handle empty
+     * objectInterfaceMap.
+     *
+     * @param[in] parsedVpdMap - Parsed VPD as a map.
+     * @param[out] objectInterfaceMap - Object and its interfaces map.
+     * @param[in] vpdFilePath - EEPROM path of FRU.
+     */
+    void populateDbus(const types::VPDMapVariant& parsedVpdMap,
+                      types::ObjectMap& objectInterfaceMap,
+                      const std::string& vpdFilePath);
+
   private:
+    /**
+     * @brief An API to parse and publish a FRU VPD over D-Bus.
+     *
+     * Note: This API will handle all the exceptions internally and will only
+     * return status of parsing and publishing of VPD over D-Bus.
+     *
+     * @param[in] vpdFilePath - Path of file containing VPD.
+     * @return Tuple of status and file path. Status, true if successfull else
+     * false.
+     */
+    std::tuple<bool, std::string>
+        parseAndPublishVPD(const std::string& vpdFilePath);
+
     /**
      * @brief An API to set appropriate device tree and JSON.
      *
@@ -119,17 +154,6 @@ class Worker
      */
     void fillVPDMap(const std::string& vpdFilePath,
                     types::VPDMapVariant& parsedVpd);
-
-    /**
-     * @brief AN API to populate DBus interfaces for a FRU.
-     *
-     * @param[in] parsedVpdMap - Parsed VPD as a map.
-     * @param[out] objectInterfaceMap - Object and its interfaces map.
-     * @param[in] vpdFilePath - EEPROM path of FRU.
-     */
-    void populateDbus(const types::VPDMapVariant& parsedVpdMap,
-                      types::ObjectMap& objectInterfaceMap,
-                      const std::string& vpdFilePath);
 
     /**
      * @brief An API to parse and publish system VPD on D-Bus.
@@ -277,5 +301,8 @@ class Worker
 
     // Hold if symlink is present or not.
     bool m_isSymlinkPresent = false;
+
+    // Path to config JSON if applicable.
+    const std::string& m_configJsonPath;
 };
 } // namespace vpd

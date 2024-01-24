@@ -13,36 +13,53 @@
 
 #include <filesystem>
 #include <fstream>
+#include <future>
 #include <typeindex>
 
 namespace vpd
 {
 
-Worker::Worker()
+Worker::Worker(std::string pathToConfigJson) :
+    m_configJsonPath(pathToConfigJson)
 {
-    auto jsonToParse = INVENTORY_JSON_DEFAULT;
-
-    // Check if symlink is already there to confirm fresh boot/factory
-    // reset.
-    if (std::filesystem::exists(INVENTORY_JSON_SYM_LINK))
+    // Implies the processing is based on some config JSON
+    if (!m_configJsonPath.empty())
     {
-        jsonToParse = INVENTORY_JSON_SYM_LINK;
-        m_isSymlinkPresent = true;
+        auto jsonToParse = m_configJsonPath;
+
+        // Check if symlink is already there to confirm fresh boot/factory
+        // reset.
+        if (std::filesystem::exists(INVENTORY_JSON_SYM_LINK))
+        {
+            logging::logMessage("SYm Link already present");
+            jsonToParse = INVENTORY_JSON_SYM_LINK;
+            m_isSymlinkPresent = true;
+        }
+        // implies it is a fresh boot/factory reset.
+        else
+        {
+            // Create the directory for hosting the symlink
+            std::filesystem::create_directories(VPD_SYMLIMK_PATH);
+        }
+
+        try
+        {
+            m_parsedJson = utils::getParsedJson(jsonToParse);
+
+            // check for mandatory fields at this point itself.
+            if (!m_parsedJson.contains("frus"))
+            {
+                throw std::runtime_error("Mandatory tag(s) missing from JSON");
+            }
+        }
+        catch (const std::exception& ex)
+        {
+            throw(JsonException(ex.what(), jsonToParse));
+        }
     }
-    // implies it is a fresh boot/factory reset.
     else
     {
-        // Create the directory for hosting the symlink
-        std::filesystem::create_directories(VPD_SYMLIMK_PATH);
-    }
-
-    try
-    {
-        m_parsedJson = utils::getParsedJson(jsonToParse);
-    }
-    catch (const std::exception& ex)
-    {
-        throw(JsonException("Json parsing failed", jsonToParse));
+        logging::logMessage("Processing in not based on any config JSON");
     }
 }
 
@@ -366,6 +383,12 @@ static void setEnvAndReboot(const std::string& key, const std::string& value)
 
 void Worker::setDeviceTreeAndJson()
 {
+    // JSON is madatory for processing of this API.
+    if (m_parsedJson.empty())
+    {
+        throw std::runtime_error("JSON is empty");
+    }
+
     types::VPDMapVariant parsedVpdMap;
     fillVPDMap(SYSTEM_VPD_FILE_PATH, parsedVpdMap);
 
@@ -669,7 +692,6 @@ void Worker::processExtraInterfaces(const nlohmann::json& singleFru,
                                     const types::VPDMapVariant& parsedVpdMap)
 {
     populateInterfaces(singleFru["extraInterfaces"], interfaces, parsedVpdMap);
-
     if (auto ipzVpdMap = std::get_if<types::IPZVpdMap>(&parsedVpdMap))
     {
         if (singleFru["extraInterfaces"].contains(
@@ -680,7 +702,7 @@ void Worker::processExtraInterfaces(const nlohmann::json& singleFru,
             {
                 return;
             }
-
+        
             std::string pgKeywordValue;
             utils::getKwVal(itrToRec->second, "PG", pgKeywordValue);
             if (!pgKeywordValue.empty())
@@ -785,49 +807,52 @@ void Worker::populateDbus(const types::VPDMapVariant& parsedVpdMap,
             "Invalid parameter passed to populateDbus API.");
     }
 
-    types::InterfaceMap interfaces;
-
-    for (const auto& aFru : m_parsedJson["frus"][vpdFilePath])
+    // JSON config is mandatory for processing of "if". Add "else" for any
+    // processing without config JSON.
+    if (!m_parsedJson.empty())
     {
-        const auto& inventoryPath = aFru["inventoryPath"];
-        sdbusplus::message::object_path fruObjectPath(inventoryPath);
+        types::InterfaceMap interfaces;
 
-        if (aFru.contains("ccin"))
+        for (const auto& aFru : m_parsedJson["frus"][vpdFilePath])
         {
-            if (!processFruWithCCIN(aFru, parsedVpdMap))
+            const auto& inventoryPath = aFru["inventoryPath"];
+            sdbusplus::message::object_path fruObjectPath(inventoryPath);
+            if (aFru.contains("ccin"))
             {
-                continue;
+                if (!processFruWithCCIN(aFru, parsedVpdMap))
+                {
+                    continue;
+                }
             }
+    
+            if (aFru.value("inherit", true))
+            {
+                processInheritFlag(parsedVpdMap, interfaces);
+            }
+    
+            // If specific record needs to be copied.
+            if (aFru.contains("copyRecords"))
+            {
+                processCopyRecordFlag(aFru, parsedVpdMap, interfaces);
+            }
+    
+            if (aFru.contains("extraInterfaces"))
+            {
+                // Process extra interfaces w.r.t a FRU.
+                processExtraInterfaces(aFru, interfaces, parsedVpdMap);
+            }
+    
+            // Process FRUS which are embedded in the parent FRU and whose VPD
+            // will be synthesized.
+            if ((aFru.value("embedded", true)) &&
+                (!aFru.value("synthesized", false)))
+            {
+                processEmbeddedAndSynthesizedFrus(aFru, interfaces);
+            }
+    
+            objectInterfaceMap.emplace(std::move(fruObjectPath),
+                                       std::move(interfaces));
         }
-
-        if (aFru.value("inherit", true))
-        {
-            processInheritFlag(parsedVpdMap, interfaces);
-        }
-
-        // If specific record needs to be copied.
-        if (aFru.contains("copyRecords"))
-        {
-            processCopyRecordFlag(aFru, parsedVpdMap, interfaces);
-        }
-
-        if (aFru.contains("extraInterfaces"))
-        {
-            // Process extra interfaces w.r.t a FRU.
-            processExtraInterfaces(aFru["extraInterfaces"], interfaces,
-                                   parsedVpdMap);
-        }
-
-        // Process FRUS which are embedded in the parent FRU and whose VPD
-        // will be synthesized.
-        if ((aFru.value("embedded", true)) &&
-            (!aFru.value("synthesized", false)))
-        {
-            processEmbeddedAndSynthesizedFrus(aFru, interfaces);
-        }
-
-        objectInterfaceMap.emplace(std::move(fruObjectPath),
-                                   std::move(interfaces));
     }
 }
 
@@ -838,11 +863,10 @@ void Worker::publishSystemVPD(const types::VPDMapVariant& parsedVpdMap)
     if (auto ipzVpdMap = std::get_if<types::IPZVpdMap>(&parsedVpdMap))
     {
         populateDbus(parsedVpdMap, objectInterfaceMap, SYSTEM_VPD_FILE_PATH);
-
         types::ObjectMap primeObjects;
         primeInventory(*ipzVpdMap, primeObjects);
         objectInterfaceMap.insert(primeObjects.begin(), primeObjects.end());
-
+    
         // Notify PIM
         if (!utils::callPIM(move(objectInterfaceMap)))
         {
@@ -855,8 +879,99 @@ void Worker::publishSystemVPD(const types::VPDMapVariant& parsedVpdMap)
     }
 }
 
-void Worker::processAllFRU()
+std::tuple<bool, std::string>
+    Worker::parseAndPublishVPD(const std::string& vpdFilePath)
 {
-    // TODO: Implement to process all other FRUs.
+    try
+    {
+        // TODO: Special handling for FRUs eg: pre/post actions.
+        if (!std::filesystem::exists(vpdFilePath))
+        {
+            logging::logMessage("Could not find file path " + vpdFilePath +
+                                "Skipping parser trigger for the EEPROM");
+            return std::make_tuple(false, vpdFilePath);
+        }
+
+        std::shared_ptr<Parser> vpdParser =
+            std::make_shared<Parser>(vpdFilePath, m_parsedJson);
+        const types::VPDMapVariant& parsedVpdMap = vpdParser->parse();
+
+        types::ObjectMap objectInterfaceMap;
+        populateDbus(parsedVpdMap, objectInterfaceMap, vpdFilePath);
+
+        logging::logMessage("Dbus sucessfully populated for FRU " +
+                            vpdFilePath);
+        // Notify PIM
+        /*    if (!utils::callPIM(move(objectInterfaceMap)))
+            {
+                throw std::runtime_error("Call to PIM failed for system VPD");
+            }*/
+    }
+    catch (const std::exception& ex)
+    {
+        // handle all the exceptions internally. Return only true/false based on
+        // status of execution.
+        if (typeid(ex) == std::type_index(typeid(DataException)))
+        {
+            // TODO: Add custom handling
+            logging::logMessage(ex.what());
+        }
+
+        if (typeid(ex) == std::type_index(typeid(EccException)))
+        {
+            // TODO: Add custom handling
+            logging::logMessage(ex.what());
+        }
+        return std::make_tuple(false, vpdFilePath);
+    }
+    return std::make_tuple(true, vpdFilePath);
+}
+
+void Worker::collectFrusFromJson()
+{
+    // A parsed JSON file should be present to pick FRUs EEPROM paths
+    if (m_parsedJson.empty())
+    {
+        throw std::runtime_error(
+            "A config JSON is required for processing of FRUs");
+    }
+
+    const nlohmann::json& listOfFrus =
+        m_parsedJson["frus"].get_ref<const nlohmann::json::object_t&>();
+
+    // future object to carry return value.
+    std::vector<std::future<std::tuple<bool, std::string>>> listOfFutureObject;
+
+    for (const auto& itemFRUS : listOfFrus.items())
+    {
+        const std::string& vpdFilePath = itemFRUS.key();
+
+        // skip processing of system VPD again as it has been already collected.
+        if (vpdFilePath == SYSTEM_VPD_FILE_PATH)
+        {
+            continue;
+        }
+
+        logging::logMessage("Parsing triggered for FRU = " + vpdFilePath);
+
+        listOfFutureObject.push_back(
+            std::async(&Worker::parseAndPublishVPD, this, vpdFilePath));
+    }
+
+    for (auto& aFutureObj : listOfFutureObject)
+    {
+        std::tuple<bool, std::string> threadInfo = aFutureObj.get();
+
+        if (!std::get<0>(threadInfo))
+        {
+            logging::logMessage("Processing failed for = " +
+                                std::get<1>(threadInfo));
+        }
+        else if (std::get<0>(threadInfo))
+        {
+            logging::logMessage("Processing passed for = " +
+                                std::get<1>(threadInfo));
+        }
+    }
 }
 } // namespace vpd

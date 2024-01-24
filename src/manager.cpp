@@ -18,7 +18,7 @@ Manager::Manager(
     try
     {
 #ifdef IBM_SYSTEM
-        m_worker = std::make_shared<Worker>();
+        m_worker = std::make_shared<Worker>(INVENTORY_JSON_DEFAULT);
 
         // Set up minimal things that is needed before bus name is claimed.
         m_worker->performInitialSetup();
@@ -63,7 +63,7 @@ void Manager::SetTimerToDetectSVPDOnDbus()
         {
             // cancel the timer
             timer.cancel();
-            m_worker->processAllFRU();
+            m_worker->collectFrusFromJson();
         }
     });
 }
