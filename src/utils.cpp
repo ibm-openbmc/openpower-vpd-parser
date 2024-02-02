@@ -404,14 +404,13 @@ std::string getExpandedLocationCode(const std::string& unexpandedLocationCode,
     return expanded;
 }
 
-void getVpdDataInVector(std::fstream& vpdFileStream,
-                        const std::string& vpdFilePath,
+void getVpdDataInVector(const std::string& vpdFilePath,
                         types::BinaryVector& vpdVector, size_t& vpdStartOffset)
 {
     try
     {
-        vpdFileStream.open(vpdFilePath,
-                           std::ios::in | std::ios::out | std::ios::binary);
+        std::fstream vpdFileStream;
+        vpdFileStream.open(vpdFilePath, std::ios::in | std::ios::binary);
         auto vpdSizeToRead = std::min(std::filesystem::file_size(vpdFilePath),
                                       static_cast<uintmax_t>(65504));
         vpdVector.resize(vpdSizeToRead);
@@ -427,8 +426,6 @@ void getVpdDataInVector(std::fstream& vpdFileStream,
     {
         std::cerr << "Exception in file handling [" << vpdFilePath
                   << "] error : " << fail.what();
-        std::cerr << "Stream file size = " << vpdFileStream.gcount()
-                  << std::endl;
         throw;
     }
 }

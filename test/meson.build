@@ -35,6 +35,7 @@ test_sources = [
   '../src/ddimm_parser.cpp',
   '../src/parser.cpp',
   '../src/parser_factory.cpp',
+  '../src/isdimm_parser.cpp',
   '../src/ipz_parser.cpp',
   '../src/keyword_vpd_parser.cpp',
   '../vpdecc/vpdecc.c'

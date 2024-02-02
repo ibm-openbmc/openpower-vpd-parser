@@ -36,14 +36,15 @@ class ParserFactory
      * Note: API throws DataException in case vpd type check fails for any
      * unknown type. Caller responsibility to handle the exception.
      *
-     * @param[in] vpdVector - vpd file content to check for the type.
-     * @param[in] vpdFilePath - FRU EEPROM path.
-     * @param[in] vpdStartOffset - Offset from where VPD starts in the VPD file.
+     * @param[in] i_vpdVector - vpd file content to check for the type.
+     * @param[in] i_vpdFilePath - FRU EEPROM path.
+     * @param[in] i_vpdStartOffset - Offset from where VPD starts in the VPD
+     * file.
      *
      * @return - Pointer to concrete parser class object.
      */
     static std::shared_ptr<ParserInterface>
-        getParser(const types::BinaryVector& vpdVector,
-                  const std::string& vpdFilePath, size_t vpdStartOffset);
+        getParser(const types::BinaryVector& i_vpdVector,
+                  const std::string& i_vpdFilePath, size_t i_vpdStartOffset);
 };
 } // namespace vpd

@@ -64,6 +64,7 @@ common_SOURCES = ['src/logger.cpp',
                   'src/ipz_parser.cpp',
                   'src/keyword_vpd_parser.cpp',
                   'src/ddimm_parser.cpp',
+                  'src/isdimm_parser.cpp',
                   'src/parser.cpp',
                   'src/worker.cpp']
 

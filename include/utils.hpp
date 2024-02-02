@@ -243,13 +243,11 @@ constexpr auto toHex(size_t aByte)
  * The vector is required by the respective parser to fill the VPD map.
  * Note: API throws exception in case of failure. Caller needs to handle.
  *
- * @param[in] vpdFileStream - File stream to read VPDfrom path.
  * @param[in] vpdFilePath - EEPROM path of the FRU.
  * @param[out] vpdVector - VPD in vector form.
  * @param[in] vpdStartOffset - Offset of VPD data in EEPROM.
  */
-void getVpdDataInVector(std::fstream& vpdFileStream,
-                        const std::string& vpdFilePath,
+void getVpdDataInVector(const std::string& vpdFilePath,
                         types::BinaryVector& vpdVector, size_t& vpdStartOffset);
 
 /**

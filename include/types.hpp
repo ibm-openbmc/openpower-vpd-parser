@@ -62,6 +62,12 @@ using KeywordVpdMap = std::unordered_map<std::string, KWdVPDValueType>;
 using DdimmVpdMap = KeywordVpdMap;
 
 /**
+ * Both Keyword VPD parser and ISDIMM parser stores the
+ * parsed SPD in the same format.
+*/
+using JedecSpdMap = KeywordVpdMap;
+
+/**
  * Type to hold keyword::value map of a VPD.
  * Variant can be extended to support additional type.
 */
@@ -110,5 +116,6 @@ enum class VpdTarget
         Hardware = 1,
         CacheAndHardware = 2
 };
+
 } // namespace types
 } // namespace vpd

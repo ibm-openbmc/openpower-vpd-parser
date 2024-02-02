@@ -4,6 +4,7 @@
 #include "ddimm_parser.hpp"
 #include "exceptions.hpp"
 #include "ipz_parser.hpp"
+#include "isdimm_parser.hpp"
 #include "keyword_vpd_parser.hpp"
 
 namespace vpd
@@ -132,8 +133,10 @@ std::shared_ptr<ParserInterface>
         case vpdType::DDR4_ISDIMM_MEMORY_VPD:
         case vpdType::DDR5_ISDIMM_MEMORY_VPD:
         {
-            // TODO:
             // return shared pointer to class object.
+            logging::logMessage("ISDIMM parser selected for VPD path: " +
+                                i_vpdFilePath);
+            return std::make_shared<JedecSpdParser>(i_vpdVector);
         }
 
         default:

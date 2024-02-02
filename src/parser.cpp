@@ -23,8 +23,7 @@ types::VPDMapVariant Parser::parse()
 
     // Read the VPD data into a vector.
     types::BinaryVector vpdVector;
-    utils::getVpdDataInVector(vpdFileStream, m_vpdFilePath, vpdVector,
-                              m_vpdStartOffset);
+    utils::getVpdDataInVector(m_vpdFilePath, vpdVector, m_vpdStartOffset);
 
     // This will detect the type of parser required.
     std::shared_ptr<vpd::ParserInterface> parser =
