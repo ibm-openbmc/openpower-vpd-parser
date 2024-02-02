@@ -19,6 +19,10 @@ static constexpr uint8_t KW_VAL_PAIR_END_TAG = 0x79;
 static constexpr auto MEMORY_VPD_DATA_START = 416;
 static constexpr auto MEMORY_VPD_START_TAG = "11S";
 static constexpr auto FORMAT_11S_LEN = 3;
+static constexpr auto PART_NUM_LEN = 7;
+static constexpr auto SERIAL_NUM_LEN = 12;
+static constexpr auto CCIN_LEN = 4;
+static constexpr auto CONVERT_MB_TO_KB = 1024;
 
 static constexpr auto SPD_BYTE_2 = 2;
 static constexpr auto SPD_BYTE_3 = 3;
@@ -26,11 +30,14 @@ static constexpr auto SPD_BYTE_4 = 4;
 static constexpr auto SPD_BYTE_6 = 6;
 static constexpr auto SPD_BYTE_12 = 12;
 static constexpr auto SPD_BYTE_13 = 13;
+static constexpr auto SPD_BYTE_234 = 234;
+static constexpr auto SPD_BYTE_235 = 235;
 static constexpr auto SPD_BYTE_BIT_0_3_MASK = 0x0F;
 static constexpr auto SPD_BYTE_MASK = 0xFF;
 static constexpr auto SPD_MODULE_TYPE_DDIMM = 0x0A;
 static constexpr auto SPD_DRAM_TYPE_DDR5 = 0x12;
 static constexpr auto SPD_DRAM_TYPE_DDR4 = 0x0C;
+
 static constexpr auto LAST_KW = "PF";
 static constexpr auto POUND_KW = '#';
 static constexpr auto MB_YEAR_END = 4;
@@ -48,6 +55,26 @@ static constexpr auto UUID_CLK_SEQ_END = 23;
 static constexpr auto MAC_ADDRESS_LEN_BYTES = 6;
 static constexpr auto ONE_BYTE = 1;
 static constexpr auto TWO_BYTES = 2;
+
+static constexpr auto VALUE_0 = 0;
+static constexpr auto VALUE_1 = 1;
+static constexpr auto VALUE_2 = 2;
+static constexpr auto VALUE_3 = 3;
+static constexpr auto VALUE_4 = 4;
+static constexpr auto VALUE_5 = 5;
+static constexpr auto VALUE_6 = 6;
+static constexpr auto VALUE_7 = 7;
+static constexpr auto VALUE_8 = 8;
+
+static constexpr auto MASK_BYTE_BITS_01 = 0x03;
+static constexpr auto MASK_BYTE_BITS_345 = 0x38;
+static constexpr auto MASK_BYTE_BITS_012 = 0x07;
+static constexpr auto MASK_BYTE_BITS_567 = 0xE0;
+static constexpr auto MASK_BYTE_BITS_01234 = 0x1F;
+
+static constexpr auto SHIFT_BITS_0 = 0;
+static constexpr auto SHIFT_BITS_3 = 3;
+static constexpr auto SHIFT_BITS_5 = 5;
 
 constexpr auto pimPath = "/xyz/openbmc_project/inventory";
 constexpr auto pimIntf = "xyz.openbmc_project.Inventory.Manager";

@@ -57,6 +57,13 @@ using KeywordVpdMap = std::unordered_map<std::string, KWdVPDValueType>;
 */
 using VPDKWdValueMap = std::variant<IPZKwdValueMap, KeywordVpdMap>;
 
+
+/* Value types supported by DDIMM VPD*/
+using DdimmVPDValueType = std::variant<BinaryVector,std::string, size_t>;
+/* This hold map of parsed data of DDIMM VPD type*/
+using DdimmVpdMap = std::unordered_map<std::string, DdimmVPDValueType>;
+
+
 /* Map<Property, Value>*/
 using PropertyMap = std::map<std::string, DbusVariantType>;
 /* Map<Interface<Property, Value>>*/
@@ -75,7 +82,7 @@ using PoundKwSize = uint16_t;
 
 using RecordOffsetList = std::vector<uint32_t>;
 
-using VPDMapVariant = std::variant<IPZVpdMap, KeywordVpdMap>;
+using VPDMapVariant = std::variant<IPZVpdMap, KeywordVpdMap, DdimmVpdMap>;
 
 using HWVerList = std::vector<std::pair<std::string, std::string>>;
 /**

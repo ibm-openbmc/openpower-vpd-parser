@@ -4,6 +4,7 @@
 #include "exceptions.hpp"
 #include "ipz_parser.hpp"
 #include "keyword_vpd_parser.hpp"
+#include "ddimm_parser.hpp"
 
 namespace vpd
 {
@@ -113,11 +114,11 @@ std::shared_ptr<ParserInterface>
             return std::make_shared<KeywordVpdParser>(vpdVector);
         }
 
-        case vpdType::DDR4_DDIMM_MEMORY_VPD:
         case vpdType::DDR5_DDIMM_MEMORY_VPD:
         {
-            // TODO:
-            // return shared pointer to class object.
+            std::cout << "DDIMM parser selected for VPD file path " << vpdFilePath
+                      << std::endl;
+            return std::make_shared<DdimmVpdParser>(vpdVector);
         }
 
         case vpdType::DDR4_ISDIMM_MEMORY_VPD:
