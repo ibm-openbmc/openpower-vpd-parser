@@ -162,7 +162,7 @@ bool IpzVpdParser::vtocEccCheck()
     auto vtocECCOffset = readUInt16LE(vpdPtr);
 
     // Get the ECC length
-    std::advance(vpdPtr, sizeof(types::ECCOffset));
+    std::advance(vpdPtr, sizeof(types::EccOffset));
     auto vtocECCLength = readUInt16LE(vpdPtr);
 
     // Reset pointer to start of the vpd,
@@ -220,7 +220,7 @@ bool IpzVpdParser::recordEccCheck(types::BinaryVector::const_iterator iterator)
     std::advance(iterator, sizeof(types::RecordLength));
     auto eccOffset = readUInt16LE(iterator);
 
-    std::advance(iterator, sizeof(types::ECCOffset));
+    std::advance(iterator, sizeof(types::EccOffset));
     auto eccLength = readUInt16LE(iterator);
 
     if (eccLength == 0 || eccOffset == 0)
@@ -366,7 +366,7 @@ types::RecordOffsetList
         // Jump record size, record length, ECC offset and ECC length
         std::advance(itrToPT,
                      sizeof(types::RecordOffset) + sizeof(types::RecordLength) +
-                         sizeof(types::ECCOffset) + sizeof(types::ECCLength));
+                         sizeof(types::EccOffset) + sizeof(types::EccLength));
     }
 
     return recordOffsets;

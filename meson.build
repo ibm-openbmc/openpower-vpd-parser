@@ -65,7 +65,8 @@ common_SOURCES = ['src/logger.cpp',
                   'src/keyword_vpd_parser.cpp',
                   'src/ddimm_parser.cpp',
                   'src/parser.cpp',
-                  'src/worker.cpp']
+                  'src/worker.cpp',
+                  'src/editor.cpp']
 
 vpd_manager_SOURCES = ['src/manager_main.cpp',
                     'src/manager.cpp',

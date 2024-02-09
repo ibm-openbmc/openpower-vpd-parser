@@ -482,5 +482,19 @@ nlohmann::json getParsedJson(const std::string& pathToJson)
         throw std::runtime_error("Failed to parse JSON file");
     }
 }
+
+std::string getDbusNameForThisKw(const std::string& keyword)
+{
+    if (keyword[0] == constants::POUND_KW)
+    {
+        return (std::string(constants::POUND_KW_PREFIX) + keyword[1]);
+    }
+    else if (isdigit(keyword[0]))
+    {
+        return (std::string(constants::NUMERIC_KW_PREFIX) + keyword);
+    }
+    return keyword;
+}
+
 } // namespace utils
 } // namespace vpd

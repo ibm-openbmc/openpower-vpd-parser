@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <iostream>
 namespace vpd
 {
@@ -86,6 +87,35 @@ static constexpr auto BD_YEAR_END = 4;
 static constexpr auto BD_MONTH_END = 7;
 static constexpr auto BD_DAY_END = 10;
 static constexpr auto BD_HOUR_END = 13;
+static constexpr auto POUND_KW_PREFIX = "PD_";
+static constexpr auto NUMERIC_KW_PREFIX = "N_";
+
+// Offset of different entries in VPD data.
+enum Offset
+{
+    VHDR = 17,
+    VHDR_TOC_ENTRY = 29,
+    VTOC_PTR = 35,
+    VTOC_REC_LEN = 37,
+    VTOC_ECC_OFF = 39,
+    VTOC_ECC_LEN = 41,
+    VTOC_DATA = 13,
+    VHDR_ECC = 0,
+    VHDR_RECORD = 11
+};
+
+// Length of some specific entries w.r.t VPD data.
+enum Length
+{
+    RECORD_NAME = 4,
+    KW_NAME = 2,
+    RECORD_OFFSET = 2,
+    RECORD_MIN = 44,
+    RECORD_LENGTH = 2,
+    RECORD_ECC_OFFSET = 2,
+    VHDR_ECC_LENGTH = 11,
+    VHDR_RECORD_LENGTH = 44
+}; // enum Length
 
 } // namespace constants
 } // namespace vpd
