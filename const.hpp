@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <iostream>
 
 namespace openpower
@@ -103,6 +104,7 @@ constexpr auto i2cPathPrefix = "/sys/bus/i2c/drivers/at24/";
 constexpr auto spiPathPrefix = "/sys/bus/spi/drivers/at25/";
 constexpr auto invItemIntf = "xyz.openbmc_project.Inventory.Item";
 constexpr auto errIntfForSysVPDMismatch = "com.ibm.VPD.Error.SystemVPDMismatch";
+static constexpr std::uintmax_t MAX_VPD_SIZE = 65504;
 
 namespace lengths
 {
