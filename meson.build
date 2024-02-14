@@ -23,37 +23,11 @@ endif
 # Setup googletest before we import any projects that also depend on it to make
 # sure we have control over its configuration
 build_tests = get_option('tests')
-if not build_tests.disabled()
-    gtest_dep = dependency('gtest', main: true, disabler: true, required: false)
-    gmock_dep = dependency('gmock', disabler: true, required: false)
-    if not gtest_dep.found() or not gmock_dep.found()
-        cmake = import('cmake')
-        gtest_opts = cmake.subproject_options()
-        gtest_opts.set_override_option('warning_level', '1')
-        gtest_opts.set_override_option('werror', 'false')
-        gtest_proj = cmake.subproject('googletest',
-                                      options: gtest_opts,
-                                      required: false)
-        if gtest_proj.found()
-            gtest_dep = declare_dependency(
-                dependencies: [
-                    dependency('threads'),
-                    gtest_proj.dependency('gtest'),
-                    gtest_proj.dependency('gtest_main'),
-                ]
-            )
-            gmock_dep = gtest_proj.dependency('gmock')
-        else
-            assert(not get_option('tests').enabled(),
-                   'Googletest is required if tests are enabled')
-        endif
-    endif
-endif
 
 sdbusplus = dependency('sdbusplus', fallback: [ 'sdbusplus', 'sdbusplus_dep' ])
 
 if not build_tests.disabled()
-    #subdir('test')
+    subdir('test')
 endif
 
 compiler = meson.get_compiler('cpp')
