@@ -101,6 +101,7 @@ constexpr auto systemVpdFilePath = "/sys/bus/i2c/drivers/at24/8-0050/eeprom";
 constexpr auto i2cPathPrefix = "/sys/bus/i2c/drivers/at24/";
 constexpr auto spiPathPrefix = "/sys/bus/spi/drivers/at25/";
 constexpr auto invItemIntf = "xyz.openbmc_project.Inventory.Item";
+static constexpr std::uintmax_t MAX_VPD_SIZE = 65504;
 
 namespace lengths
 {
