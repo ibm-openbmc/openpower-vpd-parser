@@ -28,7 +28,7 @@ int main(int, char**)
             std::make_shared<vpd::Manager>(io_con, interface, connection);
         interface->initialize();
 
-        vpd::logging::logMessage("Start VPD-Manager event loop");
+vpd::logging::logMessage("Start VPD-Manager event loop");
 
         // Start event loop.
         io_con->run();
