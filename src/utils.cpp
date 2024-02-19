@@ -5,6 +5,8 @@
 #include "constants.hpp"
 #include "logger.hpp"
 
+#include <gpiod.hpp>
+
 #include <filesystem>
 #include <fstream>
 #include <map>
@@ -481,6 +483,226 @@ nlohmann::json getParsedJson(const std::string& pathToJson)
     {
         throw std::runtime_error("Failed to parse JSON file");
     }
+}
+
+std::optional<bool> isPresent(const nlohmann::json& i_pasredConfigJson,
+                              const std::string& i_vpdFilePath)
+
+{
+    if ((i_pasredConfigJson["frus"][i_vpdFilePath].at(0)).contains("presence"))
+    {
+        if (((i_pasredConfigJson["frus"][i_vpdFilePath].at(0)["presence"])
+                 .contains("pin")) &&
+            ((i_pasredConfigJson["frus"][i_vpdFilePath].at(0)["presence"])
+                 .contains("value")))
+        {
+            // get the pin name
+            const std::string& l_presencePinName =
+                i_pasredConfigJson["frus"][i_vpdFilePath].at(
+                    0)["presence"]["pin"];
+
+            // get the pin value
+            uint8_t l_presencePinValue =
+                i_pasredConfigJson["frus"][i_vpdFilePath].at(
+                    0)["presence"]["value"];
+
+            try
+            {
+                gpiod::line l_presenceLine =
+                    gpiod::find_line(l_presencePinName);
+
+                if (!l_presenceLine)
+                {
+                    logging::logMessage("Presence line not found for " +
+                                        l_presencePinName);
+
+                    /*throw GpioException(
+                        "Couldn't find the presence line for the "
+                        "GPIO. Skipping this GPIO action.");*/
+                }
+
+                l_presenceLine.request({"Read the presence line",
+                                        gpiod::line_request::DIRECTION_INPUT,
+                                        0});
+
+                uint8_t l_gpioData = l_presenceLine.get_value();
+
+                return (l_gpioData == l_presencePinValue);
+            }
+            catch (const std::exception& ex)
+            {
+                std::string errMsg = ex.what();
+                errMsg += " GPIO : " + l_presencePinName;
+
+                if ((i_pasredConfigJson["frus"][i_vpdFilePath].at(
+                         0)["presence"])
+                        .contains("gpioI2CAddress"))
+                {
+                    errMsg += " i2cBusAddress: " +
+                              std::string(
+                                  i_pasredConfigJson["frus"][i_vpdFilePath].at(
+                                      0)["presence"]["gpioI2CAddress"]);
+                }
+
+                // throw GpioException(errMsg);
+            }
+        }
+        else
+        {
+            logging::logMessage(
+                "Config JSON missing required information to detect presence for file " +
+                i_vpdFilePath);
+
+            return false;
+        }
+    }
+    return std::optional<bool>{};
+}
+
+void executePostFailAction(const nlohmann::json& i_pasredConfigJson,
+                           const std::string& i_vpdFilePath)
+{
+    if (!(i_pasredConfigJson["frus"][i_vpdFilePath].at(0).contains(
+            "postActionFail")))
+    {
+        logging::logMessage(
+            "Post fail action flag missing in config JSON. Abort processing");
+        return;
+    }
+
+    uint8_t l_pinValue = 0;
+    std::string l_pinName;
+
+    for (const auto& postAction :
+         (i_pasredConfigJson["frus"][i_vpdFilePath].at(0))["postActionFail"]
+             .items())
+    {
+        if (postAction.key() == "pin")
+        {
+            l_pinName = postAction.value();
+        }
+        else if (postAction.key() == "value")
+        {
+            // Get the value to set
+            l_pinValue = postAction.value();
+        }
+    }
+
+    logging::logMessage("Setting GPIO: " + l_pinName + " to " +
+                        std::string((int)l_pinValue));
+
+    try
+    {
+        gpiod::line l_outputLine = gpiod::find_line(l_pinName);
+
+        if (!l_outputLine)
+        {
+            /* throw GpioException(
+                 "Couldn't find output line for the GPIO. Skipping "
+                 "this GPIO action.");*/
+        }
+        outputLine.request(
+            {"Disable line", ::gpiod::line_request::DIRECTION_OUTPUT, 0},
+            l_pinValue);
+    }
+    catch (const std::exception& ex)
+    {
+        std::string errMsg = ex.what();
+
+        if ((i_pasredConfigJson["frus"][i_vpdFilePath]
+                 .at(0)["postActionFail"]
+                 .contains("gpioI2CAddress")))
+        {
+            errMsg += " GPIO: " + l_pinName + " i2cBusAddress: " +
+                      std::string(i_pasredConfigJson["frus"][i_vpdFilePath].at(
+                          0)["postActionFail"]["gpioI2CAddress"]);
+        }
+
+        // throw GpioException(errMsg);
+    }
+
+    return;
+}
+
+bool executePreAction(const nlohmann::json& i_pasredConfigJson,
+                      const std::string& i_vpdFilePath)
+{
+    auto present = isPresent(i_pasredConfigJson, i_vpdFilePath);
+
+    if (present && !present.value())
+    {
+        return false;
+    }
+
+    if ((i_pasredConfigJson["frus"][i_vpdFilePath].at(0)).contains("preAction"))
+    {
+        if (((i_pasredConfigJson["frus"][i_vpdFilePath].at(0)["preAction"])
+                 .contains("pin")) &&
+            ((i_pasredConfigJson["frus"][i_vpdFilePath].at(0)["preAction"])
+                 .contains("value")))
+        {
+            const std::string& l_pinName =
+                i_pasredConfigJson["frus"][i_vpdFilePath].at(
+                    0)["preAction"]["pin"];
+
+            // Get the value to set
+            uint8_t l_pinValue = i_pasredConfigJson["frus"][i_vpdFilePath].at(
+                0)["preAction"]["value"];
+
+            logging::logMessage("Setting GPIO: " + l_pinName + " to " +
+                                std::string((int)l_pinValue));
+            try
+            {
+                gpiod::line l_outputLine = gpiod::find_line(l_pinName);
+
+                if (!l_outputLine)
+                {
+                    logging::logMessage(
+                        "Couldn't find the line for output pin - " + l_pinName);
+
+                    /*throw GpioException(
+                        "Couldn't find output line for the GPIO. "
+                        "Skipping this GPIO action.");*/
+                }
+
+                outputLine.request({"FRU pre-action",
+                                    ::gpiod::line_request::DIRECTION_OUTPUT, 0},
+                                   l_pinValue);
+            }
+            catch (const std::exception& ex)
+            {
+                std::string errMsg = ex.what();
+                errMsg += " GPIO : " + l_pinName;
+
+                if ((i_pasredConfigJson["frus"][i_vpdFilePath].at(
+                         0)["preAction"])
+                        .contains("gpioI2CAddress"))
+                {
+                    errMsg += " i2cBusAddress: " +
+                              std::string(
+                                  i_pasredConfigJson["frus"][i_vpdFilePath].at(
+                                      0)["preAction"]["gpioI2CAddress"]);
+                }
+
+                // Take failure postAction
+                executePostFailAction(i_pasredConfigJson, i_vpdFilePath);
+                // throw GpioException(errMsg);
+            }
+        }
+        else
+        {
+            logging::logMessage(
+                "Config JSON missing required information for path = " +
+                i_vpdFilePath + "Executing post fail action");
+
+            return false;
+        }
+    }
+    else
+    {
+        logging::logMessage("Pre action not defined for FRU " + i_vpdFilePath);
+    }
+    return true;
 }
 } // namespace utils
 } // namespace vpd

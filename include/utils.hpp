@@ -271,5 +271,49 @@ size_t getVPDOffset(const nlohmann::json& parsedJson,
  * @return Parsed JSON.
  */
 nlohmann::json getParsedJson(const std::string& pathToJson);
+
+/**
+ * @brief Checks for presence of a given FRU.
+ *
+ * This API returns the presence information of the FRU corresponding to the
+ * given EEPROM. If the JSON contains no information about presence detect, this
+ * will return an empty optional. Else it will get the presence GPIO information
+ * from the JSON and return the appropriate present status.
+ * In case of GPIO find/read errors, it will return false.
+ *
+ * @param[in] i_pasredConfigJson - config JSON
+ * @param[in] i_vpdFilePath - EEPROM file path
+ * @return Presence status of the FRU.
+ */
+std::optional<bool> isPresent(const nlohmann::json& i_pasredConfigJson,
+                              const std::string& i_vpdFilePath);
+
+/**
+ * @brief Process post-action flag in config JSON.
+ *
+ * In case there is some error in the processing of pre-action execution, a set
+ * of procedure needs to be done as a part of post fail action. Those will be
+ * handled under this API.
+ *
+ * @param[in] i_pasredConfigJson - config JSON
+ * @param[in] i_vpdFilePath - eeprom file path
+ */
+void executePostFailAction(const nlohmann::json& i_pasredConfigJson,
+                           const std::string& i_vpdFilePath);
+
+/**
+ * @brief Process pre-action flag in config JSON.
+ *
+ * Some FRUs requires some special pre-handling to get the VPD EEPROM visible in
+ * user space. The API perform the necessary action in case the FRU qualifies
+ * for that.
+ *
+ * @param[in] i_pasredConfigJson - config JSON
+ * @param[in] i_vpdFilePath - eeprom file path
+ * @return - success or failure
+ */
+bool executePreAction(const nlohmann::json& i_pasredConfigJson,
+                      const std::string& i_vpdFilePath);
+
 } // namespace utils
 } // namespace vpd

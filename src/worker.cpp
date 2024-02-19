@@ -883,6 +883,12 @@ std::tuple<bool, std::string>
 {
     try
     {
+        // check if the FRU qualifies for pre/post handling.
+        if ((m_parsedJson["frus"][vpdFilePath].at(0)).contains("preAction"))
+        {
+            utils::executePreAction(m_parsedJson, vpdFilePath);
+        }
+
         // TODO: Special handling for FRUs eg: pre/post actions.
         if (!std::filesystem::exists(vpdFilePath))
         {
