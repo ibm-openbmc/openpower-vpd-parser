@@ -25,20 +25,18 @@ Worker::Worker(std::string pathToConfigJson) :
     // Implies the processing is based on some config JSON
     if (!m_configJsonPath.empty())
     {
-        auto jsonToParse = m_configJsonPath;
-
         // Check if symlink is already there to confirm fresh boot/factory
         // reset.
         if (std::filesystem::exists(INVENTORY_JSON_SYM_LINK))
         {
             logging::logMessage("Sym Link already present");
-            jsonToParse = INVENTORY_JSON_SYM_LINK;
+            m_configJsonPath = INVENTORY_JSON_SYM_LINK;
             m_isSymlinkPresent = true;
         }
 
         try
         {
-            m_parsedJson = utils::getParsedJson(jsonToParse);
+            m_parsedJson = utils::getParsedJson(m_configJsonPath);
 
             // check for mandatory fields at this point itself.
             if (!m_parsedJson.contains("frus"))
@@ -48,7 +46,7 @@ Worker::Worker(std::string pathToConfigJson) :
         }
         catch (const std::exception& ex)
         {
-            throw(JsonException(ex.what(), jsonToParse));
+            throw(JsonException(ex.what(), m_configJsonPath));
         }
     }
     else
@@ -877,11 +875,99 @@ void Worker::publishSystemVPD(const types::VPDMapVariant& parsedVpdMap)
     }
 }
 
+bool Worker::processPreAction(const std::string& i_vpdFilePath,
+                              const std::string& i_flagToProcess)
+{
+    if (i_vpdFilePath.empty() || i_flagToProcess.empty())
+    {
+        logging::logMessage(
+            "Invalid input parameter. Abort processing pre action");
+        return false;
+    }
+
+    if ((!utils::executePreAction(m_parsedJson, i_vpdFilePath,
+                                  i_flagToProcess)) &&
+        (i_flagToProcess.compare("collection") == constants::STR_CMP_SUCCESS))
+    {
+        // TODO: Need a way to delete inventory object from Dbus and persisted
+        // data section in case any FRU is not present or there is any
+        // problem in collecting it. Once it has been deleted, it can be
+        // re-created in the flow of priming the inventory. This needs to be
+        // done either here or in the exception section of "parseAndPublishVPD"
+        // API. Any failure in the process of collecting FRU will land up in the
+        // excpetion of "parseAndPublishVPD".
+
+        // If the FRU is not there, clear the VINI/CCIN data.
+        // Enity manager probes for this keyword to look for this
+        // FRU, now if the data is persistent on BMC and FRU is
+        // removed this can lead to ambiguity. Hence clearing this
+        // Keyword if FRU is absent.
+        const auto& inventoryPath =
+            m_parsedJson["frus"][i_vpdFilePath].at(0).value("inventoryPath",
+                                                            "");
+
+        if (!inventoryPath.empty())
+        {
+            types::ObjectMap l_pimObjMap{
+                {inventoryPath,
+                 {{constants::kwdVpdInf,
+                   {{constants::kwdCCIN, types::BinaryVector{}}}}}}};
+
+            if (!utils::callPIM(std::move(l_pimObjMap)))
+            {
+                logging::logMessage("Call to PIM failed for file " +
+                                    i_vpdFilePath);
+            }
+        }
+        else
+        {
+            logging::logMessage("Inventory path is empty in Json for file " +
+                                i_vpdFilePath);
+        }
+
+        return false;
+    }
+    return true;
+}
+
 types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
 {
-    // TODO: Special handling for FRUs eg: pre/post actions.
+    if (i_vpdFilePath.empty())
+    {
+        throw std::runtime_error(
+            "Empty VPD file path passed to Worker::parseVpdFile. Abort processing");
+    }
+
+    bool l_isPostFailActionRequired = false;
+
+    // check if the FRU qualifies for pre/post handling.
+    if ((m_parsedJson["frus"][i_vpdFilePath].at(0)).contains("preAction"))
+    {
+        if (processPreAction(i_vpdFilePath, "collection"))
+        {
+            l_isPostFailActionRequired = true;
+        }
+        else
+        {
+            throw std::runtime_error("Pre-Action failed for path " +
+                                     i_vpdFilePath +
+                                     " Aborting collection for this FRU");
+        }
+    }
+
     if (!std::filesystem::exists(i_vpdFilePath))
     {
+        if (l_isPostFailActionRequired)
+        {
+            if (!utils::executePostFailAction(m_parsedJson, i_vpdFilePath,
+                                              "collection"))
+            {
+                throw std::runtime_error("Post fail action failed for path " +
+                                         i_vpdFilePath +
+                                         " Aborting collection for this FRU");
+            }
+        }
+
         throw std::runtime_error("Could not find file path " + i_vpdFilePath +
                                  "Skipping parser trigger for the EEPROM");
     }
@@ -919,12 +1005,23 @@ std::tuple<bool, std::string>
             // TODO: Add custom handling
             logging::logMessage(ex.what());
         }
-
-        if (typeid(ex) == std::type_index(typeid(EccException)))
+        else if (typeid(ex) == std::type_index(typeid(EccException)))
         {
             // TODO: Add custom handling
             logging::logMessage(ex.what());
         }
+        else if (typeid(ex) == std::type_index(typeid(JsonException)))
+        {
+            // TODO: Add custom handling
+            logging::logMessage(ex.what());
+        }
+        else
+        {
+            logging::logMessage(ex.what());
+        }
+
+        // TODO: before returning, we should prime the inventry for FRUs which
+        // are not present/processing had some error.
         return std::make_tuple(false, i_vpdFilePath);
     }
     return std::make_tuple(true, i_vpdFilePath);

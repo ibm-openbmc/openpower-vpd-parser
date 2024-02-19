@@ -1,5 +1,9 @@
 gtest_dep = dependency('gtest', main: true, disabler: true, required: false)
 gmock_dep = dependency('gmock', disabler: true, required: false)
+libgpiodcxx = dependency(
+            'libgpiodcxx',
+            default_options: ['bindings=cxx'],
+        )
 if not gtest_dep.found() or not gmock_dep.found()
     cmake = import('cmake')
     gtest_opts = cmake.subproject_options()
@@ -25,7 +29,7 @@ if not gtest_dep.found() or not gmock_dep.found()
   endif
 endif
 
-dependency_list = [gtest_dep, gmock_dep, sdbusplus]
+dependency_list = [gtest_dep, gmock_dep, sdbusplus, libgpiodcxx]
 
 configuration_inc = include_directories('..', '../include', '../vpdecc')
 

@@ -58,6 +58,11 @@ libvpdecc = shared_library(
     install: true,
 )
 
+libgpiodcxx = dependency(
+            'libgpiodcxx',
+            default_options: ['bindings=cxx'],
+        )
+
 common_SOURCES = ['src/logger.cpp',
                   'src/utils.cpp',
                   'src/parser_factory.cpp',
@@ -71,7 +76,7 @@ vpd_manager_SOURCES = ['src/manager_main.cpp',
                     'src/manager.cpp',
                     ] + common_SOURCES
 
-parser_dependencies = [sdbusplus]
+parser_dependencies = [sdbusplus, libgpiodcxx]
 
 parser_build_arguments = []
 if get_option('ibm_system').enabled()

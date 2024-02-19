@@ -271,5 +271,94 @@ size_t getVPDOffset(const nlohmann::json& parsedJson,
  * @return Parsed JSON.
  */
 nlohmann::json getParsedJson(const std::string& pathToJson);
+
+/**
+ * @brief Process "systemCmd" tag for a given FRU.
+ *
+ * The API will process "systemCmd" tag if it is defined in the config
+ * JSON for the given FRU.
+ *
+ * @param[in] i_parsedConfigJson - config JSON
+ * @param[in] i_vpdFilePath - EEPROM file path
+ * @param[in] i_baseAction - Base action for which this tag has been called.
+ * @param[in] i_flagToProcess - Flag nested under the base action for which this
+ * tag has been called.
+ * @return Execution status.
+ */
+bool processSystemCmdTag(const nlohmann::json& i_parsedConfigJson,
+                         const std::string& i_vpdFilePath,
+                         const std::string& i_baseAction,
+                         const std::string& i_flagToProcess);
+
+/**
+ * @brief Checks for presence of a given FRU using GPIO line.
+ *
+ * This API returns the presence information of the FRU corresponding to the
+ * given VPD file path by setting the presence pin.
+ *
+ * @param[in] i_parsedConfigJson - config JSON
+ * @param[in] i_vpdFilePath - EEPROM file path
+ * @param[in] i_baseAction - Base action for which this tag has been called.
+ * @param[in] i_flagToProcess - Flag nested under the base action for which this
+ * tag has been called.
+ * @return Execution status.
+ */
+bool processGpioPresenceTag(const nlohmann::json& i_parsedConfigJson,
+                            const std::string& i_vpdFilePath,
+                            const std::string& i_baseAction,
+                            const std::string& i_flagToProcess);
+
+/**
+ * @brief Process "setGpio" tag for a given FRU.
+ *
+ * This API enables the GPIO line.
+ *
+ * @param[in] i_parsedConfigJson - config JSON
+ * @param[in] i_vpdFilePath - EEPROM file path
+ * @param[in] i_baseAction - Base action for which this tag has been called.
+ * @param[in] i_flagToProcess - Flag nested under the base action for which this
+ * tag has been called.
+ * @return Execution status.
+ */
+bool procesSetGpioTag(const nlohmann::json& i_parsedConfigJson,
+                      const std::string& i_vpdFilePath,
+                      const std::string& i_baseAction,
+                      const std::string& i_flagToProcess);
+
+/**
+ * @brief Process "PostFailAction" defined in config JSON.
+ *
+ * In case there is some error in the processing of "preAction" execution and a
+ * set of procedure needs to be done as a part of post fail action. This base
+ * action can be defined in the config JSON for that FRU and it will be handled
+ * under this API.
+ *
+ * @param[in] i_parsedConfigJson - config JSON
+ * @param[in] i_vpdFilePath - EEPROM file path
+ * @param[in] i_flagToProcess - To identify which flag(s) needs to be processed
+ * under PostFailAction tag of config JSON.
+ * @return - success or failure
+ */
+bool executePostFailAction(const nlohmann::json& i_parsedConfigJson,
+                           const std::string& i_vpdFilePath,
+                           const std::string& i_flagToProcess);
+
+/**
+ * @brief Process "PreAction" defined in config JSON.
+ *
+ * If any FRU(s) requires any special pre-handling, then this base action can be
+ * defined for that FRU in the config JSON, processing of which will be handled
+ * in this API.
+ *
+ * @param[in] i_parsedConfigJson - config JSON
+ * @param[in] i_vpdFilePath - EEPROM file path
+ * @param[in] i_flagToProcess - To identify which flag(s) needs to be processed
+ * under PreAction tag of config JSON.
+ * @return - success or failure
+ */
+bool executePreAction(const nlohmann::json& i_parsedConfigJson,
+                      const std::string& i_vpdFilePath,
+                      const std::string& i_flagToProcess);
+
 } // namespace utils
 } // namespace vpd

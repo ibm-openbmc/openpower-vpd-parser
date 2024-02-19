@@ -876,24 +876,28 @@
         "/sys/bus/i2c/drivers/at24/7-0051/eeprom": [
             {
                 "inventoryPath": "/system/chassis/motherboard/lcd_op_panel_hill",
-                "devAddress": "7-0051",
-                "driverType": "at24",
-                "busType": "i2c",
-                "presence": {
-                    "pollingRequired": true,
-                    "pin": "RUSSEL_OPPANEL_PRESENCE_N",
-                    "value": 0,
-                    "gpioI2CAddress": "0-0020"
-                },
                 "preAction": {
-                    "pin": "RUSSEL_FW_I2C_ENABLE_N",
-                    "value": 0,
-                    "gpioI2CAddress": "0-0020"
+                    "collection": {
+                        "gpioPresence": {
+                            "pin": "RUSSEL_OPPANEL_PRESENCE_N",
+                            "value": 0
+                        },
+                        "setGpio": {
+                            "pin": "RUSSEL_FW_I2C_ENABLE_N",
+                            "value": 0
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 7-0051 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "RUSSEL_FW_I2C_ENABLE_N",
-                    "value": 1,
-                    "gpioI2CAddress": "0-0020"
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "RUSSEL_FW_I2C_ENABLE_N",
+                            "value": 1
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Panel": null,
@@ -1550,21 +1554,27 @@
         "/sys/bus/i2c/drivers/at24/4-0050/eeprom": [
             {
                 "inventoryPath": "/system/chassis/motherboard/pcieslot0/pcie_card0",
-                "devAddress": "4-0050",
                 "pcaChipAddress": "4-0060",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "concurrentlyMaintainable": true,
                 "preAction": {
-                    "pin": "SLOT0_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "3-0061"
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT0_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 4-0050 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT0_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "3-0061"
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT0_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -1618,21 +1628,27 @@
         "/sys/bus/i2c/drivers/at24/5-0050/eeprom": [
             {
                 "inventoryPath": "/system/chassis/motherboard/pcieslot3/pcie_card3",
-                "devAddress": "5-0050",
                 "pcaChipAddress": "5-0060",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "concurrentlyMaintainable": true,
                 "preAction": {
-                    "pin": "SLOT3_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "3-0061"
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT3_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 5-0050 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT3_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "3-0061"
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT3_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -1686,21 +1702,27 @@
         "/sys/bus/i2c/drivers/at24/5-0051/eeprom": [
             {
                 "inventoryPath": "/system/chassis/motherboard/pcieslot4/pcie_card4",
-                "devAddress": "5-0051",
                 "pcaChipAddress": "5-0061",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "concurrentlyMaintainable": true,
                 "preAction": {
-                    "pin": "SLOT4_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "3-0061"
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT4_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 5-0051 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT4_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "3-0061"
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT4_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -1754,21 +1776,27 @@
         "/sys/bus/i2c/drivers/at24/11-0050/eeprom": [
             {
                 "inventoryPath": "/system/chassis/motherboard/pcieslot10/pcie_card10",
-                "devAddress": "11-0050",
                 "pcaChipAddress": "11-0060",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "concurrentlyMaintainable": true,
                 "preAction": {
-                    "pin": "SLOT10_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "8-0061"
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT10_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 11-0050 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT10_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "8-0061"
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT10_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -1882,21 +1910,27 @@
         "/sys/bus/i2c/drivers/at24/4-0052/eeprom": [
             {
                 "inventoryPath": "/system/chassis/motherboard/pcieslot2/pcie_card2",
-                "devAddress": "4-0052",
                 "pcaChipAddress": "4-0062",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "concurrentlyMaintainable": true,
                 "preAction": {
-                    "pin": "SLOT2_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "3-0061"
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT2_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 4-0052 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT2_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "3-0061"
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT2_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -1919,20 +1953,26 @@
         "/sys/bus/i2c/drivers/at24/6-0053/eeprom": [
             {
                 "inventoryPath": "/system/chassis/motherboard/pcieslot6/pcie_card6",
-                "devAddress": "6-0053",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "concurrentlyMaintainable": true,
                 "preAction": {
-                    "pin": "SLOT6_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "8-0061"
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT6_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 6-0053 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT6_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "8-0061"
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT6_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -1948,21 +1988,27 @@
         "/sys/bus/i2c/drivers/at24/6-0052/eeprom": [
             {
                 "inventoryPath": "/system/chassis/motherboard/pcieslot7/pcie_card7",
-                "devAddress": "6-0052",
                 "pcaChipAddress": "6-0062",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "concurrentlyMaintainable": true,
                 "preAction": {
-                    "pin": "SLOT7_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "8-0061"
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT7_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 6-0052 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT7_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "8-0061"
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT7_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -1985,21 +2031,27 @@
         "/sys/bus/i2c/drivers/at24/6-0050/eeprom": [
             {
                 "inventoryPath": "/system/chassis/motherboard/pcieslot9/pcie_card9",
-                "devAddress": "6-0050",
                 "pcaChipAddress": "6-0060",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "concurrentlyMaintainable": true,
                 "preAction": {
-                    "pin": "SLOT9_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "8-0061"
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT9_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 6-0050 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT9_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "8-0061"
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT9_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -2022,21 +2074,27 @@
         "/sys/bus/i2c/drivers/at24/11-0051/eeprom": [
             {
                 "inventoryPath": "/system/chassis/motherboard/pcieslot11/pcie_card11",
-                "devAddress": "11-0051",
                 "pcaChipAddress": "11-0061",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "concurrentlyMaintainable": true,
                 "preAction": {
-                    "pin": "SLOT11_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "8-0061"
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT11_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 11-0051 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT11_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "8-0061"
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT11_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -2120,21 +2178,27 @@
         "/sys/bus/i2c/drivers/at24/4-0051/eeprom": [
             {
                 "inventoryPath": "/system/chassis/motherboard/pcieslot1/pcie_card1",
-                "devAddress": "4-0051",
                 "pcaChipAddress": "4-0061",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "concurrentlyMaintainable": true,
                 "preAction": {
-                    "pin": "SLOT1_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "3-0061"
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT1_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 4-0051 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT1_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "3-0061"
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT1_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -2157,21 +2221,27 @@
         "/sys/bus/i2c/drivers/at24/6-0051/eeprom": [
             {
                 "inventoryPath": "/system/chassis/motherboard/pcieslot8/pcie_card8",
-                "devAddress": "6-0051",
                 "pcaChipAddress": "6-0061",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "concurrentlyMaintainable": true,
                 "preAction": {
-                    "pin": "SLOT8_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "8-0061"
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT8_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 6-0051 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT8_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "8-0061"
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT8_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,

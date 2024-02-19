@@ -306,6 +306,39 @@ class Worker
     void primeInventory(const types::IPZVpdMap& ipzVpdMap,
                         types::ObjectMap primeObjects);
 
+    /**
+     * @brief API to process preAction(base_action) defined in config JSON.
+     *
+     * @note sequence of tags under any given flag of preAction is EXTREMELY
+     * important to ensure proper processing. The API will process all the
+     * nested items under the base action sequentially. Also if any of the tag
+     * processing fails, the code will not process remaining tags under the
+     * flag.
+     * ******** sample format **************
+     * fru EEPROM path: {
+     *     base_action: {
+     *         flag1: {
+     *           tag1: {
+     *            },
+     *           tag2: {
+     *            }
+     *         }
+     *         flag2: {
+     *           tags: {
+     *            }
+     *         }
+     *     }
+     * }
+     * *************************************
+     *
+     * @param[in] i_vpdFilePath - Path to the EEPROM file.
+     * @param[in] i_flagToProcess - To identify which flag(s) needs to be
+     * processed under PreAction tag of config JSON.
+     * @return Execution status.
+     */
+    bool processPreAction(const std::string& i_vpdFilePath,
+                          const std::string& i_flagToProcess);
+
     // Parsed JSON file.
     nlohmann::json m_parsedJson{};
 
@@ -313,6 +346,6 @@ class Worker
     bool m_isSymlinkPresent = false;
 
     // Path to config JSON if applicable.
-    const std::string& m_configJsonPath;
+    std::string& m_configJsonPath;
 };
 } // namespace vpd
