@@ -3,7 +3,9 @@
 #include <sdbusplus/asio/property.hpp>
 #include <sdbusplus/server.hpp>
 
+#include <tuple>
 #include <unordered_map>
+#include <variant>
 
 namespace vpd
 {
@@ -92,5 +94,21 @@ using HWVerList = std::vector<std::pair<std::string, std::string>>;
 using SystemTypeMap =
     std::unordered_map<std::string, std::pair<std::string, HWVerList>>;
 
+using Path = std::string;
+using Record = std::string;
+using Keyword = std::string;
+
+using IpzData = std::tuple<Record, Keyword, BinaryVector>;
+using KwData = std::tuple<Keyword, BinaryVector>;
+
+using ReadVpdParams = std::variant<std::tuple<Record, Keyword>, Keyword>;
+using VpdData = std::variant<IpzData, KwData>;
+
+enum class VpdTarget
+{
+        Cache = 0,
+        Hardware = 1,
+        CacheAndHardware = 2
+};
 } // namespace types
 } // namespace vpd

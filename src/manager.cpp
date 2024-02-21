@@ -5,6 +5,7 @@
 #include "logger.hpp"
 
 #include <boost/asio/steady_timer.hpp>
+#include <sdbusplus/message.hpp>
 
 namespace vpd
 {
@@ -26,11 +27,53 @@ Manager::Manager(
         // set async timer to detect if system VPD is published on D-Bus.
         SetTimerToDetectSVPDOnDbus();
 #endif
-        // TBD: register interface(s) for exposed APIs here.
+
+        // Register methods under com.ibm.VPD.Manager interface
+        iFace->register_method("WriteKeyword",
+                               [this](const types::Path i_path,
+                                      const types::VpdData i_data,
+                                      const uint8_t i_target) {
+            this->updateKeyword(i_path, i_data, i_target);
+        });
+
+        iFace->register_method(
+            "ReadKeyword",
+            [this](const types::Path i_path, const types::VpdData i_data,
+                   const uint8_t i_target) -> types::BinaryVector {
+            return this->readKeyword(i_path, i_data, i_target);
+        });
+
+        iFace->register_method(
+            "CollectFRUVPD",
+            [this](const sdbusplus::message::object_path& i_dbusObjPath) {
+            this->collectSingleFruVpd(i_dbusObjPath);
+        });
+
+        iFace->register_method(
+            "deleteFRUVPD",
+            [this](const sdbusplus::message::object_path& i_dbusObjPath) {
+            this->deleteSingleFruVpd(i_dbusObjPath);
+        });
+
+        iFace->register_method(
+            "GetExpandedLocationCode",
+            [this](const sdbusplus::message::object_path& i_dbusObjPath)
+                -> std::string {
+            return this->getExpandedLocationCode(i_dbusObjPath);
+        });
+
+        iFace->register_method(
+            "GetHardwarePath",
+            [this](const sdbusplus::message::object_path& i_dbusObjPath)
+                -> std::string { return this->getHwPath(i_dbusObjPath); });
+
+        iFace->register_method("PerformVPDRecollection",
+                               [this]() { this->performVPDRecollection(); });
     }
     catch (const std::exception& e)
     {
-        logging::logMessage("VPD-Manager service failed.");
+        logging::logMessage("VPD-Manager service failed. " +
+                            std::string(e.what()));
         throw;
     }
 }
@@ -68,4 +111,64 @@ void Manager::SetTimerToDetectSVPDOnDbus()
     });
 }
 #endif
+
+void Manager::updateKeyword(const types::Path i_path,
+                            const types::VpdData i_data, const uint8_t i_target)
+{
+    // Dummy code to supress unused variable warning.
+    std::cout << "\nFRU path " << i_path;
+    std::cout << "\nData " << i_data.index();
+    std::cout << "\nTarget = " << static_cast<int>(i_target);
+
+    // On success return nothing. On failure throw error.
+}
+
+types::BinaryVector Manager::readKeyword(const types::Path i_path,
+                                         const types::VpdData i_data,
+                                         const uint8_t i_target)
+{
+    // Dummy code to supress unused variable warning. To be removed.
+    std::cout << "\nFRU path " << i_path;
+    std::cout << "\nData " << i_data.index();
+    std::cout << "\nTarget = " << static_cast<int>(i_target);
+
+    // On success return the value read. On failure throw error.
+
+    return types::BinaryVector();
+}
+
+void Manager::collectSingleFruVpd(
+    const sdbusplus::message::object_path& i_dbusObjPath)
+{
+    // Dummy code to supress unused variable warning. To be removed.
+    logging::logMessage(std::string(i_dbusObjPath));
+}
+
+void Manager::deleteSingleFruVpd(
+    const sdbusplus::message::object_path& i_dbusObjPath)
+{
+    // Dummy code to supress unused variable warning. To be removed.
+    logging::logMessage(std::string(i_dbusObjPath));
+}
+
+std::string Manager::getExpandedLocationCode(
+    const sdbusplus::message::object_path& i_dbusObjPath)
+{
+    // Dummy code to supress unused variable warning. To be removed.
+    logging::logMessage(std::string(i_dbusObjPath));
+
+    return std::string{};
+}
+
+std::string
+    Manager::getHwPath(const sdbusplus::message::object_path& i_dbusObjPath)
+{
+    // Dummy code to supress unused variable warning. To be removed.
+    logging::logMessage(std::string(i_dbusObjPath));
+
+    return std::string{};
+}
+
+void Manager::performVPDRecollection() {}
+
 } // namespace vpd
