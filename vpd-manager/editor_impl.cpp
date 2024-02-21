@@ -8,6 +8,7 @@
 #include "parser_factory.hpp"
 #include "vpd_exceptions.hpp"
 
+#include <filesystem>
 #include <phosphor-logging/elog-errors.hpp>
 #include <xyz/openbmc_project/Common/error.hpp>
 
