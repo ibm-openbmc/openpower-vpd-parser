@@ -565,6 +565,7 @@ void EditorImpl::updateKeyword(const Binary& kwdData, uint32_t offset,
         enableRebootGuard();
 
         Binary completeVPDFile;
+	std::cout<<""
         vpdFileStream.exceptions(std::ifstream::badbit |
                                  std::ifstream::failbit);
         try
