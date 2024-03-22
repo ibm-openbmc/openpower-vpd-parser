@@ -32,14 +32,6 @@ enum vpdType
  */
 static vpdType vpdTypeCheck(const types::BinaryVector& i_vpdVector)
 {
-    // Read first 3 Bytes to check the 11S bar code format
-    std::string l_is11SFormat;
-    for (uint8_t l_index = 0; l_index < constants::FORMAT_11S_LEN; l_index++)
-    {
-        l_is11SFormat +=
-            i_vpdVector[constants::MEMORY_VPD_DATA_START + l_index];
-    }
-
     if (i_vpdVector[constants::IPZ_DATA_START] == constants::IPZ_DATA_START_TAG)
     {
         return vpdType::IPZ_VPD;
@@ -51,21 +43,39 @@ static vpdType vpdTypeCheck(const types::BinaryVector& i_vpdVector)
     }
     else if (((i_vpdVector[constants::SPD_BYTE_3] &
                constants::SPD_BYTE_BIT_0_3_MASK) ==
-              constants::SPD_MODULE_TYPE_DDIMM) &&
-             (l_is11SFormat.compare(constants::MEMORY_VPD_START_TAG) == 0))
+              constants::SPD_MODULE_TYPE_DDIMM))
     {
-        // DDIMM memory VPD format
-        if ((i_vpdVector[constants::SPD_BYTE_2] & constants::SPD_BYTE_MASK) ==
-            constants::SPD_DRAM_TYPE_DDR5)
+        std::string l_is11SFormat;
+        if (i_vpdVector.size() > (constants::DDIMM_11S_BARCODE_START +
+                                  constants::DDIMM_11S_BARCODE_LEN))
         {
-            return vpdType::DDR5_DDIMM_MEMORY_VPD;
+            // Read first 3 Bytes to check the 11S bar code format
+            for (uint8_t l_index = 0; l_index < constants::DDIMM_11S_FORMAT_LEN;
+                 l_index++)
+            {
+                l_is11SFormat +=
+                    i_vpdVector[constants::DDIMM_11S_BARCODE_START + l_index];
+            }
         }
 
-        if ((i_vpdVector[constants::SPD_BYTE_2] & constants::SPD_BYTE_MASK) ==
-            constants::SPD_DRAM_TYPE_DDR4)
+        if (l_is11SFormat.compare(constants::DDIMM_11S_BARCODE_START_TAG) == 0)
         {
-            return vpdType::DDR4_DDIMM_MEMORY_VPD;
+            // DDIMM memory VPD format
+            if ((i_vpdVector[constants::SPD_BYTE_2] &
+                 constants::SPD_BYTE_MASK) == constants::SPD_DRAM_TYPE_DDR5)
+            {
+                return vpdType::DDR5_DDIMM_MEMORY_VPD;
+            }
+
+            if ((i_vpdVector[constants::SPD_BYTE_2] &
+                 constants::SPD_BYTE_MASK) == constants::SPD_DRAM_TYPE_DDR4)
+            {
+                return vpdType::DDR4_DDIMM_MEMORY_VPD;
+            }
         }
+
+        logging::logMessage("11S format is not found in the DDIMM VPD.");
+        return vpdType::INVALID_VPD_FORMAT;
     }
     else if ((i_vpdVector[constants::SPD_BYTE_2] & constants::SPD_BYTE_MASK) ==
              constants::SPD_DRAM_TYPE_DDR5)

@@ -230,7 +230,8 @@ void DdimmVpdParser::readKeywords(
 
     m_parsedVpdMap.emplace("MemorySizeInKB", l_dimmSize);
     // point the i_iterator to DIMM data and skip "11S"
-    advance(i_iterator, constants::MEMORY_VPD_DATA_START + 3);
+    advance(i_iterator, constants::DDIMM_11S_BARCODE_START +
+                            constants::DDIMM_11S_FORMAT_LEN);
     types::BinaryVector l_partNumber(i_iterator,
                                      i_iterator + constants::PART_NUM_LEN);
 

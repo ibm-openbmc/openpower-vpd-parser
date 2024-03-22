@@ -1,5 +1,6 @@
 #pragma once
 
+#include "logger.hpp"
 #include "parser_interface.hpp"
 #include "types.hpp"
 

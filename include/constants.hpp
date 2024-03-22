@@ -17,9 +17,10 @@ static constexpr uint8_t ALT_KW_VPD_PAIR_START_TAG = 0x90;
 static constexpr uint8_t KW_VPD_END_TAG = 0x78;
 static constexpr uint8_t KW_VAL_PAIR_END_TAG = 0x79;
 
-static constexpr auto MEMORY_VPD_DATA_START = 416;
-static constexpr auto MEMORY_VPD_START_TAG = "11S";
-static constexpr auto FORMAT_11S_LEN = 3;
+static constexpr auto DDIMM_11S_BARCODE_START = 416;
+static constexpr auto DDIMM_11S_BARCODE_START_TAG = "11S";
+static constexpr auto DDIMM_11S_FORMAT_LEN = 3;
+static constexpr auto DDIMM_11S_BARCODE_LEN = 26;
 static constexpr auto PART_NUM_LEN = 7;
 static constexpr auto SERIAL_NUM_LEN = 12;
 static constexpr auto CCIN_LEN = 4;
