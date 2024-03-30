@@ -300,11 +300,10 @@ class Worker
     /**
      * @brief API to prime inventory Objects.
      *
-     * @param[in] ipzVpdMap - IPZ VPD parsed map.
-     * @param[out] primeObjects - OBject map to hold primed objects.
+     * @param[in] i_vpdFilePath - EEPROM file path.
+     * @return true if the prime inventory is success, false otherwise.
      */
-    void primeInventory(const types::IPZVpdMap& ipzVpdMap,
-                        types::ObjectMap primeObjects);
+    bool primeInventory(const std::string& i_vpdFilePath);
 
     /**
      * @brief API to process preAction(base_action) defined in config JSON.

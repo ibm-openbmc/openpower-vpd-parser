@@ -553,6 +553,7 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                 {
                     std::string value = utils::getExpandedLocationCode(
                         propValuePair.value().get<std::string>(), parsedVpdMap);
+                    propertyMap.emplace(property, value);
                 }
                 else
                 {
@@ -651,12 +652,64 @@ bool Worker::isCPUIOGoodOnly(const std::string& pgKeyword)
     return false;
 }
 
-void Worker::primeInventory(const types::IPZVpdMap& ipzVpdMap,
-                            types::ObjectMap primeObjects)
+bool Worker::primeInventory(const std::string& i_vpdFilePath)
 {
-    // TODO implementation
-    (void)ipzVpdMap;
-    (void)primeObjects;
+    logging::logMessage("primeInventory called for FRU " + i_vpdFilePath);
+
+    if (i_vpdFilePath.empty())
+    {
+        logging::logMessage("Empty VPD file path given");
+        return false;
+    }
+
+    if (m_parsedJson.empty())
+    {
+        logging::logMessage("Empty JSON detected for " + i_vpdFilePath);
+        return false;
+    }
+
+    types::ObjectMap l_objectInterfaceMap;
+    for (const auto& l_Fru : m_parsedJson["frus"][i_vpdFilePath])
+    {
+        types::InterfaceMap l_interfaces;
+        sdbusplus::message::object_path l_fruObjectPath(l_Fru["inventoryPath"]);
+
+        // Add extra interfaces mentioned in the Json config file
+        if (l_Fru.contains("extraInterfaces"))
+        {
+            populateInterfaces(l_Fru["extraInterfaces"], l_interfaces,
+                               std::monostate{});
+        }
+
+        types::PropertyMap l_propertyValueMap;
+        l_propertyValueMap.emplace("Present", false);
+        if (std::filesystem::exists(i_vpdFilePath))
+        {
+            l_propertyValueMap["Present"] = true;
+        }
+
+        utils::insertOrMerge(l_interfaces, "xyz.openbmc_project.Inventory.Item",
+                             move(l_propertyValueMap));
+
+        if (l_Fru.value("inherit", true) &&
+            m_parsedJson.contains("commonInterfaces"))
+        {
+            populateInterfaces(m_parsedJson["commonInterfaces"], l_interfaces,
+                               std::monostate{});
+        }
+
+        l_objectInterfaceMap.emplace(std::move(l_fruObjectPath),
+                                     std::move(l_interfaces));
+    }
+
+    // Notify PIM
+    if (!utils::callPIM(move(l_objectInterfaceMap)))
+    {
+        logging::logMessage("Call to PIM failed for VPD file " + i_vpdFilePath);
+        return false;
+    }
+
+    return true;
 }
 
 void Worker::processEmbeddedAndSynthesizedFrus(const nlohmann::json& singleFru,
@@ -856,13 +909,9 @@ void Worker::publishSystemVPD(const types::VPDMapVariant& parsedVpdMap)
 {
     types::ObjectMap objectInterfaceMap;
 
-    if (auto ipzVpdMap = std::get_if<types::IPZVpdMap>(&parsedVpdMap))
+    if (std::get_if<types::IPZVpdMap>(&parsedVpdMap))
     {
         populateDbus(parsedVpdMap, objectInterfaceMap, SYSTEM_VPD_FILE_PATH);
-        types::ObjectMap primeObjects;
-        primeInventory(*ipzVpdMap, primeObjects);
-        objectInterfaceMap.insert(primeObjects.begin(), primeObjects.end());
-
         // Notify PIM
         if (!utils::callPIM(move(objectInterfaceMap)))
         {
@@ -1020,8 +1069,14 @@ std::tuple<bool, std::string>
             logging::logMessage(ex.what());
         }
 
-        // TODO: before returning, we should prime the inventry for FRUs which
+        // Prime the inventry for FRUs which
         // are not present/processing had some error.
+        if (!primeInventory(i_vpdFilePath))
+        {
+            logging::logMessage("Priming of inventory failed for FRU " +
+                                i_vpdFilePath);
+        }
+
         return std::make_tuple(false, i_vpdFilePath);
     }
     return std::make_tuple(true, i_vpdFilePath);

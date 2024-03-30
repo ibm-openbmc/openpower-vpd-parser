@@ -85,7 +85,7 @@ using PoundKwSize = uint16_t;
 
 using RecordOffsetList = std::vector<uint32_t>;
 
-using VPDMapVariant = std::variant<IPZVpdMap, KeywordVpdMap>;
+using VPDMapVariant = std::variant<std::monostate, IPZVpdMap, KeywordVpdMap>;
 
 using HWVerList = std::vector<std::pair<std::string, std::string>>;
 /**
