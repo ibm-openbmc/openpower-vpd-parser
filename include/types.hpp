@@ -74,14 +74,16 @@ using InterfaceMap = std::map<std::string, PropertyMap>;
 using ObjectMap = std::map<sdbusplus::message::object_path, InterfaceMap>;
 
 using KwSize = uint8_t;
+using KwDataOffset = uint16_t;
 using RecordId = uint8_t;
 using RecordSize = uint16_t;
 using RecordType = uint16_t;
 using RecordOffset = uint16_t;
 using RecordLength = uint16_t;
-using ECCOffset = uint16_t;
-using ECCLength = uint16_t;
+using EccOffset = uint16_t;
+using EccLength = uint16_t;
 using PoundKwSize = uint16_t;
+using LE2ByteData = uint16_t;
 
 using RecordOffsetList = std::vector<uint32_t>;
 
