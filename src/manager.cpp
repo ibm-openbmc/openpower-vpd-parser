@@ -2,10 +2,15 @@
 
 #include "manager.hpp"
 
+#include "exceptions.hpp"
 #include "logger.hpp"
+#include "parser.hpp"
+#include "utils.hpp"
 
 #include <boost/asio/steady_timer.hpp>
 #include <sdbusplus/message.hpp>
+
+#include <fstream>
 
 namespace vpd
 {
@@ -28,12 +33,21 @@ Manager::Manager(
         SetTimerToDetectSVPDOnDbus();
 #endif
 
+        try
+        {
+            // Create VPD JSON Object
+            m_jsonObj = utils::getParsedJson(INVENTORY_JSON_SYM_LINK);
+        }
+        catch (...)
+        {
+            m_jsonObj = nlohmann::json();
+        }
+
         // Register methods under com.ibm.VPD.Manager interface
-        iFace->register_method("WriteKeyword",
-                               [this](const types::Path i_path,
-                                      const types::VpdData i_data,
-                                      const uint8_t i_target) {
-            this->updateKeyword(i_path, i_data, i_target);
+        iFace->register_method(
+            "WriteKeyword",
+            [this](const types::Path i_path, const types::VpdData i_data) {
+            this->updateKeyword(i_path, i_data);
         });
 
         iFace->register_method(
@@ -112,15 +126,87 @@ void Manager::SetTimerToDetectSVPDOnDbus()
 }
 #endif
 
-void Manager::updateKeyword(const types::Path i_path,
-                            const types::VpdData i_data, const uint8_t i_target)
+int Manager::updateKeyword(types::Path i_path, const types::VpdData i_data)
 {
-    // Dummy code to supress unused variable warning.
-    std::cout << "\nFRU path " << i_path;
-    std::cout << "\nData " << i_data.index();
-    std::cout << "\nTarget = " << static_cast<int>(i_target);
+    int sizeUpdated = 0;
+    types::PathCollection l_fruPaths;
 
-    // On success return nothing. On failure throw error.
+    const auto isDbusPath = utils::isDbusInvPath(i_path);
+
+    std::string l_invPath = isDbusPath ? i_path : std::string();
+    std::string l_primaryHwPath = !isDbusPath ? i_path : std::string();
+    std::string l_redundantHwPath{};
+
+    try
+    {
+        if (utils::getFRUPaths(i_path, l_fruPaths, m_jsonObj))
+        {
+            l_invPath = std::get<0>(l_fruPaths);
+            l_primaryHwPath = std::get<1>(l_fruPaths);
+            l_redundantHwPath = std::get<2>(l_fruPaths);
+        }
+    }
+    catch (JsonException& e)
+    {
+        // Do nothing, proceed to update keyword on the given path.
+    }
+
+    try
+    {
+        // If there is a primary hardware path, update on hardware
+        if (!l_primaryHwPath.empty())
+        {
+            sizeUpdated = utils::updateHardware(l_primaryHwPath, i_data,
+                                                m_jsonObj);
+
+            if (sizeUpdated > 0)
+            {
+                std::cout << "\nData updated successfully on "
+                          << l_primaryHwPath << std::endl;
+            }
+        }
+
+        // If there is a redundant eeprom path, then update
+        if (!l_redundantHwPath.empty())
+        {
+            sizeUpdated = utils::updateHardware(l_redundantHwPath, i_data,
+                                                m_jsonObj);
+
+            if (sizeUpdated > 0)
+            {
+                std::cout << "\nData updated successfully on "
+                          << l_redundantHwPath << std::endl;
+            }
+        }
+
+        // If there is a Dbus path, update on Dbus
+        if (!l_invPath.empty())
+        {
+            sizeUpdated = utils::updateDbus(l_invPath, i_data);
+
+            if (sizeUpdated > 0)
+            {
+                std::cout << "\nData updated successfully on " << l_invPath
+                          << std::endl;
+            }
+        }
+
+        return sizeUpdated;
+    }
+    catch (const sdbusplus::exception::SdBusError& e)
+    {
+        logging::logMessage(e.what());
+        logging::logMessage("D-bus write failed.");
+        throw;
+    }
+    catch (const std::exception& e)
+    {
+        logging::logMessage(e.what());
+        logging::logMessage("D-bus write failed.");
+        throw;
+    }
+
+    return -1;
 }
 
 types::BinaryVector Manager::readKeyword(const types::Path i_path,

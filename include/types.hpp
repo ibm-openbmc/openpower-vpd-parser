@@ -113,6 +113,11 @@ using KwData = std::tuple<Keyword, BinaryVector>;
 using ReadVpdParams = std::variant<std::tuple<Record, Keyword>, Keyword>;
 using VpdData = std::variant<IpzData, KwData>;
 
+namespace CommonError = sdbusplus::xyz::openbmc_project::Common::Error;
+
+/* Collection of FRU paths {Inventory path, Primary EEPROM path, Redundant EEPROM path} */
+using PathCollection = std::tuple<std::string, std::string, std::string>;
+
 enum class VpdTarget
 {
         Cache = 0,

@@ -534,8 +534,8 @@ int IpzVpdParser::updateValue(types::BinaryVector::const_iterator& io_itrToVPD,
         std::string kwdName(itrToVPDStart, itrToVPDStart + Length::KW_NAME);
         if (constants::LAST_KW == kwdName)
         {
-            // We're done
-            break;
+            throw std::runtime_error(
+                "Keyword not found. Unable to perform write");
         }
 
         // Check for Pound keyword which starts with #

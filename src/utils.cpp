@@ -5,6 +5,7 @@
 #include "constants.hpp"
 #include "exceptions.hpp"
 #include "logger.hpp"
+#include "parser_factory.hpp"
 
 #include <gpiod.hpp>
 
@@ -445,24 +446,38 @@ void getVpdDataInVector(const std::string& vpdFilePath,
     }
 }
 
-size_t getVPDOffset(const nlohmann::json& parsedJson,
+size_t getVPDOffset(const nlohmann::json& i_jsonObj,
                     const std::string& vpdFilePath)
 {
     size_t vpdOffset = 0;
-    if (!vpdFilePath.empty())
+
+    if (vpdFilePath.empty())
     {
-        if (parsedJson["frus"].contains(vpdFilePath))
+        throw std::runtime_error("Invalid VPD File path");
+    }
+
+    if (!i_jsonObj.contains("frus"))
+    {
+        throw JsonException("Missing frus section in VPD JSON",
+                            INVENTORY_JSON_SYM_LINK);
+    }
+
+    const nlohmann::json& listOfFrus =
+        i_jsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
+
+    for (const auto& itemFRUS : listOfFrus.items())
+    {
+        const auto l_hwPath = itemFRUS.key();
+        const auto l_redundantHwPath =
+            i_jsonObj["frus"][l_hwPath].at(0).value("redundantEeprom", "");
+
+        if (vpdFilePath == l_hwPath || vpdFilePath == l_redundantHwPath)
         {
-            for (const auto& item : parsedJson["frus"][vpdFilePath])
-            {
-                if (item.find("offset") != item.end())
-                {
-                    vpdOffset = item["offset"];
-                    break;
-                }
-            }
+            vpdOffset = i_jsonObj["frus"][l_hwPath].at(0).value("offset", 0);
+            break;
         }
     }
+
     return vpdOffset;
 }
 
@@ -766,5 +781,241 @@ bool executePreAction(const nlohmann::json& i_parsedConfigJson,
 
     return true;
 }
+
+int updateHardware(const types::Path& i_hwPath, const types::VpdData& i_data,
+                   const nlohmann::json& i_jsonObj)
+{
+    int rc = -1;
+    try
+    {
+        // Get the VPD type and perform write operation
+        auto l_vpdStartOffset = utils::getVPDOffset(i_jsonObj, i_hwPath);
+
+        // Read the VPD data into a vector.
+        types::BinaryVector l_vpdVector;
+        utils::getVpdDataInVector(i_hwPath, l_vpdVector, l_vpdStartOffset);
+
+        // This will detect the type of parser required.
+        std::shared_ptr<vpd::ParserInterface> parser =
+            ParserFactory::getParser(l_vpdVector, i_hwPath, l_vpdStartOffset);
+
+        rc = parser->write(i_hwPath, i_data);
+    }
+    catch (const std::exception& e)
+    {
+        throw e;
+    }
+
+    return rc;
+}
+
+int updateDbus(const types::Path& i_invPath, const types::VpdData& i_data)
+{
+    int rc = -1;
+
+    types::Record l_record;
+    types::Keyword l_keyword;
+    types::BinaryVector l_value;
+    std::string l_interface = "";
+
+    // Extract data from input
+    if (const types::IpzData* l_ipzData = std::get_if<types::IpzData>(&i_data))
+    {
+        l_record = std::get<0>(*l_ipzData);
+        l_keyword = std::get<1>(*l_ipzData);
+        l_value = std::get<2>(*l_ipzData);
+        l_interface = "com.ibm.ipzvpd." + l_record;
+    }
+
+    auto l_valueSize = l_value.size();
+
+    if (l_valueSize == 0)
+    {
+        logging::logMessage(
+            "Empty buffer given to perform write operation. Exit successfully.");
+        return 0;
+    }
+
+    types::ObjectMap l_dbusMap;
+    types::InterfaceMap l_intfMap;
+    types::PropertyMap l_propMap;
+
+    try
+    {
+        // Get service name for the given D-bus object
+        std::array<const char*, 1> interfaceList = {l_interface.c_str()};
+
+        types::MapperGetObject mapperRetValue = getObjectMap(i_invPath,
+                                                             interfaceList);
+
+        if (mapperRetValue.empty())
+        {
+            throw std::runtime_error("Mapper failed to get service");
+        }
+
+        const std::string& serviceName = std::get<0>(mapperRetValue.at(0));
+
+        // Read the keyword value from D-bus
+        auto l_dbusVal = readDbusProperty(serviceName, i_invPath, l_interface,
+                                          l_keyword);
+
+        // Read the actual size of the keyword
+        if (auto l_actualVal = std::get_if<types::BinaryVector>(&l_dbusVal))
+        {
+            auto l_actualSize =
+                reinterpret_cast<types::BinaryVector::size_type>(
+                    l_actualVal->size());
+
+            if (l_actualSize > l_valueSize)
+            {
+                std::copy(l_value.begin(), l_value.end(), l_actualVal->begin());
+                l_propMap.emplace(l_keyword, *l_actualVal);
+                rc = l_valueSize;
+            }
+            else if (l_actualSize < l_value.size())
+            {
+                // truncate extra bytes
+                l_value.resize(l_actualSize);
+                l_propMap.emplace(l_keyword, l_value);
+                rc = l_actualSize;
+            }
+            else
+            {
+                l_propMap.emplace(l_keyword, l_value);
+                rc = l_valueSize;
+            }
+        }
+
+        // Create object map and notify PIM to update the value on D-bus
+        l_intfMap.emplace(l_interface, l_propMap);
+
+        // Truncate /xyz/openbmc_project/inventory if present
+        std::string l_truncatedInvPath = i_invPath;
+        std::string::size_type pos = i_invPath.find(constants::pimPath);
+
+        if (pos != std::string::npos)
+        {
+            l_truncatedInvPath = i_invPath.substr(pos + 30);
+        }
+
+        l_dbusMap.emplace(l_truncatedInvPath, l_intfMap);
+
+        if (!utils::callPIM(move(l_dbusMap)))
+        {
+            logging::logMessage("Call to PIM Notify failed");
+            return -1;
+        }
+    }
+    catch (const sdbusplus::exception::SdBusError& e)
+    {
+        logging::logMessage(e.what());
+        throw;
+    }
+
+    return rc;
+}
+
+std::string getDbusPath(const nlohmann::json& i_jsonObj,
+                        const std::string& i_hwPath)
+{
+    if (i_jsonObj.contains("frus"))
+    {
+        const nlohmann::json& listOfFrus =
+            i_jsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
+
+        for (const auto& itemFRUS : listOfFrus.items())
+        {
+            if (itemFRUS.key() == i_hwPath)
+            {
+                auto l_invPath = i_jsonObj["frus"][i_hwPath].at(0).value(
+                    "inventoryPath", "");
+                return std::string(constants::pimPath + l_invPath);
+            }
+        }
+    }
+    return "";
+}
+
+bool isHardwarePath(const std::string& i_path)
+{
+    std::regex l_matchPatern("/eeprom$");
+    std::smatch l_matchFound;
+
+    if (std::regex_search(i_path, l_matchFound, l_matchPatern))
+    {
+        return true;
+    }
+    return false;
+}
+
+bool getFRUPaths(const std::string& i_inputPath,
+                 types::PathCollection& i_fruPaths,
+                 const nlohmann::json& i_jsonObj)
+{
+    std::string l_truncatedInvPath = "";
+
+    if (isDbusInvPath(i_inputPath))
+    {
+        // Truncated inventory path is required to map with json
+        l_truncatedInvPath = getTruncatedInvPath(i_inputPath);
+    }
+
+    if (!i_jsonObj.contains("frus"))
+    {
+        throw JsonException("Missing frus section in VPD JSON",
+                            INVENTORY_JSON_SYM_LINK);
+    }
+
+    const nlohmann::json& listOfFrus =
+        i_jsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
+
+    for (const auto& itemFRUS : listOfFrus.items())
+    {
+        const auto l_hwPath = itemFRUS.key();
+        const auto l_iPath =
+            i_jsonObj["frus"][l_hwPath].at(0).value("inventoryPath", "");
+        const auto l_rPath =
+            i_jsonObj["frus"][l_hwPath].at(0).value("redundantEeprom", "");
+
+        if (i_inputPath == l_hwPath || l_truncatedInvPath == l_iPath ||
+            i_inputPath == l_rPath)
+        {
+            i_fruPaths = std::make_tuple(
+                std::string(constants::pimPath + l_iPath), l_hwPath, l_rPath);
+
+            // Found the data from JSON
+            return true;
+        }
+    }
+
+    // Unable to find the path from JSON
+    return false;
+}
+
+std::string getTruncatedInvPath(const std::string& i_invPath)
+{
+    // Truncate /xyz/openbmc_project/inventory if present
+    std::string l_truncatedInvPath = i_invPath;
+    std::string::size_type pos = i_invPath.find(constants::pimPath);
+
+    if (pos != std::string::npos)
+    {
+        l_truncatedInvPath = i_invPath.substr(pos + 30);
+    }
+    return l_truncatedInvPath;
+}
+
+bool isDbusInvPath(const std::string& i_path)
+{
+    std::regex l_matchPatern("/xyz/openbmc_project/inventory");
+    std::smatch l_matchFound;
+
+    if (std::regex_search(i_path, l_matchFound, l_matchPatern))
+    {
+        return true;
+    }
+    return false;
+}
+
 } // namespace utils
 } // namespace vpd
