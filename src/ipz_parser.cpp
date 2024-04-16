@@ -441,4 +441,234 @@ types::VPDMapVariant IpzVpdParser::parse()
     }
 }
 
+int IpzVpdParser::updateValue(types::BinaryVector::const_iterator& io_itrToVPD,
+                              const auto i_ptLength, const auto i_record,
+                              const auto i_keyword, const auto i_value)
+{
+    auto end = io_itrToVPD;
+    std::advance(end, i_ptLength);
+
+    size_t l_recordOffset = 0;
+
+    bool l_isRecordFound = false;
+
+    // Go through VTOC and find the details of the record which we are
+    // interested in.
+    while (io_itrToVPD < end)
+    {
+        std::string recordName(io_itrToVPD, io_itrToVPD + Length::RECORD_NAME);
+
+        // Continue to next record until we find the record which we are
+        // interested.
+        if (recordName != i_record)
+        {
+            std::advance(
+                io_itrToVPD,
+                Length::RECORD_NAME + sizeof(types::RecordType) +
+                    sizeof(types::RecordOffset) + sizeof(types::RecordLength) +
+                    sizeof(types::ECCOffset) + sizeof(types::ECCLength));
+            continue;
+        }
+
+        l_isRecordFound = true;
+
+        // Skip record name and record type
+        std::advance(io_itrToVPD,
+                     Length::RECORD_NAME + sizeof(types::RecordType));
+
+        // save the record offset
+        l_recordOffset = readUInt16LE(io_itrToVPD);
+
+        // Verify ECC for this Record
+        if (!recordEccCheck(io_itrToVPD))
+        {
+            std::string errorMsg = "ERROR: ECC check failed for record " +
+                                   recordName;
+            throw(EccException(errorMsg));
+        }
+
+        // We are good to proceed with operations on this record
+        break;
+    }
+
+    if (!l_isRecordFound)
+    {
+        throw types::CommonError::InvalidArgument();
+    }
+
+    // save record length, ecc offset, ecc length
+    auto iteratorToFetchDetails = io_itrToVPD;
+    std::advance(iteratorToFetchDetails, sizeof(types::RecordOffset));
+
+    auto recordLength = readUInt16LE(iteratorToFetchDetails);
+    std::advance(iteratorToFetchDetails, sizeof(types::RecordLength));
+
+    std::size_t eccOffset = readUInt16LE(iteratorToFetchDetails);
+    std::advance(iteratorToFetchDetails, sizeof(types::ECCOffset));
+
+    std::size_t eccLength = readUInt16LE(iteratorToFetchDetails);
+
+    // Jump to the record data
+    auto recordNameOffset = l_recordOffset + sizeof(types::RecordId) +
+                            sizeof(types::RecordSize) +
+                            // Skip past the RT keyword, which contains
+                            // the record name.
+                            Length::KW_NAME + sizeof(types::KwSize);
+
+    // Get record name
+    auto itrToVPDStart = m_vpdVector.cbegin();
+    std::advance(itrToVPDStart, recordNameOffset);
+
+    std::string recordName(itrToVPDStart, itrToVPDStart + Length::RECORD_NAME);
+
+    // proceed to find contained keywords and their values.
+    std::advance(itrToVPDStart, Length::RECORD_NAME);
+
+    bool l_isKeywordFound = false;
+    std::size_t l_lengthToUpdate = 0;
+
+    // Parse through this record to find the keyword which we are interested in.
+    while (true)
+    {
+        // Note keyword name
+        std::string kwdName(itrToVPDStart, itrToVPDStart + Length::KW_NAME);
+        if (constants::LAST_KW == kwdName)
+        {
+            // We're done
+            break;
+        }
+
+        // Check for Pound keyword which starts with #
+        char kwNameStart = *itrToVPDStart;
+
+        // Jump past keyword name
+        std::advance(itrToVPDStart, Length::KW_NAME);
+
+        std::size_t kwdDataLength = *itrToVPDStart;
+
+        if (constants::POUND_KW == kwNameStart)
+        {
+            // Note keyword data length
+            std::size_t lengthHighByte = *(itrToVPDStart + 1);
+            kwdDataLength |= (lengthHighByte << 8);
+
+            // Jump past 2Byte keyword length for pound keyword
+            std::advance(itrToVPDStart, sizeof(types::PoundKwSize));
+        }
+        else
+        {
+            std::advance(itrToVPDStart, sizeof(types::KwSize));
+        }
+
+        if (kwdName == i_keyword)
+        {
+            l_isKeywordFound = true;
+
+            // update the latest value and ecc
+            l_lengthToUpdate = i_value.size() <= kwdDataLength ? i_value.size()
+                                                               : kwdDataLength;
+
+            auto l_kwdOffset = std::distance(m_vpdVector.cbegin(),
+                                             itrToVPDStart);
+
+            auto iteratorToNewdata = i_value.cbegin();
+            auto end = iteratorToNewdata;
+            std::advance(end, l_lengthToUpdate);
+
+            auto iteratorToKwdData = m_vpdVector.begin();
+            std::advance(iteratorToKwdData, l_kwdOffset);
+
+            // Copy the given value to vpdVector, required for record ECC
+            // calculation
+            std::copy(iteratorToNewdata, end, iteratorToKwdData);
+
+            // Copy the given value to EEPROM
+            m_vpdFileStream.exceptions(std::ifstream::badbit |
+                                       std::ifstream::failbit);
+            m_vpdFileStream.seekp(m_vpdStartOffset + l_kwdOffset,
+                                  std::ios::beg);
+            std::copy(i_value.cbegin(), i_value.cbegin() + l_lengthToUpdate,
+                      std::ostreambuf_iterator<char>(m_vpdFileStream));
+
+            // Update this record ECC
+            updateRecordECC(l_recordOffset, recordLength, eccOffset, eccLength);
+            break;
+        }
+        // Advance the iterator to next keyword
+        std::advance(itrToVPDStart, kwdDataLength);
+    }
+
+    if (!l_isKeywordFound)
+    {
+        throw types::CommonError::InvalidArgument();
+    }
+
+    return l_lengthToUpdate;
+}
+
+void IpzVpdParser::updateRecordECC(const auto& i_recOffset,
+                                   const auto& i_recSize,
+                                   const auto& i_recECCoffset,
+                                   auto i_recECCLength)
+{
+    auto itrToRecordData = m_vpdVector.begin();
+    std::advance(itrToRecordData, i_recOffset);
+
+    auto itrToRecordECC = m_vpdVector.begin();
+    std::advance(itrToRecordECC, i_recECCoffset);
+
+    auto l_status = vpdecc_create_ecc(
+        static_cast<uint8_t*>(&itrToRecordData[0]), i_recSize,
+        static_cast<uint8_t*>(&itrToRecordECC[0]), &i_recECCLength);
+
+    if (l_status != VPD_ECC_OK)
+    {
+        throw std::runtime_error("Ecc update failed");
+    }
+
+    auto end = itrToRecordECC;
+    std::advance(end, i_recECCLength);
+
+    m_vpdFileStream.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+    m_vpdFileStream.seekp(m_vpdStartOffset + i_recECCoffset, std::ios::beg);
+    std::copy(itrToRecordECC, end,
+              std::ostreambuf_iterator<char>(m_vpdFileStream));
+}
+
+int IpzVpdParser::write(const types::Path i_path, const types::VpdData i_data)
+{
+    types::Record l_record;
+    types::Keyword l_keyword;
+    types::BinaryVector l_value;
+
+    // Extract record, keyword and value from i_data
+    if (const types::IpzData* l_ipzData = std::get_if<types::IpzData>(&i_data))
+    {
+        l_record = std::get<0>(*l_ipzData);
+        l_keyword = std::get<1>(*l_ipzData);
+        l_value = std::get<2>(*l_ipzData);
+    }
+    else
+    {
+        logging::logMessage("Given VPD type not supported. Aborting write.");
+        return -1;
+    }
+
+    if (l_value.size() == 0)
+    {
+        logging::logMessage(
+            "Empty buffer given to perform write operation. Exit successfully.");
+        return 0;
+    }
+
+    auto l_itrToVPD = m_vpdVector.cbegin();
+
+    // Check vaidity of VHDR record
+    checkHeader(l_itrToVPD);
+
+    // Read Table of Contents
+    auto l_ptLen = readTOC(l_itrToVPD);
+
+    return (updateValue(l_itrToVPD, l_ptLen, l_record, l_keyword, l_value));
+}
 } // namespace vpd

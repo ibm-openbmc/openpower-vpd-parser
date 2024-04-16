@@ -18,9 +18,6 @@ Parser::Parser(const std::string& vpdFilePath, nlohmann::json parsedJson) :
 
 types::VPDMapVariant Parser::parse()
 {
-    std::fstream vpdFileStream;
-    vpdFileStream.exceptions(std::ifstream::badbit | std::ifstream::failbit);
-
     // Read the VPD data into a vector.
     types::BinaryVector vpdVector;
     utils::getVpdDataInVector(m_vpdFilePath, vpdVector, m_vpdStartOffset);

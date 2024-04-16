@@ -2,6 +2,7 @@
 
 #include <sdbusplus/asio/property.hpp>
 #include <sdbusplus/server.hpp>
+#include <xyz/openbmc_project/Common/error.hpp>
 
 #include <tuple>
 #include <unordered_map>
@@ -11,6 +12,8 @@ namespace vpd
 {
 namespace types
 {
+namespace CommonError = sdbusplus::xyz::openbmc_project::Common::Error;
+
 using BinaryVector = std::vector<uint8_t>;
 
 // This covers mostly all the data type supported over Dbus for a property.

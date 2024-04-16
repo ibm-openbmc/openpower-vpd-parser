@@ -24,6 +24,14 @@ endif
 # sure we have control over its configuration
 build_tests = get_option('tests')
 
+phosphor_dbus_interfaces = dependency('phosphor-dbus-interfaces',
+    default_options: [ 'data_com_ibm=true', 'data_org_open_power=true' ],
+    fallback: ['phosphor-dbus-interfaces', 'phosphor_dbus_interfaces_dep'])
+
+phosphor_logging = dependency('phosphor-logging',
+    default_options: [ 'openpower-pel-extension=enabled' ],
+    fallback: ['phosphor-logging', 'phosphor_logging_dep'])
+
 sdbusplus = dependency('sdbusplus', fallback: [ 'sdbusplus', 'sdbusplus_dep' ])
 
 if not build_tests.disabled()
@@ -77,7 +85,7 @@ vpd_manager_SOURCES = ['src/manager_main.cpp',
                     'src/manager.cpp',
                     ] + common_SOURCES
 
-parser_dependencies = [sdbusplus, libgpiodcxx]
+parser_dependencies = [sdbusplus, libgpiodcxx, phosphor_dbus_interfaces, phosphor_logging]
 
 parser_build_arguments = []
 if get_option('ibm_system').enabled()

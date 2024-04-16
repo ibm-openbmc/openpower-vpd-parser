@@ -28,13 +28,13 @@ class IpzVpdParser : public ParserInterface
     /**
      * @brief Constructor.
      *
-     * @param[in] vpdVector - VPD data.
+     * @param[in,out] vpdVector - VPD data.
      * @param[in] vpdFilePath - Path to VPD EEPROM.
      * @param[in] vpdStartOffset - Offset from where VPD starts in the file.
      * Defaulted to 0.
      */
-    IpzVpdParser(const types::BinaryVector& vpdVector,
-                 const std::string& vpdFilePath, size_t vpdStartOffset = 0) :
+    IpzVpdParser(types::BinaryVector vpdVector, const std::string& vpdFilePath,
+                 size_t vpdStartOffset = 0) :
         m_vpdVector(vpdVector),
         m_vpdFilePath(vpdFilePath), m_vpdStartOffset(vpdStartOffset)
     {
@@ -50,7 +50,7 @@ class IpzVpdParser : public ParserInterface
     }
 
     /**
-     * @brief Defaul destructor.
+     * @brief Default destructor.
      */
     ~IpzVpdParser() = default;
 
@@ -74,6 +74,19 @@ class IpzVpdParser : public ParserInterface
      * to an offset is not required after header check.
      */
     void checkHeader(types::BinaryVector::const_iterator itrToVPD);
+
+    /**
+     * @brief API to write IPZ type VPD
+     *
+     * This API can be used to write keyword value on IPZ type FRU data.
+     *
+     * @param[in] i_path - Inventory path
+     * @param[in] i_data - Data required to perform write
+     *
+     * @return -1 on failure and n if n bytes are written.
+     */
+    virtual int write(const types::Path i_path,
+                      const types::VpdData i_data) override;
 
   private:
     /**
@@ -153,8 +166,42 @@ class IpzVpdParser : public ParserInterface
      */
     void processRecord(auto recordOffset);
 
-    // Holds VPD data.
-    const types::BinaryVector& m_vpdVector;
+    /**
+     * @brief API to update record ECC
+     *
+     * API to update the record's ECC.
+     *
+     * In case of any failure, this API throws exception to the caller.
+     *
+     * @param[in] i_recOffset - Record offset
+     * @param[in] i_recSize - Record size
+     * @param[in] i_recECCoffset - Record ECC offset
+     * @param[in] i_recECCLength - Record ECC length
+     */
+    void updateRecordECC(const auto& i_recOffset, const auto& i_recSize,
+                         const auto& i_recECCoffset, auto i_recECCLength);
+
+    /**
+     * @brief API to update keyword on hardware
+     *
+     * API to update keyword value on hardware.
+     *
+     * In case of any failure, this API throws exception to the caller.
+     *
+     * @param[in, out] io_itrToVPD - VPD iterator
+     * @param[in] i_ptLength - Length of PT keyword
+     * @param[in] i_record - Record name
+     * @param[in] i_keyword - Keyword name
+     * @param[in] i_value - Value to be updated
+     *
+     * @return number of bytes updated.
+     */
+    int updateValue(types::BinaryVector::const_iterator& io_itrToVPD,
+                    const auto i_ptLength, const auto i_record,
+                    const auto i_keyword, const auto i_value);
+
+    // Holds FRU VPD
+    types::BinaryVector m_vpdVector;
 
     // stores parsed VPD data.
     types::IPZVpdMap m_parsedVPDMap{};
