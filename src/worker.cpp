@@ -486,11 +486,43 @@ void Worker::setDeviceTreeAndJson()
 
     if (fitConfigVal.find(devTreeFromJson) != std::string::npos)
     { // fitconfig is updated and correct JSON is set.
-
-        if (isSystemVPDOnDBus())
+        try
         {
-            // TODO
-            //  Restore system VPD logic should initiate from here.
+            std::string l_backupRestoreJsonPath = getBackupRestoreJsonPath();
+            m_backupRestoreJson = utils::getParsedJson(l_backupRestoreJsonPath);
+            if (!m_backupRestoreJson.empty())
+            {
+                std::string l_dstLocation;
+                std::string l_dstPath;
+                getBackupRestorePathInfo("destination", l_dstLocation,
+                                         l_dstPath);
+
+                const std::string& l_invPath =
+                    m_parsedJson["frus"][SYSTEM_VPD_FILE_PATH].at(0).value(
+                        "inventoryPath", "");
+
+                if (isSystemVPDOnDBus() &&
+                    l_dstLocation.compare("inventory") ==
+                        constants::STR_CMP_SUCCESS &&
+                    l_dstPath.compare(l_invPath) == constants::STR_CMP_SUCCESS)
+                {
+                    m_performBackupAndRestore = false;
+                    auto [l_sourceVpdVariant,
+                          l_dstVpdVariant] = backupAndRestore();
+                    if (auto l_sourceVpdMap =
+                            std::get_if<types::IPZVpdMap>(&l_sourceVpdVariant);
+                        !(*l_sourceVpdMap).empty())
+                    {
+                        parsedVpdMap = *l_sourceVpdMap;
+                    }
+                }
+            }
+        }
+        catch (const std::exception& ex)
+        {
+            logging::logMessage(
+                "Failed to call backup and restore, exception: " +
+                std::string(ex.what()));
         }
 
         // proceed to publish system VPD.
@@ -1192,5 +1224,302 @@ void Worker::collectFrusFromJson()
                                 std::get<1>(threadInfo));
         }
     }
+}
+
+void Worker::getBackupRestorePathInfo(const std::string& i_tag,
+                                      std::string& o_location,
+                                      std::string& o_path)
+{
+    if (m_backupRestoreJson.contains(i_tag))
+    {
+        if (m_backupRestoreJson[i_tag].contains("hardwarePath"))
+        {
+            o_path = m_backupRestoreJson[i_tag]["hardwarePath"];
+            o_location = "hardware";
+        }
+        else if (m_backupRestoreJson[i_tag].contains("inventoryPath"))
+        {
+            o_path = m_backupRestoreJson[i_tag]["inventoryPath"];
+            o_location = "inventory";
+        }
+    }
+}
+
+std::tuple<types::VPDMapVariant, types::VPDMapVariant>
+    Worker::backupAndRestore()
+{
+    auto l_emptySrcDstVpd = std::make_tuple(std::monostate{}, std::monostate{});
+    try
+    {
+        if (m_backupRestoreJson.empty())
+        {
+            logging::logMessage(
+                "Backup and restore config JSON is empty, can't initiate backup and restore.");
+            return l_emptySrcDstVpd;
+        }
+
+        std::string l_sourceLocation;
+        std::string l_sourcePath;
+        getBackupRestorePathInfo("source", l_sourceLocation, l_sourcePath);
+
+        std::string l_dstLocation;
+        std::string l_dstPath;
+        getBackupRestorePathInfo("destination", l_dstLocation, l_dstPath);
+
+        if (l_sourcePath.empty() || l_dstPath.empty())
+        {
+            logging::logMessage(
+                "Source or destination path is missing, can't initiate backup and restore.");
+            return l_emptySrcDstVpd;
+        }
+
+        types::VPDMapVariant l_sourceVpdMap;
+        if (l_sourceLocation.compare("hardware") == constants::STR_CMP_SUCCESS)
+        {
+            fillVPDMap(l_sourcePath, l_sourceVpdMap);
+        }
+
+        types::VPDMapVariant l_dstVpdMap;
+        if (l_dstLocation.compare("hardware") == constants::STR_CMP_SUCCESS)
+        {
+            fillVPDMap(l_dstPath, l_dstVpdMap);
+        }
+
+        // Implement backup and restore for IPZ type VPD
+        auto l_backupRestoreType = m_backupRestoreJson.value("type", "");
+        if (l_backupRestoreType.compare("IPZ") == constants::STR_CMP_SUCCESS)
+        {
+            types::IPZVpdMap* l_sourceVpdPtr = nullptr;
+            if (!(l_sourceVpdPtr =
+                      std::get_if<types::IPZVpdMap>(&l_sourceVpdMap)))
+            {
+                if (std::holds_alternative<std::monostate>(l_sourceVpdMap))
+                {
+                    l_sourceVpdPtr = new types::IPZVpdMap();
+                }
+                else
+                {
+                    logging::logMessage("Source VPD is not of IPZ type.");
+                    return l_emptySrcDstVpd;
+                }
+            }
+
+            types::IPZVpdMap* l_dstVpdPtr = nullptr;
+            if (!(l_dstVpdPtr = std::get_if<types::IPZVpdMap>(&l_dstVpdMap)))
+            {
+                if (std::holds_alternative<std::monostate>(l_dstVpdMap))
+                    l_dstVpdPtr = new types::IPZVpdMap();
+                else
+                {
+                    logging::logMessage("Destination VPD is not of IPZ type.");
+                    return l_emptySrcDstVpd;
+                }
+            }
+
+            backupAndRestoreIpzVpd(*l_sourceVpdPtr, *l_dstVpdPtr, l_sourcePath,
+                                   l_dstPath);
+            return std::make_tuple(*l_sourceVpdPtr, *l_dstVpdPtr);
+        }
+        // Note: add implementation here to support any other VPD type.
+    }
+    catch (const std::exception& ex)
+    {
+        logging::logMessage("Back up and restore failed with exception: " +
+                            std::string(ex.what()));
+    }
+    return l_emptySrcDstVpd;
+}
+
+void Worker::backupAndRestoreIpzVpd(types::IPZVpdMap& io_sourceVpdMap,
+                                    types::IPZVpdMap& io_dstVpdMap,
+                                    const std::string& i_sourcePath,
+                                    const std::string& i_dstPath)
+{
+    if (!m_backupRestoreJson.contains("backupMap") ||
+        !m_backupRestoreJson["backupMap"].is_array())
+    {
+        logging::logMessage(
+            "Backup map not found in the backup and restore config JSON.");
+        return;
+    }
+
+    bool l_isEmptySrcVpdReceived = io_sourceVpdMap.empty();
+    bool l_isEmptyDstVpdReceived = io_dstVpdMap.empty();
+
+    for (const auto& l_aRecordKwInfo : m_backupRestoreJson["backupMap"])
+    {
+        const std::string& l_sourceRecordName =
+            l_aRecordKwInfo.value("sourceRecord", "");
+        const std::string& l_dstRecordName =
+            l_aRecordKwInfo.value("destinationRecord", "");
+        const std::string& l_sourceKeyword =
+            l_aRecordKwInfo.value("sourceKeyword", "");
+        const std::string& l_dstKeyword =
+            l_aRecordKwInfo.value("destinationKeyword", "");
+
+        if (l_sourceRecordName.empty() || l_dstRecordName.empty() ||
+            l_sourceKeyword.empty() || l_dstKeyword.empty())
+        {
+            logging::logMessage(
+                "Record or keyword not found in the backup and restore config JSON.");
+            continue;
+        }
+
+        if (!io_sourceVpdMap.empty() &&
+            io_sourceVpdMap.find(l_sourceRecordName) == io_sourceVpdMap.end())
+        {
+            logging::logMessage(
+                "Record: " + l_sourceRecordName +
+                ", is not found in the source path: " + i_sourcePath);
+            continue;
+        }
+
+        if (!io_dstVpdMap.empty() &&
+            io_dstVpdMap.find(l_dstRecordName) == io_dstVpdMap.end())
+        {
+            logging::logMessage(
+                "Record: " + l_dstRecordName +
+                ", is not found in the destination path: " + i_dstPath);
+            continue;
+        }
+
+        types::BinaryVector l_defaultBinaryValue;
+        if (l_aRecordKwInfo.contains("defaultValue") &&
+            l_aRecordKwInfo["defaultValue"].is_array())
+        {
+            l_defaultBinaryValue =
+                l_aRecordKwInfo["defaultValue"].get<types::BinaryVector>();
+        }
+        else
+        {
+            logging::logMessage("Couldn't fetch default value for record: " +
+                                l_sourceRecordName +
+                                ", keyword: " + l_sourceKeyword);
+            continue;
+        }
+
+        bool l_isPelRequired = l_aRecordKwInfo.value("isPelRequired", false);
+
+        types::BinaryVector l_sourceBinaryValue;
+        std::string l_sourceStrValue;
+        if (!l_isEmptySrcVpdReceived)
+        {
+            utils::getKwVal(io_sourceVpdMap.at(l_sourceRecordName),
+                            l_sourceKeyword, l_sourceStrValue);
+            l_sourceBinaryValue = types::BinaryVector(l_sourceStrValue.begin(),
+                                                      l_sourceStrValue.end());
+        }
+        else
+        {
+            // Read keyword value from DBus
+            // TODO: Uncomment when readKeyword API implemenation is done,
+            // call the API with required parameters.
+            /* l_sourceBinaryValue = utils::readKeyword(i_sourcePath,
+            * std::tuple<types::Record, types::Keyword>(l_sourceRecordName,
+            l_sourceKeyword)); l_sourceStrValue =
+            std::string(l_sourceBinaryValue.begin(),
+            l_sourceBinaryValue.end());
+            */
+        }
+
+        types::BinaryVector l_dstBinaryValue;
+        std::string l_dstStrValue;
+        if (!l_isEmptyDstVpdReceived)
+        {
+            utils::getKwVal(io_dstVpdMap.at(l_dstRecordName), l_dstKeyword,
+                            l_dstStrValue);
+            l_dstBinaryValue = types::BinaryVector(l_dstStrValue.begin(),
+                                                   l_dstStrValue.end());
+        }
+        else
+        {
+            // Read keyword value from DBus
+            // TODO: Uncomment when readKeyword API implemenation is done,
+            // call the API with required parameters.
+            /* l_dstBinaryValue = utils::readKeyword(i_dstPath,
+            * std::tuple<types::Record, types::Keyword>(l_dstRecordName,
+            l_dstKeyword)); l_dstStrValue =
+            std::string(l_dstBinaryValue.begin(),
+            l_dstBinaryValue.end());
+            */
+        }
+
+        if (l_sourceBinaryValue != l_dstBinaryValue)
+        {
+            if (l_dstBinaryValue == l_defaultBinaryValue)
+            {
+                // TODO: Uncomment when writeKeyword API implemenation goes
+                // in, handle if separate update to hardware and cache is
+                // required. utils::writeKeyword(i_dstPath,
+                // types::IpzData(l_dstRecordName, l_dstKeyword
+                // l_sourceBinaryValue));
+                io_dstVpdMap[l_dstRecordName][l_dstKeyword] = l_sourceStrValue;
+                continue;
+            }
+
+            // Update map to publish the same data on DBus, which is already
+            // present on the DBus.
+            if (l_isEmptyDstVpdReceived)
+            {
+                io_sourceVpdMap[l_sourceRecordName][l_sourceKeyword] =
+                    l_dstStrValue;
+            }
+
+            if (l_sourceBinaryValue == l_defaultBinaryValue)
+            {
+                // TODO: Uncomment when writeKeyword API implemenation goes
+                // in, handle if separate update to hardware and cache is
+                // required. utils::writeKeyword(i_sourcePath,
+                // types::IpzData(l_sourceRecordName, l_sourceKeyword,
+                // l_dstBinaryValue));
+            }
+            else
+            {
+                // Uncomment when PEL implementation goes in.
+                /*inventory::PelAdditionalData additionalData{};
+                std::string errMsg = "Mismatch found between source and
+                destination VPD for record: " + l_sourceRecordName + " and
+                keyword: " + l_sourceKeyword;
+                additionalData.emplace("DESCRIPTION", errMsg);
+                additionalData.emplace("Value read from destination: ",
+                l_dstStrValue); additionalData.emplace("Value read from
+                source: ", l_sourceStrValue); createPEL(additionalData,
+                PelSeverity::WARNING, errIntfForVPDMismatch, nullptr);
+                */
+            }
+        }
+        else if (l_sourceBinaryValue == l_defaultBinaryValue &&
+                 l_dstBinaryValue == l_defaultBinaryValue && l_isPelRequired)
+        {
+            logging::logMessage(
+                "Default value found in both source and destination VPD, for record: " +
+                l_sourceRecordName + " and keyword: " + l_sourceKeyword);
+        }
+    }
+}
+
+bool Worker::isBackupAndRestoreRequired() const
+{
+    return m_performBackupAndRestore;
+}
+
+std::string Worker::getBackupRestoreJsonPath() const
+{
+    std::string l_backupRestoreJsonPath;
+    if (auto l_targetConfigPath =
+            read_symlink(std::filesystem::path(INVENTORY_JSON_SYM_LINK));
+        !l_targetConfigPath.empty())
+    {
+        std::string l_targetFileName = l_targetConfigPath.stem().string();
+        if (auto l_pos = l_targetFileName.find("_"); l_pos != std::string::npos)
+        {
+            l_targetFileName = l_targetFileName.substr(0, l_pos);
+        }
+        l_backupRestoreJsonPath = std::string(JSON_ABSOLUTE_PATH_PREFIX) +
+                                  "backup_restore_" + l_targetFileName +
+                                  ".json";
+    }
+
+    return l_backupRestoreJsonPath;
 }
 } // namespace vpd

@@ -100,6 +100,49 @@ class Worker
                       types::ObjectMap& objectInterfaceMap,
                       const std::string& vpdFilePath);
 
+    /**
+     * @brief An API to get backup and restore path information.
+     *
+     * This API is to get backup and restore's EEPROM or
+     * inventory path information present in the backup and restore config JSON.
+     *
+     * @param[in] i_tag - source or destination tag.
+     * @param[out] o_location - Holds hardware or inventory string value, for
+     * given i_tag.
+     * @param[out] o_path - Holds EEPROM or inventory path, for given
+     * i_tag.
+     */
+    void getBackupRestorePathInfo(const std::string& i_tag,
+                                  std::string& o_location, std::string& o_path);
+
+    /**
+     * @brief An API to backup and restore VPD.
+     *
+     * Note: This API works on the keywords declared in the backup and restore
+     * config JSON. Restore or backup action could be triggered for each
+     * keyword, based on the keyvalue present in the source and destination
+     * keyword.
+     *
+     * Restore source keyword value with destination keyword value,
+     * when source keyword has default value but
+     * destination has non default value.
+     *
+     * Backup the source keyword value on destination,
+     * when source keyword has non default value but
+     * destination has default value.
+     *
+     * @return Tuple of updated source and destination VPD map variant.
+     */
+    std::tuple<types::VPDMapVariant, types::VPDMapVariant> backupAndRestore();
+
+    /**
+     * @brief An API to get backup and restore is required or not.
+     *
+     * @return true if m_performBackupAndRestore is set to true, false
+     * otherwise.
+     */
+    bool isBackupAndRestoreRequired() const;
+
   private:
     /**
      * @brief An API to parse and publish a FRU VPD over D-Bus.
@@ -348,6 +391,27 @@ class Worker
      */
     void enableMuxChips();
 
+    /**
+     * @brief An API to handle backup and restore IPZ VPD.
+     *
+     * @param[in,out] io_sourceVpdMap - Source VPD map.
+     * @param[in,out] io_dstVpdMap - Destination VPD map.
+     * @param[in] i_sourcePath - Source EEPROM file path or inventory path.
+     * @param[in] i_dstPath - Destination EEPROM file path or inventory path.
+     */
+    void backupAndRestoreIpzVpd(types::IPZVpdMap& io_sourceVpdMap,
+                                types::IPZVpdMap& io_dstVpdMap,
+                                const std::string& i_sourcePath,
+                                const std::string& i_dstPath);
+
+    /**
+     * @brief API to get system specific backup and restore JSON.
+     *
+     * @return System specific backup and restore json path based on the IM
+     * value, otherwise empty.
+     */
+    std::string getBackupRestoreJsonPath() const;
+
     // Parsed JSON file.
     nlohmann::json m_parsedJson{};
 
@@ -356,5 +420,11 @@ class Worker
 
     // Path to config JSON if applicable.
     std::string& m_configJsonPath;
+
+    // To perform backup and restore
+    bool m_performBackupAndRestore = true;
+
+    // Parsed backup and restore config JSON file.
+    nlohmann::json m_backupRestoreJson{};
 };
 } // namespace vpd
