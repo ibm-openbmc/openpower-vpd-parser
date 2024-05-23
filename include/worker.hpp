@@ -100,6 +100,16 @@ class Worker
                       types::ObjectMap& objectInterfaceMap,
                       const std::string& vpdFilePath);
 
+    /**
+     * @brief API to get VPD config JSON object
+     *
+     * @return parsed VPD config JSON object
+     */
+    inline nlohmann::json getConfig() const
+    {
+        return m_parsedJson;
+    }
+
   private:
     /**
      * @brief An API to parse and publish a FRU VPD over D-Bus.

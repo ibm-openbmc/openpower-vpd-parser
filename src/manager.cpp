@@ -2,7 +2,9 @@
 
 #include "manager.hpp"
 
+#include "exceptions.hpp"
 #include "logger.hpp"
+#include "utils.hpp"
 
 #include <boost/asio/steady_timer.hpp>
 #include <sdbusplus/message.hpp>
@@ -38,9 +40,10 @@ Manager::Manager(
 
         iFace->register_method(
             "ReadKeyword",
-            [this](const types::Path i_path, const types::VpdData i_data,
-                   const uint8_t i_target) -> types::BinaryVector {
-            return this->readKeyword(i_path, i_data, i_target);
+            [this](const types::Path i_path,
+                   const types::ReadVpdParams i_paramsToReadData)
+                -> types::DbusVariantType {
+            return this->readKeyword(i_path, i_paramsToReadData);
         });
 
         iFace->register_method(
@@ -123,18 +126,29 @@ void Manager::updateKeyword(const types::Path i_path,
     // On success return nothing. On failure throw error.
 }
 
-types::BinaryVector Manager::readKeyword(const types::Path i_path,
-                                         const types::VpdData i_data,
-                                         const uint8_t i_target)
+types::DbusVariantType
+    Manager::readKeyword(const types::Path i_path,
+                         const types::ReadVpdParams i_paramsToReadData)
 {
-    // Dummy code to supress unused variable warning. To be removed.
-    std::cout << "\nFRU path " << i_path;
-    std::cout << "\nData " << i_data.index();
-    std::cout << "\nTarget = " << static_cast<int>(i_target);
+    try
+    {
+        nlohmann::json l_jsonObj{};
 
-    // On success return the value read. On failure throw error.
+        if (m_worker.get() != nullptr)
+        {
+            l_jsonObj = m_worker->getConfig();
+        }
 
-    return types::BinaryVector();
+        // On success return the value read. On failure throw error.
+        return (utils::readKeyword(i_path, i_paramsToReadData, l_jsonObj));
+    }
+    catch (const std::exception& e)
+    {
+        logging::logMessage(
+            e.what() + std::string(". VPD manager read operation failed for ") +
+            i_path);
+        throw types::DeviceError::ReadFailure();
+    }
 }
 
 void Manager::collectSingleFruVpd(

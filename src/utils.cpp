@@ -5,6 +5,8 @@
 #include "constants.hpp"
 #include "exceptions.hpp"
 #include "logger.hpp"
+#include "parser_factory.hpp"
+#include "parser_interface.hpp"
 
 #include <gpiod.hpp>
 
@@ -763,6 +765,74 @@ bool executePreAction(const nlohmann::json& i_parsedConfigJson,
     }
 
     return true;
+}
+
+types::DbusVariantType
+    readKeyword(const types::Path i_path,
+                const types::ReadVpdParams i_paramsToReadData,
+                const nlohmann::json i_jsonObj)
+{
+    std::error_code ec;
+
+    // Check if given path is filesystem path
+    if (!std::filesystem::exists(i_path, ec) && (ec))
+    {
+        throw std::runtime_error("Given file path " + i_path + " not found.");
+    }
+
+    auto l_vpdStartOffset =
+        utils::getVPDOffset(i_jsonObj, utils::getFRUPath(i_jsonObj, i_path));
+
+    // Read the VPD data into a vector.
+    types::BinaryVector l_vpdVector;
+    utils::getVpdDataInVector(i_path, l_vpdVector, l_vpdStartOffset);
+
+    // This will detect the type of parser required.
+    std::shared_ptr<ParserInterface> parser =
+        ParserFactory::getParser(l_vpdVector, i_path, l_vpdStartOffset);
+
+    logging::logMessage("Performing VPD read on " + i_path);
+
+    return (parser->readKeywordFromHardware(i_paramsToReadData));
+}
+
+std::string getFRUPath(const nlohmann::json i_jsonObj,
+                       const std::string& i_path)
+{
+    // Given any path, fetch the primary hardware path from json
+    if (i_path.empty())
+    {
+        throw std::runtime_error("Invalid File path provided.");
+    }
+
+    if (!i_jsonObj.contains("frus"))
+    {
+        throw std::runtime_error("Missing frus section in VPD JSON");
+    }
+
+    if (i_jsonObj["frus"].contains(i_path))
+    {
+        return i_path;
+    }
+
+    const nlohmann::json& l_listOfFrus =
+        i_jsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
+
+    for (const auto& l_itemFRUS : l_listOfFrus.items())
+    {
+        const auto l_hwPath = l_itemFRUS.key();
+        const auto l_redundantHwPath =
+            i_jsonObj["frus"][l_hwPath].at(0).value("redundantEeprom", "");
+        const auto l_invPath =
+            i_jsonObj["frus"][l_hwPath].at(0).value("inventoryPath", "");
+
+        if (i_path == l_redundantHwPath || i_path == l_invPath)
+        {
+            return l_hwPath;
+        }
+    }
+
+    return std::string();
 }
 } // namespace utils
 } // namespace vpd

@@ -27,6 +27,19 @@ class ParserInterface
     virtual types::VPDMapVariant parse() = 0;
 
     /**
+     * @brief Read keyword's value from hardware
+     *
+     * @param[in] types::ReadVpdParams - Parameters required to perform read.
+     *
+     * @return keyword's value on successful read. Exception on failure.
+     */
+    virtual types::DbusVariantType
+        readKeywordFromHardware(const types::ReadVpdParams)
+    {
+        return types::DbusVariantType();
+    }
+
+    /**
      * @brief Virtual destructor.
      */
     virtual ~ParserInterface() {}
