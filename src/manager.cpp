@@ -69,6 +69,11 @@ Manager::Manager(
 
         iFace->register_method("PerformVPDRecollection",
                                [this]() { this->performVPDRecollection(); });
+
+        // Indicates the VPD collection status of the system.
+        iFace->register_property(
+            "CollectionStatus", std::string("NotStarted"),
+            sdbusplus::asio::PropertyPermission::readWrite);
     }
     catch (const std::exception& e)
     {
@@ -106,7 +111,11 @@ void Manager::SetTimerToDetectSVPDOnDbus()
         {
             // cancel the timer
             timer.cancel();
+            m_interface->set_property("CollectionStatus",
+                                      std::string("InProgress"));
             m_worker->collectFrusFromJson();
+            m_interface->set_property("CollectionStatus",
+                                      std::string("Completed"));
         }
     });
 }
