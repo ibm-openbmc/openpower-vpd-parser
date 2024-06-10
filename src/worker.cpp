@@ -1158,9 +1158,6 @@ void Worker::collectFrusFromJson()
     const nlohmann::json& listOfFrus =
         m_parsedJson["frus"].get_ref<const nlohmann::json::object_t&>();
 
-    // future object to carry return value.
-    std::vector<std::future<std::tuple<bool, std::string>>> listOfFutureObject;
-
     for (const auto& itemFRUS : listOfFrus.items())
     {
         const std::string& vpdFilePath = itemFRUS.key();
@@ -1173,24 +1170,36 @@ void Worker::collectFrusFromJson()
 
         logging::logMessage("Parsing triggered for FRU = " + vpdFilePath);
 
-        listOfFutureObject.push_back(
-            std::async(&Worker::parseAndPublishVPD, this, vpdFilePath));
-    }
+        std::thread{[&vpdFilePath, this]() {
+            auto futureObject = std::async(&Worker::parseAndPublishVPD, this,
+                                           vpdFilePath);
+            activeCollectionThreadCount++;
 
-    for (auto& aFutureObj : listOfFutureObject)
-    {
-        std::tuple<bool, std::string> threadInfo = aFutureObj.get();
+            std::tuple<bool, std::string> threadInfo = futureObject.get();
+            if (!std::get<0>(threadInfo))
+            {
+                activeCollectionThreadCount--;
+                logging::logMessage("Processing failed for = " +
+                                    std::get<1>(threadInfo));
+            }
+            else if (std::get<0>(threadInfo))
+            {
+                activeCollectionThreadCount--;
+                logging::logMessage("Processing passed for = " +
+                                    std::get<1>(threadInfo));
+            }
 
-        if (!std::get<0>(threadInfo))
-        {
-            logging::logMessage("Processing failed for = " +
-                                std::get<1>(threadInfo));
-        }
-        else if (std::get<0>(threadInfo))
-        {
-            logging::logMessage("Processing passed for = " +
-                                std::get<1>(threadInfo));
-        }
+            if (!activeCollectionThreadCount)
+            {
+                isAllFruCollected = true;
+            }
+            else
+            {
+                logging::logMessage(
+                    "Active threads = " +
+                    std::to_string(activeCollectionThreadCount));
+            }
+        }}.detach();
     }
 }
 } // namespace vpd

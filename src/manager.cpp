@@ -26,6 +26,9 @@ Manager::Manager(
 
         // set async timer to detect if system VPD is published on D-Bus.
         SetTimerToDetectSVPDOnDbus();
+
+        // set async timer to detect if VPD collection is done.
+        SetTimerToDetectVpdCollectionStatus();
 #endif
 
         // Register methods under com.ibm.VPD.Manager interface
@@ -40,27 +43,27 @@ Manager::Manager(
             "ReadKeyword",
             [this](const types::Path i_path, const types::VpdData i_data,
                    const uint8_t i_target) -> types::BinaryVector {
-            return this->readKeyword(i_path, i_data, i_target);
-        });
+                return this->readKeyword(i_path, i_data, i_target);
+            });
 
         iFace->register_method(
             "CollectFRUVPD",
             [this](const sdbusplus::message::object_path& i_dbusObjPath) {
             this->collectSingleFruVpd(i_dbusObjPath);
-        });
+            });
 
         iFace->register_method(
             "deleteFRUVPD",
             [this](const sdbusplus::message::object_path& i_dbusObjPath) {
             this->deleteSingleFruVpd(i_dbusObjPath);
-        });
+            });
 
         iFace->register_method(
             "GetExpandedLocationCode",
             [this](const sdbusplus::message::object_path& i_dbusObjPath)
                 -> std::string {
-            return this->getExpandedLocationCode(i_dbusObjPath);
-        });
+                return this->getExpandedLocationCode(i_dbusObjPath);
+            });
 
         iFace->register_method(
             "GetHardwarePath",
@@ -70,7 +73,7 @@ Manager::Manager(
         iFace->register_method("PerformVPDRecollection",
                                [this]() { this->performVPDRecollection(); });
 
-        // Indicates the VPD collection status of the system.
+        // Indicates FRU VPD collection for the system has not started.
         iFace->register_property(
             "CollectionStatus", std::string("NotStarted"),
             sdbusplus::asio::PropertyPermission::readWrite);
@@ -111,11 +114,61 @@ void Manager::SetTimerToDetectSVPDOnDbus()
         {
             // cancel the timer
             timer.cancel();
+
+            // Triggering FRU VPD collection. Setting status to "In Progress".
             m_interface->set_property("CollectionStatus",
                                       std::string("InProgress"));
             m_worker->collectFrusFromJson();
+        }
+    });
+}
+
+void Manager::SetTimerToDetectVpdCollectionStatus()
+{
+    static constexpr auto MAX_RETRY = 5;
+
+    static boost::asio::steady_timer timer(*m_ioContext);
+    static uint8_t timerCount = 0;
+
+    auto asyncCancelled = timer.expires_after(std::chrono::seconds(3));
+
+    (asyncCancelled == 0)
+        ? std::cout << "Collection Timer started" << std::endl
+        : std::cout << "Collection Timer re-started" << std::endl;
+
+    timer.async_wait([this](const boost::system::error_code& ec) {
+        if (ec == boost::asio::error::operation_aborted)
+        {
+            throw std::runtime_error(
+                "Timer to detect thread collection status was aborted");
+        }
+
+        if (ec)
+        {
+            throw std::runtime_error(
+                "Timer to detect thread collection failed");
+        }
+
+        if (m_worker->isAllFruCollectionDone())
+        {
+            // cancel the timer
+            timer.cancel();
             m_interface->set_property("CollectionStatus",
                                       std::string("Completed"));
+        }
+        else
+        {
+            if (timerCount == MAX_RETRY)
+            {
+                timer.cancel();
+                logging::logMessage("Taking too long. Some logic needed here?");
+            }
+            else
+            {
+                logging::logMessage(
+                    "Waiting... FRU VPD collection in progress");
+                SetTimerToDetectVpdCollectionStatus();
+            }
         }
     });
 }

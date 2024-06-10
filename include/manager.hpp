@@ -168,6 +168,18 @@ class Manager
      * caller.
      */
     void SetTimerToDetectSVPDOnDbus();
+
+    /**
+     * @brief Set timer to detect and set VPD collection status for the system.
+     *
+     * Collection of FRU VPD is triggered in a separate thread. Resulting in
+     * multiple threads at  a given time. The API creates a timer which on
+     * regular interval will check if all the threads were collected back and
+     * sets the status of the VPD collection for the system accordingly.
+     *
+     * @throw std::runtime_error
+     */
+    void SetTimerToDetectVpdCollectionStatus();
 #endif
 
     // Shared pointer to asio context object.
