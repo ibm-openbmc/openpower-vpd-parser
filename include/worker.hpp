@@ -100,6 +100,16 @@ class Worker
                       types::ObjectMap& objectInterfaceMap,
                       const std::string& vpdFilePath);
 
+    /**
+     * @brief API to get status of VPD collection process.
+     *
+     * @return - True when done, false otherwise.
+     */
+    inline bool isAllFruCollectionDone() const
+    {
+        return m_isAllFruCollected;
+    }
+
   private:
     /**
      * @brief An API to parse and publish a FRU VPD over D-Bus.
@@ -356,5 +366,13 @@ class Worker
 
     // Path to config JSON if applicable.
     std::string& m_configJsonPath;
+
+    // Keeps track of active thread(s) doing VPD collection.
+    size_t m_activeCollectionThreadCount = 0;
+
+    // Holds status, if VPD collection has been done or not.
+    // Note: This variable does not give information about successfull or failed
+    // collection. It just states, if the VPD collection process is over or not.
+    bool m_isAllFruCollected = false;
 };
 } // namespace vpd

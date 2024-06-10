@@ -26,6 +26,9 @@ Manager::Manager(
 
         // set async timer to detect if system VPD is published on D-Bus.
         SetTimerToDetectSVPDOnDbus();
+
+        // set async timer to detect if VPD collection is done.
+        SetTimerToDetectVpdCollectionStatus();
 #endif
 
         // Register methods under com.ibm.VPD.Manager interface
@@ -70,7 +73,7 @@ Manager::Manager(
         iFace->register_method("PerformVPDRecollection",
                                [this]() { this->performVPDRecollection(); });
 
-        // Indicates the VPD collection status of the system.
+        // Indicates FRU VPD collection for the system has not started.
         iFace->register_property(
             "CollectionStatus", std::string("NotStarted"),
             sdbusplus::asio::PropertyPermission::readWrite);
@@ -111,11 +114,62 @@ void Manager::SetTimerToDetectSVPDOnDbus()
         {
             // cancel the timer
             timer.cancel();
+
+            // Triggering FRU VPD collection. Setting status to "In Progress".
             m_interface->set_property("CollectionStatus",
                                       std::string("InProgress"));
             m_worker->collectFrusFromJson();
+        }
+    });
+}
+
+void Manager::SetTimerToDetectVpdCollectionStatus()
+{
+    static constexpr auto MAX_RETRY = 5;
+
+    static boost::asio::steady_timer l_timer(*m_ioContext);
+    static uint8_t l_timerRetry = 0;
+
+    auto l_asyncCancelled = l_timer.expires_after(std::chrono::seconds(3));
+
+    (l_asyncCancelled == 0)
+        ? std::cout << "Collection Timer started" << std::endl
+        : std::cout << "Collection Timer re-started" << std::endl;
+
+    l_timer.async_wait([this](const boost::system::error_code& ec) {
+        if (ec == boost::asio::error::operation_aborted)
+        {
+            throw std::runtime_error(
+                "Timer to detect thread collection status was aborted");
+        }
+
+        if (ec)
+        {
+            throw std::runtime_error(
+                "Timer to detect thread collection failed");
+        }
+
+        if (m_worker->isAllFruCollectionDone())
+        {
+            // cancel the timer
+            l_timer.cancel();
             m_interface->set_property("CollectionStatus",
                                       std::string("Completed"));
+        }
+        else
+        {
+            if (l_timerRetry == MAX_RETRY)
+            {
+                l_timer.cancel();
+                logging::logMessage("Taking too long. Some logic needed here?");
+            }
+            else
+            {
+                l_timerRetry++;
+                logging::logMessage(
+                    "Waiting... FRU VPD collection is in progress");
+                SetTimerToDetectVpdCollectionStatus();
+            }
         }
     });
 }
