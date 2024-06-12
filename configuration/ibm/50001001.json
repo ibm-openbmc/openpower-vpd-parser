@@ -30,14 +30,15 @@
             "hardwarePath": "/sys/bus/i2c/drivers/at24/8-0050/eeprom"
         },
         "destination": {
-            "inventoryPath": "/system/chassis/motherboard"
+            "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard"
         },
         "type": "IPZ"
     },
     "frus": {
         "/sys/bus/i2c/drivers/at24/8-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "isSystemVpd": true,
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Board.Motherboard": null,
@@ -50,8 +51,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Oscillator Reference Clock"
@@ -59,8 +61,9 @@
                 }
             },
             {
-                "inventoryPath": "/system",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "isSystemVpd": true,
                 "copyRecords": ["VSYS"],
                 "extraInterfaces": {
@@ -88,7 +91,8 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "isSystemVpd": true,
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Chassis": null,
@@ -102,8 +106,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "com.ibm.Control.Host.PCIeLink": null,
                     "xyz.openbmc_project.State.Decorator.PowerState": "xyz.openbmc_project.State.Decorator.PowerState.State.Unknown",
@@ -119,8 +124,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "com.ibm.Control.Host.PCIeLink": null,
                     "xyz.openbmc_project.State.Decorator.PowerState": "xyz.openbmc_project.State.Decorator.PowerState.State.Unknown",
@@ -136,8 +142,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "com.ibm.Control.Host.PCIeLink": null,
                     "xyz.openbmc_project.State.Decorator.PowerState": "xyz.openbmc_project.State.Decorator.PowerState.State.Unknown",
@@ -153,8 +160,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "com.ibm.Control.Host.PCIeLink": null,
                     "xyz.openbmc_project.State.Decorator.PowerState": "xyz.openbmc_project.State.Decorator.PowerState.State.Unknown",
@@ -170,8 +178,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot4",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot4",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "com.ibm.Control.Host.PCIeLink": null,
                     "xyz.openbmc_project.State.Decorator.PowerState": "xyz.openbmc_project.State.Decorator.PowerState.State.Unknown",
@@ -187,8 +196,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot6",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot6",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "com.ibm.Control.Host.PCIeLink": null,
                     "xyz.openbmc_project.State.Decorator.PowerState": "xyz.openbmc_project.State.Decorator.PowerState.State.Unknown",
@@ -204,8 +214,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot7",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot7",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "com.ibm.Control.Host.PCIeLink": null,
                     "xyz.openbmc_project.State.Decorator.PowerState": "xyz.openbmc_project.State.Decorator.PowerState.State.Unknown",
@@ -221,8 +232,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot8",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot8",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "com.ibm.Control.Host.PCIeLink": null,
                     "xyz.openbmc_project.State.Decorator.PowerState": "xyz.openbmc_project.State.Decorator.PowerState.State.Unknown",
@@ -238,8 +250,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot9",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot9",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "com.ibm.Control.Host.PCIeLink": null,
                     "xyz.openbmc_project.State.Decorator.PowerState": "xyz.openbmc_project.State.Decorator.PowerState.State.Unknown",
@@ -255,8 +268,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot10",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot10",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "com.ibm.Control.Host.PCIeLink": null,
                     "xyz.openbmc_project.State.Decorator.PowerState": "xyz.openbmc_project.State.Decorator.PowerState.State.Unknown",
@@ -272,8 +286,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot11",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot11",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "com.ibm.Control.Host.PCIeLink": null,
                     "xyz.openbmc_project.State.Decorator.PowerState": "xyz.openbmc_project.State.Decorator.PowerState.State.Unknown",
@@ -289,8 +304,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot12",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot12",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "com.ibm.Control.Host.PCIeLink": null,
                     "xyz.openbmc_project.Inventory.Item.PCIeSlot": {
@@ -305,8 +321,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot12/pcie_card12",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot12/pcie_card12",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
                     "com.ibm.ipzvpd.Location": {
@@ -321,8 +338,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/powersupply0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/powersupply0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "embedded": false,
                 "synthesized": true,
                 "extraInterfaces": {
@@ -332,8 +350,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/powersupply1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/powersupply1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "embedded": false,
                 "synthesized": true,
                 "extraInterfaces": {
@@ -343,8 +362,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/fan0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/fan0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "embedded": false,
                 "synthesized": true,
                 "extraInterfaces": {
@@ -373,8 +393,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/fan1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/fan1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "embedded": false,
                 "synthesized": true,
                 "extraInterfaces": {
@@ -403,8 +424,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/fan2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/fan2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "embedded": false,
                 "synthesized": true,
                 "extraInterfaces": {
@@ -433,8 +455,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/fan3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/fan3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "embedded": false,
                 "synthesized": true,
                 "extraInterfaces": {
@@ -463,8 +486,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/fan4",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/fan4",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "embedded": false,
                 "synthesized": true,
                 "extraInterfaces": {
@@ -493,8 +517,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/fan5",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/fan5",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "embedded": false,
                 "synthesized": true,
                 "extraInterfaces": {
@@ -523,7 +548,8 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/tod_battery",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/tod_battery",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Battery": null,
                     "com.ibm.ipzvpd.Location": {
@@ -535,8 +561,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/connector0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/connector0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -548,8 +575,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/connector1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/connector1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -561,8 +589,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/connector2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/connector2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -574,8 +603,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/connector3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/connector3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -587,8 +617,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/connector4",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/connector4",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -600,8 +631,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/connector5",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/connector5",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -613,8 +645,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/connector6",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/connector6",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -626,8 +659,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/connector7",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/connector7",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -639,8 +673,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/connector8",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/connector8",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -652,8 +687,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/connector9",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/connector9",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -665,8 +701,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/connector11",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/connector11",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -678,8 +715,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/connector12",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/connector12",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -691,8 +729,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/connector13",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/connector13",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -704,8 +743,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/connector14",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/connector14",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -717,8 +757,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/connector15",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/connector15",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -730,8 +771,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/connector17",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/connector17",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -743,8 +785,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/connector18",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/connector18",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -758,7 +801,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/8-0051/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/ebmc_card_bmc",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/ebmc_card_bmc",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Bmc": null,
                     "com.ibm.ipzvpd.Location": {
@@ -770,8 +814,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/ebmc_card_bmc/ethernet0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/ebmc_card_bmc/ethernet0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Ethernet": null,
@@ -792,8 +837,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/ebmc_card_bmc/ethernet1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/ebmc_card_bmc/ethernet1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Ethernet": null,
@@ -814,8 +860,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/ebmc_card_bmc/usb0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/ebmc_card_bmc/usb0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -827,8 +874,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/ebmc_card_bmc/displayport0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/ebmc_card_bmc/displayport0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -840,8 +888,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/ebmc_card_bmc/usb1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/ebmc_card_bmc/usb1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -855,7 +904,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/0-0051/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/tpm_wilson",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/tpm_wilson",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Tpm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -869,7 +919,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/7-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/base_op_panel_blyth",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/base_op_panel_blyth",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "essentialFru": true,
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Panel": null,
@@ -884,7 +935,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/7-0051/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/lcd_op_panel_hill",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/lcd_op_panel_hill",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
                         "gpioPresence": {
@@ -921,7 +973,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/9-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/vdd_vrm0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/vdd_vrm0",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Vrm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -935,7 +988,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/10-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/vdd_vrm1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/vdd_vrm1",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Vrm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -949,7 +1003,8 @@
         ],
         "/sys/bus/spi/drivers/at25/spi12.0/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu0",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "redundantEeprom": "/sys/bus/spi/drivers/at25/spi13.0/eeprom",
                 "cpuType": "primary",
                 "powerOffOnly": true,
@@ -966,8 +1021,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu0/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu0/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Quad"
@@ -975,8 +1031,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu0/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu0/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "High speed SMP/OpenCAPI Link"
@@ -984,8 +1041,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu0/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu0/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Memory Controller"
@@ -993,8 +1051,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu0/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu0/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Memory Controller Channel"
@@ -1002,8 +1061,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu0/unit4",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu0/unit4",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Processor To Memory Buffer Interface"
@@ -1011,8 +1071,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu0/unit5",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu0/unit5",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Nest Memory Management Unit"
@@ -1020,8 +1081,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu0/unit6",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu0/unit6",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Accelerator"
@@ -1029,8 +1091,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu0/unit7",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu0/unit7",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Interface"
@@ -1038,8 +1101,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu0/unit8",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu0/unit8",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Interface Controller"
@@ -1047,8 +1111,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu0/unit9",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu0/unit9",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "POWER Accelerator Unit"
@@ -1056,8 +1121,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu0/unit10",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu0/unit10",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "POWER Accelerator Unit Controller"
@@ -1065,8 +1131,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu0/unit11",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu0/unit11",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "PCI Express controllers"
@@ -1074,8 +1141,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu0/unit12",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu0/unit12",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "PCIe host bridge (PHB)"
@@ -1083,8 +1151,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu0/unit13",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu0/unit13",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OBUS End Point"
@@ -1092,8 +1161,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu0/unit14",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu0/unit14",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Cache-Only Core"
@@ -1103,7 +1173,8 @@
         ],
         "/sys/bus/spi/drivers/at25/spi22.0/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu1",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "redundantEeprom": "/sys/bus/spi/drivers/at25/spi23.0/eeprom",
                 "powerOffOnly": true,
                 "offset": 196608,
@@ -1119,8 +1190,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu1/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu1/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Quad"
@@ -1128,8 +1200,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu1/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu1/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "High speed SMP/OpenCAPI Link"
@@ -1137,8 +1210,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu1/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu1/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Memory Controller"
@@ -1146,8 +1220,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu1/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu1/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Memory Controller Channel"
@@ -1155,8 +1230,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu1/unit4",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu1/unit4",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Processor To Memory Buffer Interface"
@@ -1164,8 +1240,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu1/unit5",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu1/unit5",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Nest Memory Management Unit"
@@ -1173,8 +1250,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu1/unit6",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu1/unit6",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Accelerator"
@@ -1182,8 +1260,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu1/unit7",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu1/unit7",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Interface"
@@ -1191,8 +1270,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu1/unit8",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu1/unit8",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Interface Controller"
@@ -1200,8 +1280,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu1/unit9",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu1/unit9",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "POWER Accelerator Unit"
@@ -1209,8 +1290,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu1/unit10",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu1/unit10",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "POWER Accelerator Unit Controller"
@@ -1218,8 +1300,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu1/unit11",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu1/unit11",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "PCI Express controllers"
@@ -1227,8 +1310,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu1/unit12",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu1/unit12",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "PCIe host bridge (PHB)"
@@ -1236,8 +1320,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu1/unit13",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu1/unit13",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OBUS End Point"
@@ -1245,8 +1330,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm0/cpu1/unit14",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm0/cpu1/unit14",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Cache-Only Core"
@@ -1256,7 +1342,8 @@
         ],
         "/sys/bus/spi/drivers/at25/spi32.0/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu0",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "redundantEeprom": "/sys/bus/spi/drivers/at25/spi33.0/eeprom",
                 "powerOffOnly": true,
                 "offset": 196608,
@@ -1272,8 +1359,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu0/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu0/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Quad"
@@ -1281,8 +1369,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu0/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu0/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "High speed SMP/OpenCAPI Link"
@@ -1290,8 +1379,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu0/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu0/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Memory Controller"
@@ -1299,8 +1389,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu0/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu0/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Memory Controller Channel"
@@ -1308,8 +1399,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu0/unit4",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu0/unit4",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Processor To Memory Buffer Interface"
@@ -1317,8 +1409,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu0/unit5",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu0/unit5",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Nest Memory Management Unit"
@@ -1326,8 +1419,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu0/unit6",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu0/unit6",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Accelerator"
@@ -1335,8 +1429,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu0/unit7",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu0/unit7",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Interface"
@@ -1344,8 +1439,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu0/unit8",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu0/unit8",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Interface Controller"
@@ -1353,8 +1449,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu0/unit9",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu0/unit9",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "POWER Accelerator Unit"
@@ -1362,8 +1459,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu0/unit10",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu0/unit10",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "POWER Accelerator Unit Controller"
@@ -1371,8 +1469,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu0/unit11",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu0/unit11",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "PCI Express controllers"
@@ -1380,8 +1479,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu0/unit12",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu0/unit12",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "PCIe host bridge (PHB)"
@@ -1389,8 +1489,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu0/unit13",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu0/unit13",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OBUS End Point"
@@ -1398,8 +1499,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu0/unit14",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu0/unit14",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Cache-Only Core"
@@ -1409,7 +1511,8 @@
         ],
         "/sys/bus/spi/drivers/at25/spi42.0/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu1",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "redundantEeprom": "/sys/bus/spi/drivers/at25/spi43.0/eeprom",
                 "powerOffOnly": true,
                 "offset": 196608,
@@ -1425,8 +1528,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu1/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu1/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Quad"
@@ -1434,8 +1538,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu1/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu1/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "High speed SMP/OpenCAPI Link"
@@ -1443,8 +1548,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu1/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu1/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Memory Controller"
@@ -1452,8 +1558,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu1/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu1/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Memory Controller Channel"
@@ -1461,8 +1568,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu1/unit4",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu1/unit4",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Processor To Memory Buffer Interface"
@@ -1470,8 +1578,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu1/unit5",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu1/unit5",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Nest Memory Management Unit"
@@ -1479,8 +1588,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu1/unit6",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu1/unit6",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Accelerator"
@@ -1488,8 +1598,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu1/unit7",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu1/unit7",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Interface"
@@ -1497,8 +1608,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu1/unit8",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu1/unit8",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Interface Controller"
@@ -1506,8 +1618,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu1/unit9",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu1/unit9",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "POWER Accelerator Unit"
@@ -1515,8 +1628,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu1/unit10",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu1/unit10",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "POWER Accelerator Unit Controller"
@@ -1524,8 +1638,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu1/unit11",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu1/unit11",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "PCI Express controllers"
@@ -1533,8 +1648,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu1/unit12",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu1/unit12",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "PCIe host bridge (PHB)"
@@ -1542,8 +1658,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu1/unit13",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu1/unit13",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OBUS End Point"
@@ -1551,8 +1668,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dcm1/cpu1/unit14",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dcm1/cpu1/unit14",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Cache-Only Core"
@@ -1562,7 +1680,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/4-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot0/pcie_card0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot0/pcie_card0",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "pcaChipAddress": "4-0060",
                 "replaceableAtStandby": true,
                 "concurrentlyMaintainable": true,
@@ -1604,8 +1723,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot0/pcie_card0/cxp_top",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot0/pcie_card0/cxp_top",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "ccin": ["2CE2", "58FF", "6B92", "6B99"],
                 "extraInterfaces": {
@@ -1619,8 +1739,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot0/pcie_card0/cxp_bot",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot0/pcie_card0/cxp_bot",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "ccin": ["2CE2", "58FF", "6B92", "6B99"],
                 "extraInterfaces": {
@@ -1636,7 +1757,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/5-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot3/pcie_card3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot3/pcie_card3",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "pcaChipAddress": "5-0060",
                 "replaceableAtStandby": true,
                 "concurrentlyMaintainable": true,
@@ -1678,8 +1800,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot3/pcie_card3/cxp_top",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot3/pcie_card3/cxp_top",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "ccin": ["2CE2", "58FF", "6B92", "6B99"],
                 "extraInterfaces": {
@@ -1693,8 +1816,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot3/pcie_card3/cxp_bot",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot3/pcie_card3/cxp_bot",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "ccin": ["2CE2", "58FF", "6B92", "6B99"],
                 "extraInterfaces": {
@@ -1710,7 +1834,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/5-0051/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot4/pcie_card4",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot4/pcie_card4",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "pcaChipAddress": "5-0061",
                 "replaceableAtStandby": true,
                 "concurrentlyMaintainable": true,
@@ -1752,8 +1877,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot4/pcie_card4/cxp_top",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot4/pcie_card4/cxp_top",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "ccin": ["2CE2", "58FF", "6B92", "6B99"],
                 "extraInterfaces": {
@@ -1767,8 +1893,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot4/pcie_card4/cxp_bot",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot4/pcie_card4/cxp_bot",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "ccin": ["2CE2", "58FF", "6B92", "6B99"],
                 "extraInterfaces": {
@@ -1784,7 +1911,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/11-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot10/pcie_card10",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot10/pcie_card10",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "pcaChipAddress": "11-0060",
                 "replaceableAtStandby": true,
                 "concurrentlyMaintainable": true,
@@ -1826,8 +1954,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot10/pcie_card10/cxp_top",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot10/pcie_card10/cxp_top",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "ccin": ["2CE2", "58FF", "6B92", "6B99"],
                 "extraInterfaces": {
@@ -1841,8 +1970,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot10/pcie_card10/cxp_bot",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot10/pcie_card10/cxp_bot",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "ccin": ["2CE2", "58FF", "6B92", "6B99"],
                 "extraInterfaces": {
@@ -1856,8 +1986,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot10/pcie_card10/c10_connector0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot10/pcie_card10/c10_connector0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "ccin": ["6B87"],
                 "extraInterfaces": {
@@ -1871,8 +2002,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot10/pcie_card10/c10_connector1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot10/pcie_card10/c10_connector1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "ccin": ["6B87"],
                 "extraInterfaces": {
@@ -1886,8 +2018,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot10/pcie_card10/c10_connector2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot10/pcie_card10/c10_connector2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "ccin": ["6B87"],
                 "extraInterfaces": {
@@ -1901,8 +2034,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot10/pcie_card10/c10_connector3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot10/pcie_card10/c10_connector3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "ccin": ["6B87"],
                 "extraInterfaces": {
@@ -1918,7 +2052,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/4-0052/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot2/pcie_card2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot2/pcie_card2",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "pcaChipAddress": "4-0062",
                 "replaceableAtStandby": true,
                 "concurrentlyMaintainable": true,
@@ -1961,7 +2096,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/6-0053/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot6/pcie_card6",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot6/pcie_card6",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "replaceableAtStandby": true,
                 "concurrentlyMaintainable": true,
                 "preAction": {
@@ -1996,7 +2132,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/6-0052/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot7/pcie_card7",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot7/pcie_card7",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "pcaChipAddress": "6-0062",
                 "replaceableAtStandby": true,
                 "concurrentlyMaintainable": true,
@@ -2039,7 +2176,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/6-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot9/pcie_card9",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot9/pcie_card9",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "pcaChipAddress": "6-0060",
                 "replaceableAtStandby": true,
                 "concurrentlyMaintainable": true,
@@ -2082,7 +2220,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/11-0051/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot11/pcie_card11",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot11/pcie_card11",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "pcaChipAddress": "11-0061",
                 "replaceableAtStandby": true,
                 "concurrentlyMaintainable": true,
@@ -2124,8 +2263,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot11/pcie_card11/c11_connector0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot11/pcie_card11/c11_connector0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "ccin": ["6B87"],
                 "extraInterfaces": {
@@ -2139,8 +2279,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot11/pcie_card11/c11_connector1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot11/pcie_card11/c11_connector1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "ccin": ["6B87"],
                 "extraInterfaces": {
@@ -2154,8 +2295,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot11/pcie_card11/c11_connector2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot11/pcie_card11/c11_connector2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "ccin": ["6B87"],
                 "extraInterfaces": {
@@ -2169,8 +2311,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot11/pcie_card11/c11_connector3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot11/pcie_card11/c11_connector3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "ccin": ["6B87"],
                 "extraInterfaces": {
@@ -2186,7 +2329,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/4-0051/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot1/pcie_card1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot1/pcie_card1",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "pcaChipAddress": "4-0061",
                 "replaceableAtStandby": true,
                 "concurrentlyMaintainable": true,
@@ -2229,7 +2373,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/6-0051/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot8/pcie_card8",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot8/pcie_card8",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "pcaChipAddress": "6-0061",
                 "replaceableAtStandby": true,
                 "concurrentlyMaintainable": true,
@@ -2271,8 +2416,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot8/pcie_card8/c8_connector0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot8/pcie_card8/c8_connector0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "ccin": ["6B87"],
                 "extraInterfaces": {
@@ -2286,8 +2432,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot8/pcie_card8/c8_connector1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot8/pcie_card8/c8_connector1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "ccin": ["6B87"],
                 "extraInterfaces": {
@@ -2301,8 +2448,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot8/pcie_card8/c8_connector2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot8/pcie_card8/c8_connector2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "ccin": ["6B87"],
                 "extraInterfaces": {
@@ -2316,8 +2464,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/pcieslot8/pcie_card8/c8_connector3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot8/pcie_card8/c8_connector3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "ccin": ["6B87"],
                 "extraInterfaces": {
@@ -2333,7 +2482,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/13-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane0",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.DiskBackplane": null,
                     "xyz.openbmc_project.Inventory.Item.FabricAdapter": null,
@@ -2346,8 +2496,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane0/nvme2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane0/nvme2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "com.ibm.Control.Host.PCIeLink": null,
                     "xyz.openbmc_project.State.Decorator.PowerState": "xyz.openbmc_project.State.Decorator.PowerState.State.Unknown",
@@ -2363,8 +2514,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane0/nvme2/dp0_drive2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane0/nvme2/dp0_drive2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "embedded": false,
                 "devAddress": "13-0050",
                 "busType": "i2c",
@@ -2381,8 +2533,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane0/nvme3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane0/nvme3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "com.ibm.Control.Host.PCIeLink": null,
                     "xyz.openbmc_project.State.Decorator.PowerState": "xyz.openbmc_project.State.Decorator.PowerState.State.Unknown",
@@ -2398,8 +2551,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane0/nvme3/dp0_drive3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane0/nvme3/dp0_drive3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "embedded": false,
                 "devAddress": "13-0050",
                 "busType": "i2c",
@@ -2416,8 +2570,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane0/nvme4",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane0/nvme4",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "com.ibm.Control.Host.PCIeLink": null,
                     "xyz.openbmc_project.State.Decorator.PowerState": "xyz.openbmc_project.State.Decorator.PowerState.State.Unknown",
@@ -2433,8 +2588,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane0/nvme4/dp0_drive4",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane0/nvme4/dp0_drive4",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "embedded": false,
                 "devAddress": "13-0050",
                 "busType": "i2c",
@@ -2451,8 +2607,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane0/nvme5",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane0/nvme5",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "com.ibm.Control.Host.PCIeLink": null,
                     "xyz.openbmc_project.State.Decorator.PowerState": "xyz.openbmc_project.State.Decorator.PowerState.State.Unknown",
@@ -2468,8 +2625,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane0/nvme5/dp0_drive5",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane0/nvme5/dp0_drive5",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "embedded": false,
                 "devAddress": "13-0050",
                 "busType": "i2c",
@@ -2486,8 +2644,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane0/dp0_connector1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane0/dp0_connector1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2499,8 +2658,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane0/dp0_connector2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane0/dp0_connector2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2512,8 +2672,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane0/dp0_connector4",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane0/dp0_connector4",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2525,8 +2686,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane0/dp0_connector5",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane0/dp0_connector5",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2540,6 +2702,7 @@
             {
                 "inventoryPath": "/cables/dp0_cable0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Cable": null,
@@ -2551,6 +2714,7 @@
             {
                 "inventoryPath": "/cables/dp0_cable1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Cable": null,
@@ -2562,7 +2726,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/14-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane1",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.DiskBackplane": null,
                     "xyz.openbmc_project.Inventory.Item.FabricAdapter": null,
@@ -2575,8 +2740,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane1/nvme2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane1/nvme2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "com.ibm.Control.Host.PCIeLink": null,
                     "xyz.openbmc_project.State.Decorator.PowerState": "xyz.openbmc_project.State.Decorator.PowerState.State.Unknown",
@@ -2592,8 +2758,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane1/nvme2/dp1_drive2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane1/nvme2/dp1_drive2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "embedded": false,
                 "devAddress": "14-0050",
                 "busType": "i2c",
@@ -2610,8 +2777,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane1/nvme3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane1/nvme3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "com.ibm.Control.Host.PCIeLink": null,
                     "xyz.openbmc_project.State.Decorator.PowerState": "xyz.openbmc_project.State.Decorator.PowerState.State.Unknown",
@@ -2627,8 +2795,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane1/nvme3/dp1_drive3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane1/nvme3/dp1_drive3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "embedded": false,
                 "devAddress": "14-0050",
                 "busType": "i2c",
@@ -2645,8 +2814,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane1/nvme4",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane1/nvme4",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "com.ibm.Control.Host.PCIeLink": null,
                     "xyz.openbmc_project.State.Decorator.PowerState": "xyz.openbmc_project.State.Decorator.PowerState.State.Unknown",
@@ -2662,8 +2832,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane1/nvme4/dp1_drive4",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane1/nvme4/dp1_drive4",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "embedded": false,
                 "devAddress": "14-0050",
                 "busType": "i2c",
@@ -2680,8 +2851,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane1/nvme5",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane1/nvme5",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "com.ibm.Control.Host.PCIeLink": null,
                     "xyz.openbmc_project.State.Decorator.PowerState": "xyz.openbmc_project.State.Decorator.PowerState.State.Unknown",
@@ -2697,8 +2869,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane1/nvme5/dp1_drive5",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane1/nvme5/dp1_drive5",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "embedded": false,
                 "devAddress": "14-0050",
                 "busType": "i2c",
@@ -2715,8 +2888,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane1/dp1_connector1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane1/dp1_connector1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2728,8 +2902,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane1/dp1_connector2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane1/dp1_connector2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2741,8 +2916,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane1/dp1_connector4",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane1/dp1_connector4",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2754,8 +2930,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/disk_backplane1/dp1_connector5",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/disk_backplane1/dp1_connector5",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Connector": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2769,6 +2946,7 @@
             {
                 "inventoryPath": "/cables/dp1_cable0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Cable": null,
@@ -2780,6 +2958,7 @@
             {
                 "inventoryPath": "/cables/dp1_cable1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "noprime": true,
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Cable": null,
@@ -2791,7 +2970,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/111-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm0",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2806,8 +2986,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm0/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm0/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -2815,8 +2996,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm0/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm0/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -2824,8 +3006,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm0/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm0/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -2833,8 +3016,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm0/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm0/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -2844,7 +3028,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/110-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm1",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2859,8 +3044,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm1/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm1/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -2868,8 +3054,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm1/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm1/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -2877,8 +3064,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm1/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm1/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -2886,8 +3074,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm1/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm1/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -2897,7 +3086,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/214-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm10",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm10",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2912,8 +3102,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm10/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm10/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -2921,8 +3112,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm10/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm10/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -2930,8 +3122,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm10/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm10/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -2939,8 +3132,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm10/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm10/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -2950,7 +3144,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/210-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm9",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm9",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2965,8 +3160,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm9/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm9/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -2974,8 +3170,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm9/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm9/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -2983,8 +3180,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm9/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm9/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -2992,8 +3190,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm9/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm9/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -3003,7 +3202,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/202-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm8",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm8",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -3018,8 +3218,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm8/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm8/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -3027,8 +3228,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm8/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm8/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -3036,8 +3238,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm8/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm8/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -3045,8 +3248,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm8/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm8/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -3056,7 +3260,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/311-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm16",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm16",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -3071,8 +3276,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm16/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm16/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -3080,8 +3286,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm16/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm16/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -3089,8 +3296,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm16/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm16/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -3098,8 +3306,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm16/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm16/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -3109,7 +3318,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/310-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm17",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm17",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -3124,8 +3334,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm17/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm17/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -3133,8 +3344,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm17/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm17/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -3142,8 +3354,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm17/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm17/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -3151,8 +3364,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm17/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm17/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -3162,7 +3376,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/312-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm18",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm18",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -3177,8 +3392,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm18/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm18/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -3186,8 +3402,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm18/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm18/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -3195,8 +3412,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm18/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm18/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -3204,8 +3422,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm18/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm18/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -3215,7 +3434,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/402-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm24",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm24",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -3230,8 +3450,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm24/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm24/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -3239,8 +3460,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm24/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm24/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -3248,8 +3470,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm24/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm24/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -3257,8 +3480,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm24/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm24/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -3268,7 +3492,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/410-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm25",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm25",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -3283,8 +3508,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm25/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm25/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -3292,8 +3518,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm25/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm25/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -3301,8 +3528,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm25/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm25/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -3310,8 +3538,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm25/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm25/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -3321,7 +3550,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/112-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm2",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -3336,8 +3566,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm2/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm2/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -3345,8 +3576,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm2/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm2/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -3354,8 +3586,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm2/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm2/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -3363,8 +3596,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm2/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm2/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -3374,7 +3608,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/115-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm4",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm4",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -3389,8 +3624,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm4/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm4/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -3398,8 +3634,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm4/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm4/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -3407,8 +3644,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm4/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm4/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -3416,8 +3654,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm4/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm4/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -3427,7 +3666,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/100-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm5",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm5",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -3442,8 +3682,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm5/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm5/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -3451,8 +3692,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm5/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm5/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -3460,8 +3702,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm5/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm5/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -3469,8 +3712,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm5/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm5/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -3480,7 +3724,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/101-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm7",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm7",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -3495,8 +3740,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm7/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm7/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -3504,8 +3750,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm7/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm7/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -3513,8 +3760,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm7/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm7/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -3522,8 +3770,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm7/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm7/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -3533,7 +3782,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/114-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm6",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm6",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -3548,8 +3798,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm6/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm6/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -3557,8 +3808,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm6/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm6/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -3566,8 +3818,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm6/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm6/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -3575,8 +3828,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm6/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm6/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -3586,7 +3840,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/113-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm3",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -3601,8 +3856,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm3/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm3/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -3610,8 +3866,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm3/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm3/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -3619,8 +3876,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm3/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm3/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -3628,8 +3886,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm3/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm3/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -3639,7 +3898,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/216-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm15",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm15",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -3654,8 +3914,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm15/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm15/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -3663,8 +3924,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm15/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm15/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -3672,8 +3934,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm15/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm15/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -3681,8 +3944,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm15/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm15/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -3692,7 +3956,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/203-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm14",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm14",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -3707,8 +3972,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm14/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm14/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -3716,8 +3982,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm14/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm14/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -3725,8 +3992,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm14/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm14/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -3734,8 +4002,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm14/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm14/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -3745,7 +4014,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/217-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm11",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm11",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -3760,8 +4030,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm11/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm11/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -3769,8 +4040,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm11/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm11/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -3778,8 +4050,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm11/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm11/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -3787,8 +4060,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm11/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm11/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -3798,7 +4072,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/211-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm13",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm13",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -3813,8 +4088,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm13/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm13/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -3822,8 +4098,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm13/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm13/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -3831,8 +4108,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm13/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm13/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -3840,8 +4118,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm13/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm13/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -3851,7 +4130,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/215-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm12",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm12",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -3866,8 +4146,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm12/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm12/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -3875,8 +4156,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm12/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm12/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -3884,8 +4166,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm12/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm12/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -3893,8 +4176,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm12/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm12/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -3904,7 +4188,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/315-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm20",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm20",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -3919,8 +4204,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm20/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm20/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -3928,8 +4214,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm20/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm20/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -3937,8 +4224,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm20/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm20/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -3946,8 +4234,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm20/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm20/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -3957,7 +4246,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/300-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm21",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm21",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -3972,8 +4262,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm21/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm21/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -3981,8 +4272,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm21/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm21/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -3990,8 +4282,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm21/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm21/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -3999,8 +4292,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm21/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm21/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -4010,7 +4304,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/313-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm19",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm19",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -4025,8 +4320,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm19/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm19/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -4034,8 +4330,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm19/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm19/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -4043,8 +4340,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm19/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm19/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -4052,8 +4350,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm19/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm19/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -4063,7 +4362,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/314-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm22",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm22",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -4078,8 +4378,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm22/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm22/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -4087,8 +4388,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm22/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm22/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -4096,8 +4398,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm22/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm22/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -4105,8 +4408,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm22/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm22/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -4116,7 +4420,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/301-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm23",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm23",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -4131,8 +4436,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm23/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm23/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -4140,8 +4446,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm23/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm23/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -4149,8 +4456,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm23/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm23/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -4158,8 +4466,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm23/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm23/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -4169,7 +4478,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/417-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm27",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm27",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -4184,8 +4494,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm27/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm27/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -4193,8 +4504,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm27/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm27/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -4202,8 +4514,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm27/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm27/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -4211,8 +4524,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm27/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm27/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -4222,7 +4536,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/403-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm30",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm30",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -4237,8 +4552,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm30/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm30/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -4246,8 +4562,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm30/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm30/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -4255,8 +4572,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm30/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm30/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -4264,8 +4582,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm30/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm30/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -4275,7 +4594,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/416-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm31",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm31",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -4290,8 +4610,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm31/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm31/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -4299,8 +4620,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm31/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm31/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -4308,8 +4630,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm31/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm31/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -4317,8 +4640,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm31/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm31/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -4328,7 +4652,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/411-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm29",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm29",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -4343,8 +4668,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm29/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm29/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -4352,8 +4678,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm29/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm29/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -4361,8 +4688,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm29/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm29/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -4370,8 +4698,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm29/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm29/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -4381,7 +4710,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/415-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm28",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm28",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -4396,8 +4726,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm28/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm28/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -4405,8 +4736,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm28/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm28/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -4414,8 +4746,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm28/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm28/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -4423,8 +4756,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm28/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm28/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
@@ -4434,7 +4768,8 @@
         ],
         "/sys/bus/i2c/drivers/at24/414-0050/eeprom": [
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm26",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm26",
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Dimm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -4449,8 +4784,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm26/unit0",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm26/unit0",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "OpenCAPI Memory Buffer"
@@ -4458,8 +4794,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm26/unit1",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm26/unit1",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "DDR Memory Port"
@@ -4467,8 +4804,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm26/unit2",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm26/unit2",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Control Device"
@@ -4476,8 +4814,9 @@
                 }
             },
             {
-                "inventoryPath": "/system/chassis/motherboard/dimm26/unit3",
+                "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/dimm26/unit3",
                 "inherit": false,
+                "hostService": "xyz.openbmc_project.Inventory.Manager",
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item": {
                         "PrettyName": "Onboard Memory Power Management IC"
