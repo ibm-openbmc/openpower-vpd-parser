@@ -25,15 +25,6 @@
             }
         }
     },
-    "backupAndRestore": {
-        "source": {
-            "hardwarePath": "/sys/bus/i2c/drivers/at24/8-0050/eeprom"
-        },
-        "destination": {
-            "inventoryPath": "/system/chassis/motherboard"
-        },
-        "type": "IPZ"
-    },
     "muxes": [
         {
             "i2bus": "4",

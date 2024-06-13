@@ -21,5 +21,8 @@ types::SystemTypeMap systemType{
     {"50003000",
      {"50003000_v2", {{"000A", ""}, {"000B", ""}, {"000C", ""}, {"0014", ""}}}},
     {"50004000", {"50004000", {}}}};
+
+std::unordered_map<std::string, std::string> systemSpecificBackupMap{
+    {"50001001", "backup_restore_50001001.json"}};
 } // namespace config
 } // namespace vpd
