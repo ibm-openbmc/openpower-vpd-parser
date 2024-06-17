@@ -85,11 +85,17 @@ constexpr auto pimIntf = "xyz.openbmc_project.Inventory.Manager";
 constexpr auto ipzVpdInf = "com.ibm.ipzvpd.";
 constexpr auto kwdVpdInf = "com.ibm.ipzvpd.VINI";
 constexpr auto kwdCCIN = "CC";
+constexpr auto locationCodeInf = "com.ibm.ipzvpd.Location";
 
 static constexpr auto BD_YEAR_END = 4;
 static constexpr auto BD_MONTH_END = 7;
 static constexpr auto BD_DAY_END = 10;
 static constexpr auto BD_HOUR_END = 13;
+
+constexpr uint8_t UNEXP_LOCATION_CODE_MIN_LENGTH = 4;
+constexpr uint8_t EXP_LOCATION_CODE_MIN_LENGTH = 17;
+static constexpr auto SE_KWD_LENGTH = 7;
+static constexpr auto INVALID_NODE_NUMBER = -1;
 
 // To be explicitly used for string comparision.
 static constexpr auto STR_CMP_SUCCESS = 0;
