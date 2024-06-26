@@ -808,5 +808,43 @@ std::string
     }
     return std::string();
 }
+
+std::string getFruPathFromJson(const nlohmann::json& i_sysCfgJsonObj,
+                               const std::string& i_vpdPath)
+{
+    if (i_vpdPath.empty())
+    {
+        throw std::runtime_error("Path parameter is empty.");
+    }
+
+    if (!i_sysCfgJsonObj.contains("frus"))
+    {
+        throw std::runtime_error("Missing frus tag in system config JSON.");
+    }
+
+    // check if given path is FRU path
+    if (i_sysCfgJsonObj["frus"].contains(i_vpdPath))
+    {
+        return i_vpdPath;
+    }
+
+    const nlohmann::json& l_fruList =
+        i_sysCfgJsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
+
+    for (const auto& l_fru : l_fruList.items())
+    {
+        const auto l_fruPath = l_fru.key();
+
+        // check if given path is redundant FRU path or inventory path
+        if (i_vpdPath == i_sysCfgJsonObj["frus"][l_fruPath].at(0).value(
+                             "redundantEeprom", "") ||
+            (i_vpdPath == i_sysCfgJsonObj["frus"][l_fruPath].at(0).value(
+                              "inventoryPath", "")))
+        {
+            return l_fruPath;
+        }
+    }
+    return std::string();
+}
 } // namespace utils
 } // namespace vpd
