@@ -43,67 +43,47 @@ class Manager
     /**
      * @brief Update keyword value.
      *
-     * API can be used to update VPD keyword.
+     * This API is used to update keyword value on the given input path and its
+     * redundant path(s) if any taken from system config JSON.
      *
-     * To update a keyword on cache, input path should be D-bus object path.
-     * Eg: ("/xyz/openbmc_project/inventory/system/chassis/motherboard").
+     * To update IPZ type VPD, input parameter for writing should be in the form
+     * of (Record, Keyword, Value). Eg: ("VINI", "SN", {0x01, 0x02, 0x03}).
      *
-     * To update a keyword on hardware, input path should be EEPROM path.
-     * Eg:
-     * ("/sys/bus/i2c/drivers/at24/9-0052/eeprom").
+     * To update Keyword type VPD, input parameter for writing should be in the
+     * form of (Keyword, Value). Eg: ("PE", {0x01, 0x02, 0x03}).
      *
-     * To update a keyword on both cache and hardware, input path should be
-     * D-bus object path. Eg:
-     * ("/xyz/openbmc_project/inventory/system/chassis/motherboard").
+     * @param[in] i_vpdPath - Path (inventory object path/FRU EEPROM path).
+     * @param[in] i_paramsToWriteData - Input details.
      *
-     * To update IPZ type VPD, input data should be in the form of (Record,
-     * Keyword, Value). Eg: ("VINI", "SN", {0x01, 0x02, 0x03}).
-     *
-     * To update Keyword type VPD, input data should be in the form of (Keyword,
-     * Value). Eg: ("PE", {0x01, 0x02, 0x03}).
-     *
-     * The target to update can either be cache/hardware/both, whose values are
-     * 0/1/2 respectively.
-     *
-     * @param[in] i_path - D-bus object path/EEPROM path.
-     * @param[in] i_data - Data to be updated.
-     * @param[in] i_target - Target location to update (0/1/2).
-     *
-     * @return On failure this API throws an error, on success it returns
-     * nothing.
+     * @return On success returns number of bytes written, on failure returns
+     * -1.
      */
-    void updateKeyword(const types::Path i_path, const types::VpdData i_data,
-                       const uint8_t i_target);
+    int updateKeyword(const types::Path i_vpdPath,
+                      const types::WriteVpdParams i_paramsToWriteData);
 
     /**
      * @brief Read keyword value.
      *
-     * API can be used to read VPD keyword.
+     * API can be used to read VPD keyword from the given input path.
      *
-     * To read a keyword from cache, input path should be D-bus object path.
-     * Eg: ("/xyz/openbmc_project/inventory/system/chassis/motherboard").
-     *
-     * To read a keyword from hardware, input path should be EEPROM path.
-     * Eg: ("/sys/bus/i2c/drivers/at24/9-0052/eeprom").
-     *
-     * To read keyword from IPZ type VPD, input data should be in the form of
-     * (Record, Keyword). Eg: ("VINI", "SN").
+     * To read keyword of type IPZ, input parameter for reading should be in the
+     * form of (Record, Keyword). Eg: ("VINI", "SN").
      *
      * To read keyword from keyword type VPD, just keyword name has to be
-     * supplied as input. Eg: ("SN").
+     * supplied in the input parameter. Eg: ("SN").
      *
-     * The target to read can either be cache/hardware, whose values are 0/1
-     * respectively.
+     * @param[in] i_fruPath - EEPROM path.
+     * @param[in] i_paramsToReadData - Input details.
      *
-     * @param[in] i_path - D-bus object path/EEPROM path.
-     * @param[in] i_data - Data to be read.
-     * @param[in] i_target - Target location to read from (0/1).
+     * @throw
+     * sdbusplus::xyz::openbmc_project::Common::Device::Error::ReadFailure.
      *
-     * @return Read value in array of bytes.
+     * @return On success returns the read value in variant of array of bytes.
+     * On failure throws exception.
      */
-    types::BinaryVector readKeyword(const types::Path i_path,
-                                    const types::VpdData i_data,
-                                    const uint8_t i_target);
+    types::DbusVariantType
+        readKeyword(const types::Path i_fruPath,
+                    const types::ReadVpdParams i_paramsToReadData);
 
     /**
      * @brief Collect single FRU VPD

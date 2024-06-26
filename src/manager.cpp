@@ -32,18 +32,19 @@ Manager::Manager(
 #endif
 
         // Register methods under com.ibm.VPD.Manager interface
-        iFace->register_method("WriteKeyword",
-                               [this](const types::Path i_path,
-                                      const types::VpdData i_data,
-                                      const uint8_t i_target) {
-            this->updateKeyword(i_path, i_data, i_target);
+        iFace->register_method(
+            "WriteKeyword",
+            [this](const types::Path i_vpdPath,
+                   const types::WriteVpdParams i_paramsToWriteData) -> int {
+            return this->updateKeyword(i_vpdPath, i_paramsToWriteData);
         });
 
         iFace->register_method(
             "ReadKeyword",
-            [this](const types::Path i_path, const types::VpdData i_data,
-                   const uint8_t i_target) -> types::BinaryVector {
-            return this->readKeyword(i_path, i_data, i_target);
+            [this](const types::Path i_fruPath,
+                   const types::ReadVpdParams i_paramsToReadData)
+                -> types::DbusVariantType {
+            return this->readKeyword(i_fruPath, i_paramsToReadData);
         });
 
         iFace->register_method(
@@ -175,29 +176,27 @@ void Manager::SetTimerToDetectVpdCollectionStatus()
 }
 #endif
 
-void Manager::updateKeyword(const types::Path i_path,
-                            const types::VpdData i_data, const uint8_t i_target)
+int Manager::updateKeyword(const types::Path i_vpdPath,
+                           const types::WriteVpdParams i_paramsToWriteData)
 {
-    // Dummy code to supress unused variable warning.
-    std::cout << "\nFRU path " << i_path;
-    std::cout << "\nData " << i_data.index();
-    std::cout << "\nTarget = " << static_cast<int>(i_target);
+    // Code to supress unused variable warning. To be removed.
+    (void)i_vpdPath;
+    (void)i_paramsToWriteData;
 
-    // On success return nothing. On failure throw error.
+    // On success return number of bytes written. On failure return -1.
+    return -1;
 }
 
-types::BinaryVector Manager::readKeyword(const types::Path i_path,
-                                         const types::VpdData i_data,
-                                         const uint8_t i_target)
+types::DbusVariantType
+    Manager::readKeyword(const types::Path i_fruPath,
+                         const types::ReadVpdParams i_paramsToReadData)
 {
-    // Dummy code to supress unused variable warning. To be removed.
-    std::cout << "\nFRU path " << i_path;
-    std::cout << "\nData " << i_data.index();
-    std::cout << "\nTarget = " << static_cast<int>(i_target);
+    // Code to supress unused variable warning. To be removed.
+    (void)i_fruPath;
+    (void)i_paramsToReadData;
 
     // On success return the value read. On failure throw error.
-
-    return types::BinaryVector();
+    return types::DbusVariantType();
 }
 
 void Manager::collectSingleFruVpd(
