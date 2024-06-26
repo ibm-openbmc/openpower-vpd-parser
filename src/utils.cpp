@@ -423,6 +423,8 @@ void getVpdDataInVector(const std::string& vpdFilePath,
     try
     {
         std::fstream vpdFileStream;
+        vpdFileStream.exceptions(std::ifstream::badbit |
+                                 std::ifstream::failbit);
         vpdFileStream.open(vpdFilePath, std::ios::in | std::ios::binary);
         auto vpdSizeToRead = std::min(std::filesystem::file_size(vpdFilePath),
                                       static_cast<uintmax_t>(65504));
