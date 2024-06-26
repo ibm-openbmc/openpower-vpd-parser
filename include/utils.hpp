@@ -358,5 +358,23 @@ bool executePreAction(const nlohmann::json& i_parsedConfigJson,
                       const std::string& i_vpdFilePath,
                       const std::string& i_flagToProcess);
 
+/**
+ * @brief Get FRU EEPROM path from system config JSON
+ *
+ * Given either D-bus inventory path/FRU EEPROM path/redundant EEPROM path,
+ * this API returns FRU EEPROM path if present in JSON.
+ *
+ * @param[in] i_sysCfgJsonObj - Parsed system config JSON object
+ * @param[in] i_vpdPath - Path to VPD(D-bus path/FRU EEPROM path/redundant
+ * EEPROM path)
+ *
+ * @throw std::runtime_error to the caller.
+ *
+ * @return If JSON find is successful return valid FRU EEPROM path, else return
+ * empty string.
+ */
+std::string getFRUPathFromJSON(const nlohmann::json i_sysCfgJsonObj,
+                               const std::string& i_vpdPath);
+
 } // namespace utils
 } // namespace vpd
