@@ -116,6 +116,11 @@ void Manager::SetTimerToDetectSVPDOnDbus()
             m_worker->collectFrusFromJson();
             m_interface->set_property("CollectionStatus",
                                       std::string("Completed"));
+
+            if (m_worker->isBackupAndRestoreRequired())
+            {
+                m_worker->backupAndRestore();
+            }
         }
     });
 }
