@@ -358,5 +358,21 @@ bool executePreAction(const nlohmann::json& i_parsedConfigJson,
                       const std::string& i_vpdFilePath,
                       const std::string& i_flagToProcess);
 
+/**
+ * @brief Get redundant FRU path from system config JSON
+ *
+ * Given either D-bus inventory path/FRU path/redundant FRU path, this
+ * API returns the redundant FRU path taken from "redundantEeprom" tag from
+ * system config JSON.
+ *
+ * @param[in] i_sysCfgJsonObj - system config JSON object
+ * @param[in] i_vpdPath - Path to where VPD is stored.
+ *
+ * @throw std::runtime_error.
+ * @return On success return valid path, on failure return empty string.
+ */
+std::string
+    getRedundantEepromPathFromJson(const nlohmann::json& i_sysCfgJsonObj,
+                                   const std::string& i_vpdPath);
 } // namespace utils
 } // namespace vpd

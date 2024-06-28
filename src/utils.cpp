@@ -766,5 +766,47 @@ bool executePreAction(const nlohmann::json& i_parsedConfigJson,
 
     return true;
 }
+
+std::string
+    getRedundantEepromPathFromJson(const nlohmann::json& i_sysCfgJsonObj,
+                                   const std::string& i_vpdPath)
+{
+    if (i_vpdPath.empty())
+    {
+        throw std::runtime_error("Path parameter is empty.");
+    }
+
+    if (!i_sysCfgJsonObj.contains("frus"))
+    {
+        throw std::runtime_error("Missing frus tag in system config JSON.");
+    }
+
+    // check if given path is FRU path
+    if (i_sysCfgJsonObj["frus"].contains(i_vpdPath))
+    {
+        return i_sysCfgJsonObj["frus"][i_vpdPath].at(0).value("redundantEeprom",
+                                                              "");
+    }
+
+    const nlohmann::json& l_fruList =
+        i_sysCfgJsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
+
+    for (const auto& l_fru : l_fruList.items())
+    {
+        const std::string& l_fruPath = l_fru.key();
+        const std::string& l_redundantFruPath =
+            i_sysCfgJsonObj["frus"][l_fruPath].at(0).value("redundantEeprom",
+                                                           "");
+
+        // check if given path is inventory path or redundant FRU path
+        if ((i_sysCfgJsonObj["frus"][l_fruPath].at(0).value("inventoryPath",
+                                                            "") == i_vpdPath) ||
+            (l_redundantFruPath == i_vpdPath))
+        {
+            return l_redundantFruPath;
+        }
+    }
+    return std::string();
+}
 } // namespace utils
 } // namespace vpd
