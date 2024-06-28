@@ -75,6 +75,19 @@ class IpzVpdParser : public ParserInterface
      */
     void checkHeader(types::BinaryVector::const_iterator itrToVPD);
 
+    /**
+     * @brief API to read keyword's value from hardware
+     *
+     * @param[in] i_paramsToReadData - Data required to perform read
+     *
+     * @throw
+     * sdbusplus::xyz::openbmc_project::Common::Device::Error::ReadFailure.
+     * @return On success return the value read from the given path. On failure
+     * throw exception.
+     */
+    types::DbusVariantType
+        readKeywordFromHardware(const types::ReadVpdParams i_paramsToReadData);
+
   private:
     /**
      * @brief Check ECC of VPD header.
@@ -145,6 +158,36 @@ class IpzVpdParser : public ParserInterface
      */
     types::IPZVpdMap::mapped_type
         readKeywords(types::BinaryVector::const_iterator& itrToKwds);
+
+    /**
+     * @brief Get record offset from VTOC PT keyword
+     *
+     * This API parses through VTOC's PT keyword value and returns the offset of
+     * the record which we are interested in.
+     *
+     * @param[in] i_record - Record name.
+     * @param[in] i_vtocOffset - Offset to VTOC record
+     *
+     * @return Record offset value if found in VTOC PT, else return 0.
+     */
+    types::RecordOffset getRecordOffsetFromPT(const types::Record& l_record,
+                                              auto i_vtocOffset);
+
+    /**
+     * @brief Get keyword value
+     *
+     * @param[in] i_record - Record name
+     * @param[in] i_keyword - Keyword name
+     * @param[in] i_recordDataOffset - Record offset value
+     *
+     * @throw std::runtime_error
+     * @return On success return hexadecimal array of bytes read from the given
+     * record's keyword. On failure throws error.
+     */
+    types::BinaryVector
+        getKeywordValueFromRecord(const types::Record& i_record,
+                                  const types::Keyword& i_keyword,
+                                  auto i_recordDataOffset);
 
     /**
      * @brief API to process a record.

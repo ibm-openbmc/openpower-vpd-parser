@@ -358,5 +358,38 @@ bool executePreAction(const nlohmann::json& i_parsedConfigJson,
                       const std::string& i_vpdFilePath,
                       const std::string& i_flagToProcess);
 
+/**
+ * @brief Read keyword's value
+ *
+ * API reads the keyword's value from the given path and returns it to the
+ * caller.
+ *
+ * @param[in] i_path - EEPROM path
+ * @param[in] i_paramsToReadData - Data required to perform read
+ * @param[in] i_jsonObj - JSON object
+ *
+ * @throw xyz.openbmc_project.Common.Device.Error.ReadFailure on hardware read
+ * failures.
+ *
+ * @return On success return keyword's value. On failure throws exception.
+ */
+types::DbusVariantType
+    readKeyword(const types::Path i_path,
+                const types::ReadVpdParams i_paramsToReadData,
+                const nlohmann::json i_jsonObj);
+
+/**
+ * @brief Get primary EEPROM path from config JSON
+ *
+ * Given either D-bus inventory path/FRU EEPROM path,
+ * this API returns the primary EEPROM path fetched from JSON.
+ *
+ * @param[in] i_jsonObj - Parsed VPD config JSON object
+ * @param[in] i-path - Path in which VPD is present(D-bus path/FRU EEPROM path)
+ *
+ * @return On success returns valid path, on failure returns empty string.
+ */
+std::string getFRUPath(const nlohmann::json i_jsonObj,
+                       const std::string& i_path);
 } // namespace utils
 } // namespace vpd

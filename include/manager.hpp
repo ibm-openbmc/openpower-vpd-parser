@@ -80,30 +80,23 @@ class Manager
      *
      * API can be used to read VPD keyword.
      *
-     * To read a keyword from cache, input path should be D-bus object path.
-     * Eg: ("/xyz/openbmc_project/inventory/system/chassis/motherboard").
-     *
-     * To read a keyword from hardware, input path should be EEPROM path.
-     * Eg: ("/sys/bus/i2c/drivers/at24/9-0052/eeprom").
-     *
-     * To read keyword from IPZ type VPD, input data should be in the form of
+     * To read keyword of type IPZ, input data should be in the form of
      * (Record, Keyword). Eg: ("VINI", "SN").
      *
      * To read keyword from keyword type VPD, just keyword name has to be
      * supplied as input. Eg: ("SN").
      *
-     * The target to read can either be cache/hardware, whose values are 0/1
-     * respectively.
+     * @param[in] i_path - EEPROM path.
+     * @param[in] i_paramsToReadData - Input required to perform read.
      *
-     * @param[in] i_path - D-bus object path/EEPROM path.
-     * @param[in] i_data - Data to be read.
-     * @param[in] i_target - Target location to read from (0/1).
-     *
-     * @return Read value in array of bytes.
+     * @throw
+     * sdbusplus::xyz::openbmc_project::Common::Device::Error::ReadFailure.
+     * @return On success read value in variant of array of bytes. On failure
+     * throws exception.
      */
-    types::BinaryVector readKeyword(const types::Path i_path,
-                                    const types::VpdData i_data,
-                                    const uint8_t i_target);
+    types::DbusVariantType
+        readKeyword(const types::Path i_path,
+                    const types::ReadVpdParams i_paramsToReadData);
 
     /**
      * @brief Collect single FRU VPD

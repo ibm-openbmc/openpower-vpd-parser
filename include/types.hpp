@@ -2,6 +2,7 @@
 
 #include <sdbusplus/asio/property.hpp>
 #include <sdbusplus/server.hpp>
+#include <xyz/openbmc_project/Common/Device/error.hpp>
 
 #include <tuple>
 #include <unordered_map>
@@ -15,8 +16,7 @@ using BinaryVector = std::vector<uint8_t>;
 
 // This covers mostly all the data type supported over Dbus for a property.
 // clang-format off
-using DbusVariantType = std::variant<
-    std::vector<std::tuple<std::string, std::string, std::string>>,
+using DbusVariantType = std::variant<std::vector<std::tuple<std::string, std::string, std::string>>,
     std::vector<std::string>,
     std::vector<double>,
     std::string,
@@ -107,15 +107,11 @@ using Keyword = std::string;
 using IpzData = std::tuple<Record, Keyword, BinaryVector>;
 using KwData = std::tuple<Keyword, BinaryVector>;
 
-using ReadVpdParams = std::variant<std::tuple<Record, Keyword>, Keyword>;
+using IpzType = std::tuple<Record, Keyword>;
+using ReadVpdParams = std::variant<IpzType, Keyword>;
 using VpdData = std::variant<IpzData, KwData>;
 
-enum class VpdTarget
-{
-        Cache = 0,
-        Hardware = 1,
-        CacheAndHardware = 2
-};
+namespace DeviceError = sdbusplus::xyz::openbmc_project::Common::Device::Error;
 
 } // namespace types
 } // namespace vpd
