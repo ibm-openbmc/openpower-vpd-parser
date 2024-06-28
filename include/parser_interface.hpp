@@ -1,5 +1,6 @@
 #pragma once
 
+#include "logger.hpp"
 #include "types.hpp"
 
 #include <variant>
@@ -25,6 +26,21 @@ class ParserInterface
      * parsing logic.
      */
     virtual types::VPDMapVariant parse() = 0;
+
+    /**
+     * @brief Virtual function to perform write on VPD of any type.
+     *
+     * The API can be overridden by classes inheriting this ParserInterface
+     * class to implement VPD write operation.
+     *
+     * @return -1 on failure and n if n bytes are written.
+     */
+    virtual int write(const types::Path, const types::VpdData)
+    {
+        logging::logMessage(
+            "Write operation not supported for the given VPD type.");
+        return 0;
+    }
 
     /**
      * @brief Virtual destructor.

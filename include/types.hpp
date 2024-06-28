@@ -2,6 +2,7 @@
 
 #include <sdbusplus/asio/property.hpp>
 #include <sdbusplus/server.hpp>
+#include <xyz/openbmc_project/Common/error.hpp>
 
 #include <tuple>
 #include <unordered_map>
@@ -11,6 +12,8 @@ namespace vpd
 {
 namespace types
 {
+namespace CommonError = sdbusplus::xyz::openbmc_project::Common::Error;
+
 using BinaryVector = std::vector<uint8_t>;
 
 // This covers mostly all the data type supported over Dbus for a property.
@@ -109,6 +112,11 @@ using KwData = std::tuple<Keyword, BinaryVector>;
 
 using ReadVpdParams = std::variant<std::tuple<Record, Keyword>, Keyword>;
 using VpdData = std::variant<IpzData, KwData>;
+
+namespace CommonError = sdbusplus::xyz::openbmc_project::Common::Error;
+
+/* Collection of FRU paths {Inventory path, Primary EEPROM path, Redundant EEPROM path} */
+using PathCollection = std::tuple<std::string, std::string, std::string>;
 
 enum class VpdTarget
 {

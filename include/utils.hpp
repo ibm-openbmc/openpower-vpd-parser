@@ -358,5 +358,76 @@ bool executePreAction(const nlohmann::json& i_parsedConfigJson,
                       const std::string& i_vpdFilePath,
                       const std::string& i_flagToProcess);
 
+/**
+ * @brief Check if given path is D-bus inventory path.
+ *
+ * @param[in] i_path - FRU path
+ *
+ * @return true if d-bus inventory path, false otherwise.
+ */
+bool isDbusInvPath(const std::string& i_path);
+
+/**
+ * @brief Update keyword data on D-bus
+ *
+ * Update keyword on D-bus and persist the data in BMC's cache memory. Data can
+ * be of type IPZ/Keyword. Data has to be sent in the respective formats.
+ *
+ * IPZ format - Record, Keyword, Value
+ * Keyword format - Keyword, Value.
+ *
+ * @param[in] i_invPath - Inventory path
+ * @param[in] i_data - Data to be updated.
+ *
+ * @return 0 if update is successful, -1 otherwise.
+ */
+int updateDbus(const types::Path& i_invPath, const types::VpdData& i_data);
+
+/**
+ * @brief Update keyword on hardware
+ *
+ * Update keyword data on EEPROM. Data can be of type IPZ/Keyword. Data has to
+ * be sent in the respective formats.
+ *
+ * IPZ format - Record, Keyword, Value
+ * Keyword format - Keyword, Value.
+ *
+ * @param[in] i_hwPath - Hardware path
+ * @param[in] i_data - Data to be updated.
+ * @param[in] i_jsonObk - Parsed JSON object.
+ *
+ * @return 0 if update is successful, -1 otherwise
+ */
+int updateHardware(const types::Path& i_hwPath, const types::VpdData& i_data,
+                   const nlohmann::json& i_jsonObj);
+
+/**
+ * @brief Get FRU paths
+ *
+ * This api sends back the inventory path, primary hardware path and redundant
+ * hardware path if any one of the paths is given as input.
+ *
+ * @param[in] i_inputPath - Input FRU path. It can be either Inventory
+ * path/Primary EEPROM path/Redundant EEPROM path.
+ * @param[in,out] i_fruPaths - FRU paths.
+ * @param[in] i_jsonObj - JSON object.
+ *
+ * @return true if the paths are found from JSON, false otherwise.
+ */
+bool getFRUPaths(const std::string& i_inputPath,
+                 types::PathCollection& i_fruPaths,
+                 const nlohmann::json& i_jsonObj);
+
+/**
+ * @brief Remove prefix from inventory path
+ *
+ * Remove the prefix /xyz/openbmc_project/inventory from the given D-bus object
+ * path.
+ *
+ * @param[in] i_invPath - Inventory path
+ *
+ * @return truncated inventory path
+ */
+std::string getTruncatedInvPath(const std::string& i_invPath);
 } // namespace utils
 } // namespace vpd

@@ -67,13 +67,11 @@ class Manager
      *
      * @param[in] i_path - D-bus object path/EEPROM path.
      * @param[in] i_data - Data to be updated.
-     * @param[in] i_target - Target location to update (0/1/2).
      *
-     * @return On failure this API throws an error, on success it returns
-     * nothing.
+     * @return On failure this API throws an error, on success it returns the
+     * number of bytes updated.
      */
-    void updateKeyword(const types::Path i_path, const types::VpdData i_data,
-                       const uint8_t i_target);
+    int updateKeyword(types::Path i_path, const types::VpdData i_data);
 
     /**
      * @brief Read keyword value.
@@ -181,6 +179,9 @@ class Manager
 
     // Shared pointer to worker class
     std::shared_ptr<Worker> m_worker;
+
+    // VPD JSON object
+    nlohmann::json m_jsonObj;
 };
 
 } // namespace vpd
