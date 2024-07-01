@@ -766,5 +766,67 @@ bool executePreAction(const nlohmann::json& i_parsedConfigJson,
 
     return true;
 }
+
+std::string getRedundantEEPROMPathFromJSON(const nlohmann::json i_sysCfgJsonObj,
+                                           const std::string& i_vpdPath)
+{
+    if (i_vpdPath.empty())
+    {
+        throw std::runtime_error("Empty file path provided.");
+    }
+
+    if (!i_sysCfgJsonObj.contains("frus"))
+    {
+        throw std::runtime_error("Missing frus section in VPD JSON");
+    }
+
+    // If given path is FRU EEPROM path
+    if (i_sysCfgJsonObj["frus"].contains(i_vpdPath))
+    {
+        return i_sysCfgJsonObj["frus"][i_vpdPath].at(0).value("redundantEeprom",
+                                                              "");
+    }
+
+    const nlohmann::json& l_fruList =
+        i_sysCfgJsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
+
+    for (const auto& l_fru : l_fruList.items())
+    {
+        const std::string& l_fruPath = l_fru.key();
+        const std::string& l_redundantFruPath =
+            i_sysCfgJsonObj["frus"][l_fruPath].at(0).value("redundantEeprom",
+                                                           "");
+
+        // If there is no redundantEeprom tag for this entry
+        if (l_redundantFruPath == std::string())
+        {
+            continue;
+        }
+
+        // If given path is redundant EEPROM path
+        if (l_redundantFruPath == i_vpdPath)
+        {
+            return l_redundantFruPath;
+        }
+
+        const std::vector<nlohmann::json>& l_subFruList =
+            l_fru.value().get_ref<const nlohmann::json::array_t&>();
+
+        for (const auto& l_subFru : l_subFruList)
+        {
+            if (l_subFru.find("inventoryPath") != l_subFru.end())
+            {
+                // If given path is inventory path
+                if ((l_subFru["inventoryPath"]
+                         .get_ref<const nlohmann::json::string_t&>() ==
+                     i_vpdPath))
+                {
+                    return l_redundantFruPath;
+                }
+            }
+        }
+    }
+    return std::string();
+}
 } // namespace utils
 } // namespace vpd
