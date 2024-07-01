@@ -1,6 +1,7 @@
 #pragma once
 
 #include "constants.hpp"
+#include "types.hpp"
 #include "worker.hpp"
 
 #include <sdbusplus/asio/object_server.hpp>
@@ -126,16 +127,56 @@ class Manager
         const sdbusplus::message::object_path& i_dbusObjPath);
 
     /**
-     * @brief Get expanded location code
-     * API can be used to get expanded location code for the given FRU inventory
-     * path.
+     * @brief Get expanded location code.
      *
-     * @param[in] i_dbusObjPath - D-bus object path
+     * API to get expanded location code from the unexpanded location code.
      *
-     * @return FRU's expanded Location code
+     * @param[in] i_unexpandedLocationCode - Unexpanded location code.
+     * @param[in] i_nodeNumber - Denotes the node in case of a multi-node
+     * configuration, defaulted to zero incase of single node system.
+     *
+     * @throw xyz.openbmc_project.Common.Error.InvalidArgument for
+     * invalid argument.
+     *
+     * @return Location code of the FRU.
      */
-    std::string getExpandedLocationCode(
-        const sdbusplus::message::object_path& i_dbusObjPath);
+    std::string
+        getExpandedLocationCode(const std::string& i_unexpandedLocationCode,
+                                uint16_t i_nodeNumber = 0);
+
+    /**
+     * @brief Get D-Bus object path of FRUs from expanded location code.
+     *
+     * An API to get list of FRU D-Bus object paths for a given expanded
+     * location code.
+     *
+     * @param[in] i_expandedLocationCode - Expanded location code.
+     *
+     * @throw xyz.openbmc_project.Common.Error.InvalidArgument for
+     * invalid argument.
+     *
+     * @return List of FRUs D-Bus object paths for the given location code.
+     */
+    types::ListOfPaths getFRUsByExpandedLocationCode(
+        const std::string& i_expandedLocationCode);
+
+    /**
+     * @brief Get D-Bus object path of FRUs from un-expanded location code.
+     *
+     * An API to get list of FRU D-Bus object paths for a given unexpanded
+     * location code.
+     *
+     * @param[in] i_unexpandedLocationCode - Unexpanded location code.
+     * @param[in] i_nodeNumber - Denotes the node in case of a multi-node
+     * configuration, defaulted to zero incase of single node system.
+     *
+     * @throw xyz.openbmc_project.Common.Error.InvalidArgument for
+     * invalid argument.
+     *
+     * @return List of FRUs D-Bus object paths for the given location code.
+     */
+    types::ListOfPaths getFRUsByUnexpandedLocationCode(
+        const std::string& i_unexpandedLocationCode, uint16_t i_nodeNumber = 0);
 
     /**
      * @brief Get Hardware path
@@ -153,6 +194,22 @@ class Manager
      * can be replaced at standby.
      */
     void performVPDRecollection();
+
+    /**
+     * @brief Get un-expanded location code.
+     *
+     * An API to get un-expanded location code and node number from expanded
+     * location code.
+     *
+     * @param[in] i_expandedLocationCode - Expanded location code.
+     *
+     * @throw xyz.openbmc_project.Common.Error.InvalidArgument for
+     * invalid argument.
+     *
+     * @return Location code in unexpanded format and its node number.
+     */
+    std::tuple<std::string, uint16_t>
+        getUnexpandedLocationCode(const std::string& i_expandedLocationCode);
 
   private:
 #ifdef IBM_SYSTEM
@@ -181,6 +238,15 @@ class Manager
      */
     void SetTimerToDetectVpdCollectionStatus();
 #endif
+
+    /**
+     * @brief An api to check validity of unexpanded location code.
+     *
+     * @param[in] i_locationCode - Unexpanded location code.
+     *
+     * @return True/False based on validity check.
+     */
+    bool isValidUnexpandedLocationCode(const std::string& i_locationCode);
 
     // Shared pointer to asio context object.
     const std::shared_ptr<boost::asio::io_context>& m_ioContext;

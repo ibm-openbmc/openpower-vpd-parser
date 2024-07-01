@@ -110,6 +110,15 @@ class Worker
         return m_isAllFruCollected;
     }
 
+    /** API to get system config JSON Object.
+     *
+     * @return parsed system config JSON object.
+     */
+    inline nlohmann::json getSysConfigJsonObj()
+    {
+        return m_parsedJson;
+    }
+
   private:
     /**
      * @brief An API to parse and publish a FRU VPD over D-Bus.
