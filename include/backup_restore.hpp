@@ -25,10 +25,12 @@ class BackupRestore
     /**
      * @brief Constructor.
      *
-     * @param[in] i_parsedSystemJson - Parsed system config JSON.
+     * @param[in] i_sysCfgJsonObj - Parsed system config JSON.
      *
+     * Note: Throws exception in case of construction failure. Caller needs
+     * to handle to detect successful object creation.
      */
-    BackupRestore(const nlohmann::json& i_parsedSystemJson);
+    BackupRestore(const nlohmann::json& i_sysCfgJsonObj);
 
     /**
      * @brief Default destructor.
@@ -55,6 +57,13 @@ class BackupRestore
      */
     std::tuple<types::VPDMapVariant, types::VPDMapVariant> backupAndRestore();
 
+    /**
+     * @brief An API to set backup and restore is done or not.
+     *
+     * @param[in] i_status - Status to set.
+     */
+    static void setBackupAndRestoreStatus(bool i_status);
+
   private:
     /**
      * @brief An API to handle backup and restore of IPZ type VPD.
@@ -69,7 +78,15 @@ class BackupRestore
                                 const std::string& i_srcPath,
                                 const std::string& i_dstPath);
 
+    // Parsed system JSON config file.
+    nlohmann::json m_sysCfgJsonObj{};
+
     // Parsed backup and restore's JSON config file.
-    nlohmann::json m_backupRestoreParsedJson{};
+    nlohmann::json m_backupRestoreCfgJsonObj{};
+
+    // Indicates if backup and restore has been performed.
+    static bool m_backupAndRestoreDone;
 };
+
+bool BackupRestore::m_backupAndRestoreDone = false;
 } // namespace vpd
