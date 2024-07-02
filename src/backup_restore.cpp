@@ -8,31 +8,31 @@
 
 namespace vpd
 {
-BackupRestore::BackupRestore(const nlohmann::json& i_sysCfgJsonObj) :
+BackupAndRestore::BackupAndRestore(const nlohmann::json& i_sysCfgJsonObj) :
     m_sysCfgJsonObj(i_sysCfgJsonObj)
 {
-    m_backupRestoreCfgJsonObj = utils::getParsedJson(
+    m_backupAndRestoreCfgJsonObj = utils::getParsedJson(
         i_sysCfgJsonObj.value("backupRestoreConfigPath", ""));
 }
 
 std::tuple<types::VPDMapVariant, types::VPDMapVariant>
-    BackupRestore::backupAndRestore()
+    BackupAndRestore::backupAndRestore()
 {
     auto l_emptyVariantPair = std::make_tuple(std::monostate{},
                                               std::monostate{});
     if (m_backupAndRestoreDone)
     {
-        logging::logMessage("Backup and restore triggered already.");
+        logging::logMessage("Backup and restore invoked already.");
         return l_emptyVariantPair;
     }
 
     try
     {
-        if (m_backupRestoreCfgJsonObj.empty() ||
-            !m_backupRestoreCfgJsonObj.contains("source") ||
-            !m_backupRestoreCfgJsonObj.contains("destination") ||
-            !m_backupRestoreCfgJsonObj.contains("type") ||
-            !m_backupRestoreCfgJsonObj.contains("backupMap"))
+        if (m_backupAndRestoreCfgJsonObj.empty() ||
+            !m_backupAndRestoreCfgJsonObj.contains("source") ||
+            !m_backupAndRestoreCfgJsonObj.contains("destination") ||
+            !m_backupAndRestoreCfgJsonObj.contains("type") ||
+            !m_backupAndRestoreCfgJsonObj.contains("backupMap"))
         {
             logging::logMessage(
                 "Backup restore config JSON is missing necessary tag(s), can't initiate backup and restore.");
@@ -41,15 +41,15 @@ std::tuple<types::VPDMapVariant, types::VPDMapVariant>
 
         std::string l_srcVpdPath;
         types::VPDMapVariant l_srcVpdMap;
-        if (l_srcVpdPath =
-                m_backupRestoreCfgJsonObj["source"].value("hardwarePath", "");
+        if (l_srcVpdPath = m_backupAndRestoreCfgJsonObj["source"].value(
+                "hardwarePath", "");
             !l_srcVpdPath.empty() && std::filesystem::exists(l_srcVpdPath))
         {
             std::shared_ptr<Parser> l_vpdParser =
                 std::make_shared<Parser>(l_srcVpdPath, m_sysCfgJsonObj);
             l_srcVpdMap = l_vpdParser->parse();
         }
-        else if (l_srcVpdPath = m_backupRestoreCfgJsonObj["source"].value(
+        else if (l_srcVpdPath = m_backupAndRestoreCfgJsonObj["source"].value(
                      "inventoryPath", "");
                  l_srcVpdPath.empty())
         {
@@ -60,7 +60,7 @@ std::tuple<types::VPDMapVariant, types::VPDMapVariant>
 
         std::string l_dstVpdPath;
         types::VPDMapVariant l_dstVpdMap;
-        if (l_dstVpdPath = m_backupRestoreCfgJsonObj["destination"].value(
+        if (l_dstVpdPath = m_backupAndRestoreCfgJsonObj["destination"].value(
                 "hardwarePath", "");
             !l_dstVpdPath.empty() && std::filesystem::exists(l_dstVpdPath))
         {
@@ -68,8 +68,9 @@ std::tuple<types::VPDMapVariant, types::VPDMapVariant>
                 std::make_shared<Parser>(l_dstVpdPath, m_sysCfgJsonObj);
             l_dstVpdMap = l_vpdParser->parse();
         }
-        else if (l_dstVpdPath = m_backupRestoreCfgJsonObj["destination"].value(
-                     "inventoryPath", "");
+        else if (l_dstVpdPath =
+                     m_backupAndRestoreCfgJsonObj["destination"].value(
+                         "inventoryPath", "");
                  l_dstVpdPath.empty())
         {
             logging::logMessage(
@@ -78,8 +79,9 @@ std::tuple<types::VPDMapVariant, types::VPDMapVariant>
         }
 
         // Implement backup and restore for IPZ type VPD
-        auto l_backupRestoreType = m_backupRestoreCfgJsonObj.value("type", "");
-        if (l_backupRestoreType.compare("IPZ") == constants::STR_CMP_SUCCESS)
+        auto l_backupAndRestoreType = m_backupAndRestoreCfgJsonObj.value("type",
+                                                                         "");
+        if (l_backupAndRestoreType.compare("IPZ") == constants::STR_CMP_SUCCESS)
         {
             types::IPZVpdMap* l_srcVpdPtr = nullptr;
             if (!(l_srcVpdPtr = std::get_if<types::IPZVpdMap>(&l_srcVpdMap)))
@@ -123,10 +125,10 @@ std::tuple<types::VPDMapVariant, types::VPDMapVariant>
     return l_emptyVariantPair;
 }
 
-void BackupRestore::backupAndRestoreIpzVpd(types::IPZVpdMap& io_srcVpdMap,
-                                           types::IPZVpdMap& io_dstVpdMap,
-                                           const std::string& i_srcPath,
-                                           const std::string& i_dstPath)
+void BackupAndRestore::backupAndRestoreIpzVpd(types::IPZVpdMap& io_srcVpdMap,
+                                              types::IPZVpdMap& io_dstVpdMap,
+                                              const std::string& i_srcPath,
+                                              const std::string& i_dstPath)
 {
     (void)io_srcVpdMap;
     (void)io_dstVpdMap;
@@ -134,7 +136,7 @@ void BackupRestore::backupAndRestoreIpzVpd(types::IPZVpdMap& io_srcVpdMap,
     (void)i_dstPath;
 }
 
-void BackupRestore::setBackupAndRestoreStatus(bool i_status)
+void BackupAndRestore::setBackupAndRestoreStatus(bool i_status)
 {
     m_backupAndRestoreDone = i_status;
 }

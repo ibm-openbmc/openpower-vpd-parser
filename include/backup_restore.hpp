@@ -12,30 +12,29 @@ namespace vpd
  * @brief class to implement backup and restore VPD.
  *
  */
-class BackupRestore
+class BackupAndRestore
 {
   public:
     // delete functions
-    BackupRestore() = delete;
-    BackupRestore(const BackupRestore&) = delete;
-    BackupRestore& operator=(const BackupRestore&) = delete;
-    BackupRestore(BackupRestore&&) = delete;
-    BackupRestore& operator=(BackupRestore&&) = delete;
+    BackupAndRestore() = delete;
+    BackupAndRestore(const BackupAndRestore&) = delete;
+    BackupAndRestore& operator=(const BackupAndRestore&) = delete;
+    BackupAndRestore(BackupAndRestore&&) = delete;
+    BackupAndRestore& operator=(BackupAndRestore&&) = delete;
 
     /**
      * @brief Constructor.
      *
-     * @param[in] i_sysCfgJsonObj - Parsed system config JSON.
+     * @param[in] i_sysCfgJsonObj - System config JSON object.
      *
-     * @throw std::runtime_error in case of construction failure. Caller needs
-     * to handle to detect successful object creation.
+     * @throw std::runtime_error in case constructor failure.
      */
-    BackupRestore(const nlohmann::json& i_sysCfgJsonObj);
+    BackupAndRestore(const nlohmann::json& i_sysCfgJsonObj);
 
     /**
      * @brief Default destructor.
      */
-    ~BackupRestore() = default;
+    ~BackupAndRestore() = default;
 
     /**
      * @brief An API to backup and restore VPD.
@@ -58,7 +57,7 @@ class BackupRestore
     std::tuple<types::VPDMapVariant, types::VPDMapVariant> backupAndRestore();
 
     /**
-     * @brief An API to set backup and restore is done or not.
+     * @brief An API to set backup and restore status.
      *
      * @param[in] i_status - Status to set.
      */
@@ -78,15 +77,15 @@ class BackupRestore
                                 const std::string& i_srcPath,
                                 const std::string& i_dstPath);
 
-    // Parsed system JSON config file.
+    // System JSON config JSON object.
     nlohmann::json m_sysCfgJsonObj{};
 
-    // Parsed backup and restore's JSON config file.
-    nlohmann::json m_backupRestoreCfgJsonObj{};
+    // Backup and restore config JSON object.
+    nlohmann::json m_backupAndRestoreCfgJsonObj{};
 
     // Indicates if backup and restore has been performed.
     static bool m_backupAndRestoreDone;
 };
 
-bool BackupRestore::m_backupAndRestoreDone = false;
+bool BackupAndRestore::m_backupAndRestoreDone = false;
 } // namespace vpd
