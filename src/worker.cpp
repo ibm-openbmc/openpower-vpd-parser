@@ -731,6 +731,12 @@ bool Worker::primeInventory(const std::string& i_vpdFilePath)
         logging::logMessage("Empty JSON detected for " + i_vpdFilePath);
         return false;
     }
+    else if (!m_parsedJson["frus"].contains(i_vpdFilePath))
+    {
+        logging::logMessage("File " + i_vpdFilePath +
+                            ", is not found in the system config JSON file.");
+        return false;
+    }
 
     types::ObjectMap l_objectInterfaceMap;
     for (const auto& l_Fru : m_parsedJson["frus"][i_vpdFilePath])
