@@ -83,6 +83,7 @@ class BackupAndRestore
     // Backup and restore config JSON object.
     nlohmann::json m_backupAndRestoreCfgJsonObj{};
 
+    // ToDo: Use enum intead of bool to hold different status.
     // Indicates if backup and restore has been performed.
     static bool m_backupAndRestoreDone;
 };
