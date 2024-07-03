@@ -115,7 +115,7 @@ class Worker
      *
      * @return System config JSON object.
      */
-    inline nlohmann::json getSysConfigJsonObj() const
+    inline nlohmann::json getSysCfgJsonObj() const
     {
         return m_parsedJson;
     }
