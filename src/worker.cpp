@@ -11,6 +11,8 @@
 #include "parser_interface.hpp"
 #include "utils.hpp"
 
+#include <utility/dbus_utility.hpp>
+
 #include <filesystem>
 #include <fstream>
 #include <future>
@@ -189,7 +191,7 @@ bool Worker::isSystemVPDOnDBus() const
         "xyz.openbmc_project.Inventory.Item.Board.Motherboard"};
 
     types::MapperGetObject objectMap =
-        utils::getObjectMap(PIM_PATH_PREFIX + mboardPath, interfaces);
+        dbusUtility::getObjectMap(PIM_PATH_PREFIX + mboardPath, interfaces);
 
     if (objectMap.empty())
     {
@@ -773,7 +775,7 @@ bool Worker::primeInventory(const std::string& i_vpdFilePath)
     }
 
     // Notify PIM
-    if (!utils::callPIM(move(l_objectInterfaceMap)))
+    if (!dbusUtility::callPIM(move(l_objectInterfaceMap)))
     {
         logging::logMessage("Call to PIM failed for VPD file " + i_vpdFilePath);
         return false;
@@ -983,7 +985,7 @@ void Worker::publishSystemVPD(const types::VPDMapVariant& parsedVpdMap)
     {
         populateDbus(parsedVpdMap, objectInterfaceMap, SYSTEM_VPD_FILE_PATH);
         // Notify PIM
-        if (!utils::callPIM(move(objectInterfaceMap)))
+        if (!dbusUtility::callPIM(move(objectInterfaceMap)))
         {
             throw std::runtime_error("Call to PIM failed for system VPD");
         }
@@ -1032,7 +1034,7 @@ bool Worker::processPreAction(const std::string& i_vpdFilePath,
                  {{constants::kwdVpdInf,
                    {{constants::kwdCCIN, types::BinaryVector{}}}}}}};
 
-            if (!utils::callPIM(std::move(l_pimObjMap)))
+            if (!dbusUtility::callPIM(std::move(l_pimObjMap)))
             {
                 logging::logMessage("Call to PIM failed for file " +
                                     i_vpdFilePath);

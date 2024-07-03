@@ -7,6 +7,7 @@
 #include "logger.hpp"
 
 #include <gpiod.hpp>
+#include <utility/dbus_utility.hpp>
 
 #include <filesystem>
 #include <fstream>
@@ -27,106 +28,6 @@ std::unordered_map<std::string, functionPtr> funcionMap{
     {"gpioPresence", processGpioPresenceTag},
     {"setGpio", procesSetGpioTag},
     {"systemCmd", processSystemCmdTag}};
-
-types::MapperGetObject getObjectMap(const std::string& objectPath,
-                                    std::span<const char*> interfaces)
-{
-    types::MapperGetObject getObjectMap;
-
-    // interface list is optional argument, hence no check required.
-    if (objectPath.empty())
-    {
-        logging::logMessage("Path value is empty, invalid call to GetObject");
-        return getObjectMap;
-    }
-
-    try
-    {
-        auto bus = sdbusplus::bus::new_default();
-        auto method = bus.new_method_call("xyz.openbmc_project.ObjectMapper",
-                                          "/xyz/openbmc_project/object_mapper",
-                                          "xyz.openbmc_project.ObjectMapper",
-                                          "GetObject");
-        method.append(objectPath, interfaces);
-        auto result = bus.call(method);
-        result.read(getObjectMap);
-    }
-    catch (const sdbusplus::exception::SdBusError& e)
-    {
-        logging::logMessage(e.what());
-    }
-
-    return getObjectMap;
-}
-
-types::DbusVariantType readDbusProperty(const std::string& serviceName,
-                                        const std::string& objectPath,
-                                        const std::string& interface,
-                                        const std::string& property)
-{
-    types::DbusVariantType propertyValue;
-
-    // Mandatory fields to make a read dbus call.
-    if (serviceName.empty() || objectPath.empty() || interface.empty() ||
-        property.empty())
-    {
-        logging::logMessage(
-            "One of the parameter to make Dbus read call is empty.");
-        return propertyValue;
-    }
-
-    try
-    {
-        auto bus = sdbusplus::bus::new_default();
-        auto method =
-            bus.new_method_call(serviceName.c_str(), objectPath.c_str(),
-                                "org.freedesktop.DBus.Properties", "Get");
-        method.append(interface, property);
-
-        auto result = bus.call(method);
-        result.read(propertyValue);
-    }
-    catch (const sdbusplus::exception::SdBusError& e)
-    {
-        logging::logMessage(e.what());
-    }
-    return propertyValue;
-}
-
-void writeDbusProperty(const std::string& serviceName,
-                       const std::string& objectPath,
-                       const std::string& interface,
-                       const std::string& property,
-                       const types::DbusVariantType& propertyValue)
-{
-    // Mandatory fields to make a write dbus call.
-    if (serviceName.empty() || objectPath.empty() || interface.empty() ||
-        property.empty())
-    {
-        logging::logMessage(
-            "One of the parameter to make Dbus read call is empty.");
-
-        // caller need to handle the throw to ensure Dbus write success.
-        throw std::runtime_error("Dbus write failed, Parameter empty");
-    }
-
-    try
-    {
-        auto bus = sdbusplus::bus::new_default();
-        auto method =
-            bus.new_method_call(serviceName.c_str(), objectPath.c_str(),
-                                "org.freedesktop.DBus.Properties", "Set");
-        method.append(interface, property, propertyValue);
-        bus.call(method);
-    }
-    catch (const sdbusplus::exception::SdBusError& e)
-    {
-        logging::logMessage(e.what());
-
-        // caller needs to handle this throw to handle error in writing Dbus.
-        throw std::runtime_error("Dbus write failed");
-    }
-}
 
 std::string generateBadVPDFileName(const std::string& vpdFilePath)
 {
@@ -204,37 +105,6 @@ void getKwVal(const types::IPZKwdValueMap& kwdValueMap, const std::string& kwd,
     }
 
     throw std::runtime_error("Keyword not found");
-}
-
-bool callPIM(types::ObjectMap&& objectMap)
-{
-    try
-    {
-        std::array<const char*, 1> pimInterface = {constants::pimIntf};
-
-        auto mapperObjectMap = getObjectMap(constants::pimPath, pimInterface);
-
-        if (!mapperObjectMap.empty())
-        {
-            auto bus = sdbusplus::bus::new_default();
-            auto pimMsg = bus.new_method_call(
-                mapperObjectMap.begin()->first.c_str(), constants::pimPath,
-                constants::pimIntf, "Notify");
-            pimMsg.append(std::move(objectMap));
-            bus.call(pimMsg);
-        }
-        else
-        {
-            logging::logMessage("Mapper returned empty object map for PIM");
-            return false;
-        }
-    }
-    catch (const sdbusplus::exception::SdBusError& e)
-    {
-        logging::logMessage(e.what());
-        return false;
-    }
-    return true;
 }
 
 std::string encodeKeyword(const std::string& keyword,
@@ -345,9 +215,10 @@ std::string getExpandedLocationCode(const std::string& unexpandedLocationCode,
                     kwdInterface.c_str()};
 
                 types::MapperGetObject mapperRetValue =
-                    getObjectMap("/xyz/openbmc_project/inventory/system/"
-                                 "chassis/motherboard",
-                                 interfaceList);
+                    dbusUtility::getObjectMap(
+                        "/xyz/openbmc_project/inventory/system/"
+                        "chassis/motherboard",
+                        interfaceList);
 
                 if (mapperRetValue.empty())
                 {
@@ -357,11 +228,11 @@ std::string getExpandedLocationCode(const std::string& unexpandedLocationCode,
                 const std::string& serviceName =
                     std::get<0>(mapperRetValue.at(0));
 
-                auto retVal =
-                    readDbusProperty(serviceName,
-                                     "/xyz/openbmc_project/inventory/system/"
-                                     "chassis/motherboard",
-                                     kwdInterface, kwd1);
+                auto retVal = dbusUtility::readDbusProperty(
+                    serviceName,
+                    "/xyz/openbmc_project/inventory/system/"
+                    "chassis/motherboard",
+                    kwdInterface, kwd1);
 
                 if (auto kwdVal = std::get_if<types::BinaryVector>(&retVal))
                 {
@@ -375,11 +246,11 @@ std::string getExpandedLocationCode(const std::string& unexpandedLocationCode,
                                              " from Bus");
                 }
 
-                retVal =
-                    readDbusProperty(serviceName,
-                                     "/xyz/openbmc_project/inventory/system/"
-                                     "chassis/motherboard",
-                                     kwdInterface, kwd2);
+                retVal = dbusUtility::readDbusProperty(
+                    serviceName,
+                    "/xyz/openbmc_project/inventory/system/"
+                    "chassis/motherboard",
+                    kwdInterface, kwd2);
 
                 if (auto kwdVal = std::get_if<types::BinaryVector>(&retVal))
                 {
