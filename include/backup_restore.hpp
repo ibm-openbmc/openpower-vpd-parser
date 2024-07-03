@@ -8,10 +8,23 @@
 
 namespace vpd
 {
+
+// Backup and restore operation status.
+enum BackupAndRestoreStatus
+{
+    NotStarted = 0,
+    Instantiated = 1,
+    InstantiationFailed = 2,
+    Invoked = 3,
+    InvokeFailed = 4,
+    Completed = 5
+};
+
 /**
  * @brief class to implement backup and restore VPD.
  *
  */
+
 class BackupAndRestore
 {
   public:
@@ -61,7 +74,8 @@ class BackupAndRestore
      *
      * @param[in] i_status - Status to set.
      */
-    static void setBackupAndRestoreStatus(bool i_status);
+    static void
+        setBackupAndRestoreStatus(const BackupAndRestoreStatus& i_status);
 
   private:
     /**
@@ -83,10 +97,8 @@ class BackupAndRestore
     // Backup and restore config JSON object.
     nlohmann::json m_backupAndRestoreCfgJsonObj{};
 
-    // ToDo: Use enum intead of bool to hold different status.
-    // Indicates if backup and restore has been performed.
-    static bool m_backupAndRestoreDone;
+    // Backup and restore status.
+    static BackupAndRestoreStatus m_backupAndRestoreStatus;
 };
 
-bool BackupAndRestore::m_backupAndRestoreDone = false;
 } // namespace vpd

@@ -9,11 +9,28 @@
 
 namespace vpd
 {
+BackupAndRestoreStatus BackupAndRestore::m_backupAndRestoreStatus =
+    BackupAndRestoreStatus::NotStarted;
+
 BackupAndRestore::BackupAndRestore(const nlohmann::json& i_sysCfgJsonObj) :
     m_sysCfgJsonObj(i_sysCfgJsonObj)
 {
-    m_backupAndRestoreCfgJsonObj = jsonUtility::getParsedJson(
-        i_sysCfgJsonObj.value("backupRestoreConfigPath", ""));
+    std::string l_backupAndRestoreCfgFilePath =
+        i_sysCfgJsonObj.value("backupRestoreConfigPath", "");
+    try
+    {
+        m_backupAndRestoreCfgJsonObj =
+            jsonUtility::getParsedJson(l_backupAndRestoreCfgFilePath);
+        m_backupAndRestoreStatus = BackupAndRestoreStatus::Instantiated;
+    }
+    catch (const std::exception& ex)
+    {
+        m_backupAndRestoreStatus = BackupAndRestoreStatus::InstantiationFailed;
+        logging::logMessage(
+            "Failed to intialize backup and restore object for file = " +
+            l_backupAndRestoreCfgFilePath);
+        throw(ex);
+    }
 }
 
 std::tuple<types::VPDMapVariant, types::VPDMapVariant>
@@ -21,12 +38,14 @@ std::tuple<types::VPDMapVariant, types::VPDMapVariant>
 {
     auto l_emptyVariantPair = std::make_tuple(std::monostate{},
                                               std::monostate{});
-    if (m_backupAndRestoreDone)
+
+    if (m_backupAndRestoreStatus >= BackupAndRestoreStatus::Invoked)
     {
         logging::logMessage("Backup and restore invoked already.");
         return l_emptyVariantPair;
     }
 
+    m_backupAndRestoreStatus = BackupAndRestoreStatus::Invoked;
     try
     {
         if (m_backupAndRestoreCfgJsonObj.empty() ||
@@ -114,12 +133,15 @@ std::tuple<types::VPDMapVariant, types::VPDMapVariant>
 
             backupAndRestoreIpzVpd(*l_srcVpdPtr, *l_dstVpdPtr, l_srcVpdPath,
                                    l_dstVpdPath);
+            m_backupAndRestoreStatus = BackupAndRestoreStatus::Completed;
+
             return std::make_tuple(*l_srcVpdPtr, *l_dstVpdPtr);
         }
         // Note: add implementation here to support any other VPD type.
     }
     catch (const std::exception& ex)
     {
+        m_backupAndRestoreStatus = BackupAndRestoreStatus::InvokeFailed;
         logging::logMessage("Back up and restore failed with exception: " +
                             std::string(ex.what()));
     }
@@ -137,8 +159,9 @@ void BackupAndRestore::backupAndRestoreIpzVpd(types::IPZVpdMap& io_srcVpdMap,
     (void)i_dstPath;
 }
 
-void BackupAndRestore::setBackupAndRestoreStatus(bool i_status)
+void BackupAndRestore::setBackupAndRestoreStatus(
+    const BackupAndRestoreStatus& i_status)
 {
-    m_backupAndRestoreDone = i_status;
+    m_backupAndRestoreStatus = i_status;
 }
 } // namespace vpd
