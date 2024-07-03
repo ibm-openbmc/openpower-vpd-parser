@@ -365,7 +365,7 @@ bool executePreAction(const nlohmann::json& i_parsedConfigJson,
  * API returns the redundant FRU path taken from "redundantEeprom" tag from
  * system config JSON.
  *
- * @param[in] i_sysCfgJsonObj - system config JSON object
+ * @param[in] i_sysCfgJsonObj - System config JSON object.
  * @param[in] i_vpdPath - Path to where VPD is stored.
  *
  * @throw std::runtime_error.
