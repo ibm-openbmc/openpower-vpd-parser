@@ -606,5 +606,37 @@ inline std::string
     }
     return std::string();
 }
+
+/**
+ * @brief An API to check backup and restore VPD is required.
+ *
+ * The API checks if there is provision for backup and restore mentioned in the
+ * system config JSON, by looking "backupRestoreConfigPath" tag.
+ * Checks if the path mentioned is a hardware path, by checking if the file path
+ * exists and size of contents in the path.
+ *
+ * @param[in] i_sysCfgJsonObj - System config JSON object.
+ *
+ * @return true if backup and restore is required, false otherwise.
+ */
+inline bool isBackupAndRestoreRequired(const nlohmann::json& i_sysCfgJsonObj)
+{
+    try
+    {
+        const std::string& l_backupAndRestoreCfgFilePath =
+            i_sysCfgJsonObj.value("backupRestoreConfigPath", "");
+        if (!l_backupAndRestoreCfgFilePath.empty() &&
+            std::filesystem::exists(l_backupAndRestoreCfgFilePath) &&
+            !std::filesystem::is_empty(l_backupAndRestoreCfgFilePath))
+        {
+            return true;
+        }
+    }
+    catch (std::exception& ex)
+    {
+        logging::logMessage(ex.what());
+    }
+    return false;
+}
 } // namespace jsonUtility
 } // namespace vpd

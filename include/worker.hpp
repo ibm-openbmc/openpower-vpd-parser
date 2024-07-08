@@ -368,6 +368,13 @@ class Worker
      */
     void enableMuxChips();
 
+    /**
+     * @brief An API to perform backup or restore of VPD.
+     *
+     * @param[in,out] io_srcVpdMap - Source VPD map.
+     */
+    void performBackupAndRestore(types::VPDMapVariant& io_srcVpdMap);
+
     // Parsed JSON file.
     nlohmann::json m_parsedJson{};
 

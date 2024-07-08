@@ -2,6 +2,7 @@
 
 #include "manager.hpp"
 
+#include "backup_restore.hpp"
 #include "constants.hpp"
 #include "exceptions.hpp"
 #include "logger.hpp"
@@ -180,6 +181,14 @@ void Manager::SetTimerToDetectVpdCollectionStatus()
             l_timer.cancel();
             m_interface->set_property("CollectionStatus",
                                       std::string("Completed"));
+
+            const nlohmann::json& l_sysCfgJsonObj =
+                m_worker->getSysCfgJsonObj();
+            if (jsonUtility::isBackupAndRestoreRequired(l_sysCfgJsonObj))
+            {
+                BackupAndRestore l_backupAndRestoreObj(l_sysCfgJsonObj);
+                l_backupAndRestoreObj.backupAndRestore();
+            }
         }
         else
         {

@@ -2,6 +2,7 @@
 
 #include "worker.hpp"
 
+#include "backup_restore.hpp"
 #include "configuration.hpp"
 #include "constants.hpp"
 #include "exceptions.hpp"
@@ -18,6 +19,7 @@
 #include <fstream>
 #include <future>
 #include <typeindex>
+#include <unordered_set>
 
 namespace vpd
 {
@@ -491,10 +493,10 @@ void Worker::setDeviceTreeAndJson()
     if (fitConfigVal.find(devTreeFromJson) != std::string::npos)
     { // fitconfig is updated and correct JSON is set.
 
-        if (isSystemVPDOnDBus())
+        if (isSystemVPDOnDBus() &&
+            jsonUtility::isBackupAndRestoreRequired(m_parsedJson))
         {
-            // TODO
-            //  Restore system VPD logic should initiate from here.
+            performBackupAndRestore(parsedVpdMap);
         }
 
         // proceed to publish system VPD.
@@ -1215,6 +1217,53 @@ void Worker::collectFrusFromJson()
                     std::to_string(m_activeCollectionThreadCount));
             }
         }}.detach();
+    }
+}
+
+// ToDo: Move the API under IBM_SYSTEM
+void Worker::performBackupAndRestore(types::VPDMapVariant& io_srcVpdMap)
+{
+    try
+    {
+        std::string l_backupAndRestoreCfgFilePath =
+            m_parsedJson.value("backupRestoreConfigPath", "");
+
+        nlohmann::json l_backupAndRestoreCfgJsonObj =
+            jsonUtility::getParsedJson(l_backupAndRestoreCfgFilePath);
+
+        if (!l_backupAndRestoreCfgJsonObj.empty() &&
+            ((l_backupAndRestoreCfgJsonObj.contains("source") &&
+              l_backupAndRestoreCfgJsonObj["source"].contains(
+                  "inventoryPath")) ||
+             (l_backupAndRestoreCfgJsonObj.contains("destination") &&
+              l_backupAndRestoreCfgJsonObj["destination"].contains(
+                  "inventoryPath"))))
+        {
+            BackupAndRestore l_backupAndRestoreObj(m_parsedJson);
+            auto [l_srcVpdVariant,
+                  l_dstVpdVariant] = l_backupAndRestoreObj.backupAndRestore();
+
+            // ToDo: Revisit is this check is required or not.
+            if (auto l_srcVpdMap =
+                    std::get_if<types::IPZVpdMap>(&l_srcVpdVariant);
+                l_srcVpdMap && !(*l_srcVpdMap).empty())
+            {
+                io_srcVpdMap = std::move(l_srcVpdVariant);
+            }
+        }
+    }
+    catch (const std::exception& ex)
+    {
+        logging::logMessage(ex.what());
+        // ToDo: Uncomment when PEL implementation goes in.
+        /*std::string l_errorMsg(
+            "Exception caught while backup and restore VPD keyword's. Error: " +
+            std::string(ex.what()));
+        inventory::PelAdditionalData l_additionalData{};
+        l_additionalData.emplace("DESCRIPTION", l_errorMsg);
+        createPEL(l_additionalData,
+        PelSeverity::ERROR, errBackupAndRestore, nullptr);
+        */
     }
 }
 } // namespace vpd
