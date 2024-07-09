@@ -9,9 +9,9 @@
 #include "parser.hpp"
 #include "parser_factory.hpp"
 #include "parser_interface.hpp"
-#include "utils.hpp"
 
 #include <utility/dbus_utility.hpp>
+#include <utility/generic_utility.hpp>
 #include <utility/json_utility.hpp>
 
 #include <filesystem>
@@ -83,7 +83,7 @@ void Worker::enableMuxChips()
 
             logging::logMessage("Enabling mux with command = " + cmd);
 
-            utils::executeCmd(cmd);
+            genericUtility::executeCmd(cmd);
             continue;
         }
 
@@ -155,7 +155,8 @@ void Worker::performInitialSetup()
 
 static std::string readFitConfigValue()
 {
-    std::vector<std::string> output = utils::executeCmd("/sbin/fw_printenv");
+    std::vector<std::string> output =
+        genericUtility::executeCmd("/sbin/fw_printenv");
     std::string fitConfigValue;
 
     for (const auto& entry : output)
@@ -330,7 +331,7 @@ void Worker::fillVPDMap(const std::string& vpdFilePath,
 
             logging::logMessage(ex.what());
             // Need to decide once all error handling is implemented.
-            // utils::dumpBadVpd(vpdFilePath,vpdVector);
+            // genericUtility::dumpBadVpd(vpdFilePath,vpdVector);
 
             // throw generic error from here to inform main caller about
             // failure.
@@ -399,7 +400,7 @@ void Worker::getSystemJson(std::string& systemJson,
 static void setEnvAndReboot(const std::string& key, const std::string& value)
 {
     // set env and reboot and break.
-    utils::executeCmd("/sbin/fw_setenv", key, value);
+    genericUtility::executeCmd("/sbin/fw_setenv", key, value);
     logging::logMessage("Rebooting BMC to pick up new device tree");
 
     // make dbus call to reboot
@@ -618,7 +619,7 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                 if (property.compare("LocationCode") == 0 &&
                     interface.compare("com.ibm.ipzvpd.Location") == 0)
                 {
-                    std::string value = utils::getExpandedLocationCode(
+                    std::string value = genericUtility::getExpandedLocationCode(
                         propValuePair.value().get<std::string>(), parsedVpdMap);
                     propertyMap.emplace(property, value);
                 }
@@ -664,7 +665,7 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                         (*ipzVpdMap).count(record) &&
                         (*ipzVpdMap).at(record).count(keyword))
                     {
-                        auto encoded = utils::encodeKeyword(
+                        auto encoded = genericUtility::encodeKeyword(
                             ((*ipzVpdMap).at(record).at(keyword)), encoding);
                         propertyMap.emplace(property, encoded);
                     }
@@ -677,7 +678,7 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                         if (auto kwValue = std::get_if<types::BinaryVector>(
                                 &(*kwdVpdMap).at(keyword)))
                         {
-                            auto encodedValue = utils::encodeKeyword(
+                            auto encodedValue = genericUtility::encodeKeyword(
                                 std::string((*kwValue).begin(),
                                             (*kwValue).end()),
                                 encoding);
@@ -687,7 +688,7 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                         else if (auto kwValue = std::get_if<std::string>(
                                      &(*kwdVpdMap).at(keyword)))
                         {
-                            auto encodedValue = utils::encodeKeyword(
+                            auto encodedValue = genericUtility::encodeKeyword(
                                 std::string((*kwValue).begin(),
                                             (*kwValue).end()),
                                 encoding);
@@ -708,7 +709,8 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                 }
             }
         }
-        utils::insertOrMerge(interfaceMap, interface, move(propertyMap));
+        genericUtility::insertOrMerge(interfaceMap, interface,
+                                      move(propertyMap));
     }
 }
 
@@ -761,8 +763,9 @@ bool Worker::primeInventory(const std::string& i_vpdFilePath)
             l_propertyValueMap["Present"] = true;
         }
 
-        utils::insertOrMerge(l_interfaces, "xyz.openbmc_project.Inventory.Item",
-                             move(l_propertyValueMap));
+        genericUtility::insertOrMerge(l_interfaces,
+                                      "xyz.openbmc_project.Inventory.Item",
+                                      move(l_propertyValueMap));
 
         if (l_Fru.value("inherit", true) &&
             m_parsedJson.contains("commonInterfaces"))
@@ -805,8 +808,8 @@ void Worker::processEmbeddedAndSynthesizedFrus(const nlohmann::json& singleFru,
     {
         types::PropertyMap presProp;
         presProp.emplace("Present", true);
-        utils::insertOrMerge(interfaces, "xyz.openbmc_project.Inventory.Item",
-                             move(presProp));
+        genericUtility::insertOrMerge(
+            interfaces, "xyz.openbmc_project.Inventory.Item", move(presProp));
     }
 }
 
@@ -827,7 +830,7 @@ void Worker::processExtraInterfaces(const nlohmann::json& singleFru,
             }
 
             std::string pgKeywordValue;
-            utils::getKwVal(itrToRec->second, "PG", pgKeywordValue);
+            genericUtility::getKwVal(itrToRec->second, "PG", pgKeywordValue);
             if (!pgKeywordValue.empty())
             {
                 if (isCPUIOGoodOnly(pgKeywordValue))
@@ -894,7 +897,7 @@ bool Worker::processFruWithCCIN(const nlohmann::json& singleFru,
         }
 
         std::string ccinFromVpd;
-        utils::getKwVal(itrToRec->second, "CC", ccinFromVpd);
+        genericUtility::getKwVal(itrToRec->second, "CC", ccinFromVpd);
         if (ccinFromVpd.empty())
         {
             return true;

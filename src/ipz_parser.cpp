@@ -6,7 +6,6 @@
 
 #include "constants.hpp"
 #include "exceptions.hpp"
-#include "utils.hpp"
 
 #include <nlohmann/json.hpp>
 

@@ -1,7 +1,6 @@
 #include "parser.hpp"
 
-#include "utils.hpp"
-
+#include <utility/generic_utility.hpp>
 #include <utility/json_utility.hpp>
 
 #include <fstream>
@@ -22,7 +21,8 @@ types::VPDMapVariant Parser::parse()
 {
     // Read the VPD data into a vector.
     types::BinaryVector vpdVector;
-    utils::getVpdDataInVector(m_vpdFilePath, vpdVector, m_vpdStartOffset);
+    genericUtility::getVpdDataInVector(m_vpdFilePath, vpdVector,
+                                       m_vpdStartOffset);
 
     // This will detect the type of parser required.
     std::shared_ptr<vpd::ParserInterface> parser =

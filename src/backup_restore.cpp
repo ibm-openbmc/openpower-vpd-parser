@@ -4,7 +4,6 @@
 #include "exceptions.hpp"
 #include "logger.hpp"
 #include "parser.hpp"
-#include "utils.hpp"
 
 #include <utility/json_utility.hpp>
 

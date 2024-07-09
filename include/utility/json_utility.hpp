@@ -5,6 +5,7 @@
 
 #include <gpiod.hpp>
 #include <nlohmann/json.hpp>
+#include <utility/generic_utility.hpp>
 
 #include <fstream>
 #include <unordered_map>
@@ -216,7 +217,7 @@ inline bool processSystemCmdTag(const nlohmann::json& i_parsedConfigJson,
                 0)[i_baseAction][i_flagToProcess]["systemCmd"]["cmd"];
 
         logging::logMessage("Bind command = " + l_bindCommand);
-        utils::executeCmd(l_bindCommand);
+        genericUtility::executeCmd(l_bindCommand);
         return true;
     }
     catch (const std::exception& e)

@@ -1,4 +1,4 @@
-#include "utils.hpp"
+#include <utility/generic_utility.hpp>
 
 #include <cassert>
 #include <string>
@@ -12,7 +12,7 @@ TEST(UtilsTest, TestValidValue)
     std::string key = "VINI";
     std::string encoding = "MAC";
     std::string expected = "56:49:4e:49";
-    EXPECT_EQ(expected, utils::encodeKeyword(key, encoding));
+    EXPECT_EQ(expected, genericUtility::encodeKeyword(key, encoding));
 }
 
 int main(int argc, char** argv)

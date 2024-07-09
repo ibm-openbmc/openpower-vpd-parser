@@ -2,7 +2,6 @@
 #include "parser.hpp"
 #include "parser_interface.hpp"
 #include "types.hpp"
-#include "utils.hpp"
 #include "worker.hpp"
 
 #include <CLI/CLI.hpp>

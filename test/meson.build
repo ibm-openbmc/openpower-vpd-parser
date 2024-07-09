@@ -39,7 +39,6 @@ dependency_list = [gtest_dep, gmock_dep, sdbusplus, libgpiodcxx]
 configuration_inc = include_directories('..', '../include', '../vpdecc')
 
 test_sources = [
-  '../src/utils.cpp',
   '../src/logger.cpp',
   '../src/ddimm_parser.cpp',
   '../src/parser.cpp',

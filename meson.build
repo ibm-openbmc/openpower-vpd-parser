@@ -64,7 +64,6 @@ libgpiodcxx = dependency(
         )
 
 common_SOURCES = ['src/logger.cpp',
-                  'src/utils.cpp',
                   'src/parser_factory.cpp',
                   'src/ipz_parser.cpp',
                   'src/keyword_vpd_parser.cpp',
