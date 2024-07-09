@@ -38,7 +38,10 @@ enum Length
     RECORD_LENGTH = 2,
     RECORD_ECC_OFFSET = 2,
     VHDR_ECC_LENGTH = 11,
-    VHDR_RECORD_LENGTH = 44
+    VHDR_RECORD_LENGTH = 44,
+    RECORD_TYPE = 2,
+    SKIP_A_RECORD_IN_PT = 14,
+    JUMP_TO_RECORD_NAME = 6
 }; // enum Length
 
 static constexpr auto toHex(size_t aChar)
@@ -440,4 +443,123 @@ types::VPDMapVariant IpzVpdParser::parse()
     }
 }
 
+types::BinaryVector IpzVpdParser::getKeywordValueFromRecord(
+    const types::Record& i_recordName, const types::Keyword& i_keywordName,
+    const types::RecordOffset& i_recordDataOffset)
+{
+    auto l_iterator = m_vpdVector.cbegin();
+
+    // Go to the record name in the given record's offset
+    std::ranges::advance(l_iterator,
+                         i_recordDataOffset + Length::JUMP_TO_RECORD_NAME,
+                         m_vpdVector.cend());
+
+    // Check if the record is present in the given record's offset
+    if (i_recordName !=
+        std::string(l_iterator,
+                    std::ranges::next(l_iterator, Length::RECORD_NAME,
+                                      m_vpdVector.cend())))
+    {
+        throw std::runtime_error(
+            "Given record is not present in the offset provided");
+    }
+
+    std::ranges::advance(l_iterator, Length::RECORD_NAME, m_vpdVector.cend());
+
+    std::string l_kwName = std::string(
+        l_iterator,
+        std::ranges::next(l_iterator, Length::KW_NAME, m_vpdVector.cend()));
+
+    // Iterate through the keywords until the last keyword PF is found.
+    while (l_kwName != constants::LAST_KW)
+    {
+        // First character required for #D keyword check
+        char l_kwNameStart = *l_iterator;
+
+        std::ranges::advance(l_iterator, Length::KW_NAME, m_vpdVector.cend());
+
+        // Get the keyword's data length
+        auto l_kwdDataLength = 0;
+
+        if (constants::POUND_KW == l_kwNameStart)
+        {
+            l_kwdDataLength = readUInt16LE(l_iterator);
+            std::ranges::advance(l_iterator, sizeof(types::PoundKwSize),
+                                 m_vpdVector.cend());
+        }
+        else
+        {
+            l_kwdDataLength = *l_iterator;
+            std::ranges::advance(l_iterator, sizeof(types::KwSize),
+                                 m_vpdVector.cend());
+        }
+
+        if (l_kwName == i_keywordName)
+        {
+            // Return keyword's value to the caller
+            return types::BinaryVector(
+                l_iterator, std::ranges::next(l_iterator, l_kwdDataLength,
+                                              m_vpdVector.cend()));
+        }
+
+        // next keyword search
+        std::ranges::advance(l_iterator, l_kwdDataLength, m_vpdVector.cend());
+
+        // next keyword name
+        l_kwName = std::string(
+            l_iterator,
+            std::ranges::next(l_iterator, Length::KW_NAME, m_vpdVector.cend()));
+    }
+
+    // Keyword not found
+    throw std::runtime_error("Given keyword not found.");
+}
+
+types::RecordData IpzVpdParser::getRecordDetailsFromVTOC(
+    const types::Record& i_recordName, const types::RecordOffset& i_vtocOffset)
+{
+    // Get VTOC's PT keyword value.
+    const auto l_vtocPTKwValue = getKeywordValueFromRecord("VTOC", "PT",
+                                                           i_vtocOffset);
+
+    // Parse through VTOC PT keyword value to find the record which we are
+    // interested in.
+    auto l_vtocPTItr = l_vtocPTKwValue.cbegin();
+
+    types::RecordData l_recordData;
+
+    while (l_vtocPTItr < l_vtocPTKwValue.cend())
+    {
+        if (i_recordName ==
+            std::string(l_vtocPTItr, l_vtocPTItr + Length::RECORD_NAME))
+        {
+            // Record found in VTOC PT keyword. Get offset
+            std::ranges::advance(l_vtocPTItr,
+                                 Length::RECORD_NAME + Length::RECORD_TYPE,
+                                 l_vtocPTKwValue.cend());
+            const auto l_recordOffset = readUInt16LE(l_vtocPTItr);
+
+            std::ranges::advance(l_vtocPTItr, Length::RECORD_OFFSET,
+                                 l_vtocPTKwValue.cend());
+            const auto l_recordLength = readUInt16LE(l_vtocPTItr);
+
+            std::ranges::advance(l_vtocPTItr, Length::RECORD_LENGTH,
+                                 l_vtocPTKwValue.cend());
+            const auto l_eccOffset = readUInt16LE(l_vtocPTItr);
+
+            std::ranges::advance(l_vtocPTItr, Length::RECORD_ECC_OFFSET,
+                                 l_vtocPTKwValue.cend());
+            const auto l_eccLength = readUInt16LE(l_vtocPTItr);
+
+            l_recordData = std::make_tuple(l_recordOffset, l_recordLength,
+                                           l_eccOffset, l_eccLength);
+            break;
+        }
+
+        std::ranges::advance(l_vtocPTItr, Length::SKIP_A_RECORD_IN_PT,
+                             l_vtocPTKwValue.cend());
+    }
+
+    return l_recordData;
+}
 } // namespace vpd

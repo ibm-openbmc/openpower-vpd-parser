@@ -153,6 +153,37 @@ class IpzVpdParser : public ParserInterface
      */
     void processRecord(auto recordOffset);
 
+    /**
+     * @brief Get keyword's value from record
+     *
+     * @param[in] i_record - Record's name
+     * @param[in] i_keyword - Keyword's name
+     * @param[in] i_recordDataOffset - Record's offset value
+     *
+     * @throw std::runtime_error
+     *
+     * @return On success return bytes read, on failure throws error.
+     */
+    types::BinaryVector getKeywordValueFromRecord(
+        const types::Record& i_recordName, const types::Keyword& i_keywordName,
+        const types::RecordOffset& i_recordDataOffset);
+
+    /**
+     * @brief Get record's details from VTOC's PT keyword value
+     *
+     * This API parses through VTOC's PT keyword value and returns the given
+     * record's offset, record's length, ECC offset and ECC length.
+     *
+     * @param[in] i_record - Record's name.
+     * @param[in] i_vtocOffset - Offset to VTOC record
+     *
+     * @return On success return record's details, on failure return empty
+     * buffer.
+     */
+    types::RecordData
+        getRecordDetailsFromVTOC(const types::Record& l_recordName,
+                                 const types::RecordOffset& i_vtocOffset);
+
     // Holds VPD data.
     const types::BinaryVector& m_vpdVector;
 
