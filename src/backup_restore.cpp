@@ -6,12 +6,14 @@
 #include "parser.hpp"
 #include "utils.hpp"
 
+#include <utility/json_utility.hpp>
+
 namespace vpd
 {
 BackupAndRestore::BackupAndRestore(const nlohmann::json& i_sysCfgJsonObj) :
     m_sysCfgJsonObj(i_sysCfgJsonObj)
 {
-    m_backupAndRestoreCfgJsonObj = utils::getParsedJson(
+    m_backupAndRestoreCfgJsonObj = jsonUtility::getParsedJson(
         i_sysCfgJsonObj.value("backupRestoreConfigPath", ""));
 }
 

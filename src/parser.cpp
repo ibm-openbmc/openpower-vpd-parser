@@ -2,6 +2,8 @@
 
 #include "utils.hpp"
 
+#include <utility/json_utility.hpp>
+
 #include <fstream>
 
 namespace vpd
@@ -12,7 +14,7 @@ Parser::Parser(const std::string& vpdFilePath, nlohmann::json parsedJson) :
     // Read VPD offset if applicable.
     if (!m_parsedJson.empty())
     {
-        m_vpdStartOffset = utils::getVPDOffset(m_parsedJson, vpdFilePath);
+        m_vpdStartOffset = jsonUtility::getVPDOffset(m_parsedJson, vpdFilePath);
     }
 }
 

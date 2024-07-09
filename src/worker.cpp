@@ -12,6 +12,7 @@
 #include "utils.hpp"
 
 #include <utility/dbus_utility.hpp>
+#include <utility/json_utility.hpp>
 
 #include <filesystem>
 #include <fstream>
@@ -38,7 +39,7 @@ Worker::Worker(std::string pathToConfigJson) :
 
         try
         {
-            m_parsedJson = utils::getParsedJson(m_configJsonPath);
+            m_parsedJson = jsonUtility::getParsedJson(m_configJsonPath);
 
             // check for mandatory fields at this point itself.
             if (!m_parsedJson.contains("frus"))
@@ -1006,8 +1007,8 @@ bool Worker::processPreAction(const std::string& i_vpdFilePath,
         return false;
     }
 
-    if ((!utils::executePreAction(m_parsedJson, i_vpdFilePath,
-                                  i_flagToProcess)) &&
+    if ((!jsonUtility::executePreAction(m_parsedJson, i_vpdFilePath,
+                                        i_flagToProcess)) &&
         (i_flagToProcess.compare("collection") == constants::STR_CMP_SUCCESS))
     {
         // TODO: Need a way to delete inventory object from Dbus and persisted
@@ -1080,8 +1081,8 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
     {
         if (l_isPostFailActionRequired)
         {
-            if (!utils::executePostFailAction(m_parsedJson, i_vpdFilePath,
-                                              "collection"))
+            if (!jsonUtility::executePostFailAction(m_parsedJson, i_vpdFilePath,
+                                                    "collection"))
             {
                 throw std::runtime_error("Post fail action failed for path " +
                                          i_vpdFilePath +
