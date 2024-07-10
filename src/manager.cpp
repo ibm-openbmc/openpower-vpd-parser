@@ -3,10 +3,10 @@
 #include "manager.hpp"
 
 #include "constants.hpp"
+#include "dbus_utility.hpp"
 #include "exceptions.hpp"
 #include "logger.hpp"
 #include "types.hpp"
-#include "utils.hpp"
 
 #include <boost/asio/steady_timer.hpp>
 #include <sdbusplus/message.hpp>
@@ -282,7 +282,7 @@ std::string Manager::getExpandedLocationCode(
                 l_aFru["extraInterfaces"][constants::locationCodeInf].value(
                     "LocationCode", "") == i_unexpandedLocationCode)
             {
-                return std::get<std::string>(utils::readDbusProperty(
+                return std::get<std::string>(dbusUtility::readDbusProperty(
                     l_aFru["serviceName"], l_aFru["inventoryPath"],
                     constants::locationCodeInf, "LocationCode"));
             }
@@ -372,7 +372,7 @@ std::tuple<std::string, uint16_t> Manager::getUnexpandedLocationCode(
 
     std::string l_fcKwd;
 
-    auto l_fcKwdValue = utils::readDbusProperty(
+    auto l_fcKwdValue = dbusUtility::readDbusProperty(
         "xyz.openbmc_project.Inventory.Manager",
         "/xyz/openbmc_project/inventory/system/chassis/motherboard",
         "com.ibm.ipzvpd.VCEN", "FC");
@@ -440,7 +440,7 @@ std::tuple<std::string, uint16_t> Manager::getUnexpandedLocationCode(
     {
         std::string l_tmKwd;
         // Read TM keyword value.
-        auto l_tmKwdValue = utils::readDbusProperty(
+        auto l_tmKwdValue = dbusUtility::readDbusProperty(
             "xyz.openbmc_project.Inventory.Manager",
             "/xyz/openbmc_project/inventory/system/chassis/motherboard",
             "com.ibm.ipzvpd.VSYS", "TM");

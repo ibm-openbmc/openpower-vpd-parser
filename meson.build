@@ -88,7 +88,7 @@ endif
 vpd_manager_exe = executable(
                 'vpd-manager',
                 vpd_manager_SOURCES,
-                include_directories : ['include/', 'configuration/'],
+                include_directories : ['include/', 'configuration/', 'include/utility'],
                 link_with : libvpdecc,
                 dependencies : [
                                 parser_dependencies,
@@ -103,7 +103,7 @@ vpd_parser_SOURCES = ['src/vpd_parser_main.cpp',
 vpd_parser_exe = executable(
                 'vpd-parser',
                 vpd_parser_SOURCES,
-                include_directories : ['include/', 'configuration/'],
+                include_directories : ['include/', 'configuration/', 'include/utility'],
                 link_with : libvpdecc,
                 dependencies : parser_dependencies,
                 install : true,
