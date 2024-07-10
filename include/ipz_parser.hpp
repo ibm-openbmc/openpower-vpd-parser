@@ -75,6 +75,19 @@ class IpzVpdParser : public ParserInterface
      */
     void checkHeader(types::BinaryVector::const_iterator itrToVPD);
 
+    /**
+     * @brief API to read keyword's value from hardware
+     *
+     * @param[in] i_paramsToReadData - Data required to perform read
+     *
+     * @throw
+     * sdbusplus::xyz::openbmc_project::Common::Device::Error::ReadFailure.
+     *
+     * @return On success return the value read. On failure throw exception.
+     */
+    types::DbusVariantType
+        readKeywordFromHardware(const types::ReadVpdParams i_paramsToReadData);
+
   private:
     /**
      * @brief Check ECC of VPD header.

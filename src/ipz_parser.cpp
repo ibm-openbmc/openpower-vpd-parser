@@ -562,4 +562,73 @@ types::RecordData IpzVpdParser::getRecordDetailsFromVTOC(
 
     return l_recordData;
 }
+
+types::DbusVariantType IpzVpdParser::readKeywordFromHardware(
+    const types::ReadVpdParams i_paramsToReadData)
+{
+    // Extract record and keyword from i_paramsToReadData
+    types::Record l_record;
+    types::Keyword l_keyword;
+
+    if (const types::IpzType* l_ipzData =
+            std::get_if<types::IpzType>(&i_paramsToReadData))
+    {
+        l_record = std::get<0>(*l_ipzData);
+        l_keyword = std::get<1>(*l_ipzData);
+    }
+    else
+    {
+        logging::logMessage(
+            "Input parameter type provided isn't compatible with the given VPD type.");
+        throw types::DbusInvalidArgument();
+    }
+
+    // Read keyword's value from vector
+    auto l_itrToVPD = m_vpdVector.cbegin();
+
+    if (l_record == "VHDR")
+    {
+// Disable providing a way to read keywords from VHDR for the time being.
+#if 0
+        std::ranges::advance(l_itrToVPD, Offset::VHDR_RECORD,
+                             m_vpdVector.cend());
+
+        return types::DbusVariantType{getKeywordValueFromRecord(
+            l_record, l_keyword, Offset::VHDR_RECORD)};
+#endif
+
+        logging::logMessage("Read cannot be performed on VHDR record.");
+        throw types::DbusInvalidArgument();
+    }
+
+    // Get VTOC offset
+    std::ranges::advance(l_itrToVPD, Offset::VTOC_PTR, m_vpdVector.cend());
+    auto l_vtocOffset = readUInt16LE(l_itrToVPD);
+
+    if (l_record == "VTOC")
+    {
+        // Disable providing a way to read keywords from VTOC for the time
+        // being.
+#if 0
+        return types::DbusVariantType{
+            getKeywordValueFromRecord(l_record, l_keyword, l_vtocOffset)};
+#endif
+
+        logging::logMessage("Read cannot be performed on VTOC record.");
+        throw types::DbusInvalidArgument();
+    }
+
+    // Get record offset from VTOC's PT keyword value.
+    auto l_recordData = getRecordDetailsFromVTOC(l_record, l_vtocOffset);
+    const auto l_recordOffset = std::get<0>(l_recordData);
+
+    if (l_recordOffset == 0)
+    {
+        throw std::runtime_error("Record not found in VTOC PT keyword.");
+    }
+
+    // Get the given keyword's value
+    return types::DbusVariantType{
+        getKeywordValueFromRecord(l_record, l_keyword, l_recordOffset)};
+}
 } // namespace vpd

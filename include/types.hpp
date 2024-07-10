@@ -109,6 +109,7 @@ using Keyword = std::string;
 
 using IpzData = std::tuple<Record, Keyword, BinaryVector>;
 using KwData = std::tuple<Keyword, BinaryVector>;
+using VpdData = std::variant<IpzData, KwData>;
 
 using IpzType = std::tuple<Record, Keyword>;
 using ReadVpdParams = std::variant<IpzType, Keyword>;
