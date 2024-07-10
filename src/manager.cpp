@@ -5,8 +5,13 @@
 #include "constants.hpp"
 #include "exceptions.hpp"
 #include "logger.hpp"
+#include "parser.hpp"
+#include "parser_factory.hpp"
+#include "parser_interface.hpp"
 #include "types.hpp"
 #include "utility/dbus_utility.hpp"
+#include "utility/generic_utility.hpp"
+#include "utility/json_utility.hpp"
 
 #include <boost/asio/steady_timer.hpp>
 #include <sdbusplus/message.hpp>
@@ -210,12 +215,42 @@ types::DbusVariantType
     Manager::readKeyword(const types::Path i_fruPath,
                          const types::ReadVpdParams i_paramsToReadData)
 {
-    // Code to supress unused variable warning. To be removed.
-    (void)i_fruPath;
-    (void)i_paramsToReadData;
+    try
+    {
+        nlohmann::json l_jsonObj{};
 
-    // On success return the value read. On failure throw error.
-    return types::DbusVariantType();
+        if (m_worker.get() != nullptr)
+        {
+            l_jsonObj = m_worker->getSysCfgJsonObj();
+        }
+
+        std::error_code ec;
+
+        // Check if given path is filesystem path
+        if (!std::filesystem::exists(i_fruPath, ec) && (ec))
+        {
+            throw std::runtime_error("Given file path " + i_fruPath +
+                                     " not found.");
+        }
+
+        logging::logMessage("Performing VPD read on " + i_fruPath);
+
+        std::shared_ptr<vpd::Parser> l_parserObj =
+            std::make_shared<vpd::Parser>(i_fruPath, l_jsonObj);
+
+        std::shared_ptr<vpd::ParserInterface> l_vpdParserInstance =
+            l_parserObj->getVpdParserInstance();
+
+        return (
+            l_vpdParserInstance->readKeywordFromHardware(i_paramsToReadData));
+    }
+    catch (const std::exception& e)
+    {
+        logging::logMessage(
+            e.what() + std::string(". VPD manager read operation failed for ") +
+            i_fruPath);
+        throw types::DeviceError::ReadFailure();
+    }
 }
 
 void Manager::collectSingleFruVpd(

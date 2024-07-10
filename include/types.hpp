@@ -3,6 +3,7 @@
 #include <phosphor-logging/elog-errors.hpp>
 #include <sdbusplus/asio/property.hpp>
 #include <sdbusplus/server.hpp>
+#include <xyz/openbmc_project/Common/Device/error.hpp>
 #include <xyz/openbmc_project/Common/error.hpp>
 
 #include <tuple>
@@ -119,12 +120,6 @@ using DbusInvalidArgument =
     sdbusplus::xyz::openbmc_project::Common::Error::InvalidArgument;
 using InvalidArgument = phosphor::logging::xyz::openbmc_project::Common::InvalidArgument;
 
-enum class VpdTarget
-{
-        Cache = 0,
-        Hardware = 1,
-        CacheAndHardware = 2
-};
-
+namespace DeviceError = sdbusplus::xyz::openbmc_project::Common::Device::Error;
 } // namespace types
 } // namespace vpd
