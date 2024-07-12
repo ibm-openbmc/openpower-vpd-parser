@@ -197,6 +197,24 @@ class IpzVpdParser : public ParserInterface
         getRecordDetailsFromVTOC(const types::Record& l_recordName,
                                  const types::RecordOffset& i_vtocOffset);
 
+    /**
+     * @brief API to update record's ECC
+     *
+     * This API is required to update the record's ECC based on the record's
+     * current data.
+     *
+     * @param[in] i_recordDataOffset - Record's data offset
+     * @param[in] i_recordDataLength - Record's data length
+     * @param[in] i_recordECCOffset - Record's ECC offset
+     * @param[in] i_recordECCLength - Record's ECC length
+     *
+     * @throw std::runtime_error on ECC failure.
+     */
+    void updateRecordECC(const auto& i_recordDataOffset,
+                         const auto& i_recordDataLength,
+                         const auto& i_recordECCOffset,
+                         size_t i_recordECCLength);
+
     // Holds VPD data.
     const types::BinaryVector& m_vpdVector;
 

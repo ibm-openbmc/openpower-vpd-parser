@@ -631,4 +631,31 @@ types::DbusVariantType IpzVpdParser::readKeywordFromHardware(
     return types::DbusVariantType{
         getKeywordValueFromRecord(l_record, l_keyword, l_recordOffset)};
 }
+
+void IpzVpdParser::updateRecordECC(const auto& i_recordDataOffset,
+                                   const auto& i_recordDataLength,
+                                   const auto& i_recordECCOffset,
+                                   size_t i_recordECCLength)
+{
+    auto l_recordDataBegin = std::next(m_vpdVector.begin(), i_recordDataOffset);
+
+    auto l_recordECCBegin = std::next(m_vpdVector.begin(), i_recordECCOffset);
+
+    auto l_eccStatus = vpdecc_create_ecc(
+        const_cast<uint8_t*>(&l_recordDataBegin[0]), i_recordDataLength,
+        const_cast<uint8_t*>(&l_recordECCBegin[0]), &i_recordECCLength);
+
+    if (l_eccStatus != VPD_ECC_OK)
+    {
+        throw std::runtime_error("ECC update failed.");
+    }
+
+    auto l_recordECCEnd = std::next(l_recordECCBegin, i_recordECCLength);
+
+    m_vpdFileStream.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+    m_vpdFileStream.seekp(m_vpdStartOffset + i_recordECCOffset, std::ios::beg);
+
+    std::copy(l_recordECCBegin, l_recordECCEnd,
+              std::ostreambuf_iterator<char>(m_vpdFileStream));
+}
 } // namespace vpd
