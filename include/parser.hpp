@@ -39,6 +39,16 @@ class Parser
      */
     types::VPDMapVariant parse();
 
+    /**
+     * @brief API to get parser instance based on VPD type.
+     *
+     * This API detects the VPD type based on the data passed to the constructor
+     * of the class and returns the respective parser instance.
+     *
+     * @return Parser instance.
+     */
+    std::shared_ptr<vpd::ParserInterface> getVpdParserInstance();
+
   private:
     // holds offfset to VPD if applicable.
     size_t m_vpdStartOffset = 0;
