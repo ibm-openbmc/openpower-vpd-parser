@@ -39,6 +39,8 @@ class Parser
      */
     types::VPDMapVariant parse();
 
+    std::shared_ptr<vpd::ParserInterface> getVpdParserInstance();
+
   private:
     // holds offfset to VPD if applicable.
     size_t m_vpdStartOffset = 0;
@@ -48,6 +50,8 @@ class Parser
 
     // Path to configuration file, can be empty.
     nlohmann::json m_parsedJson;
+
+    types::BinaryVector m_vpdVector;
 
 }; // parser
 } // namespace vpd
