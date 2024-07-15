@@ -631,4 +631,62 @@ types::DbusVariantType IpzVpdParser::readKeywordFromHardware(
     return types::DbusVariantType{
         getKeywordValueFromRecord(l_record, l_keyword, l_recordOffset)};
 }
+
+bool IpzVpdParser::isRecordECCValid(const auto& i_recordDataOffset,
+                                    const auto& i_recordDataLength,
+                                    const auto& i_recordECCOffset,
+                                    const auto& i_recordECCLength)
+{
+    auto l_recordDataBegin = std::ranges::next(
+        m_vpdVector.begin(), i_recordDataOffset, m_vpdVector.end());
+
+    auto l_recordECCBegin = std::ranges::next(
+        m_vpdVector.begin(), i_recordECCOffset, m_vpdVector.end());
+
+    auto l_eccStatus = vpdecc_check_data(
+        const_cast<uint8_t*>(&l_recordDataBegin[0]), i_recordDataLength,
+        const_cast<uint8_t*>(&l_recordECCBegin[0]), i_recordECCLength);
+
+    if (l_eccStatus == VPD_ECC_OK)
+    {
+        return true;
+    }
+
+    if (l_eccStatus == VPD_ECC_CORRECTABLE_DATA)
+    {
+        try
+        {
+            if (m_vpdFileStream.is_open())
+            {
+                // Copy the corrected record data into filestream which is the
+                // reference to actual file on the system
+                m_vpdFileStream.seekp(m_vpdStartOffset + i_recordDataOffset,
+                                      std::ios::beg);
+
+                std::copy(l_recordDataBegin,
+                          std::ranges::next(l_recordDataBegin,
+                                            i_recordDataLength,
+                                            m_vpdVector.end()),
+                          std::ostreambuf_iterator<char>(m_vpdFileStream));
+                return true;
+            }
+            else
+            {
+                logging::logMessage(
+                    "Unable to open VPD file stream. ECC validation failure.");
+                return false;
+            }
+        }
+        catch (const std::fstream::failure& e)
+        {
+            logging::logMessage(
+                "VPD file stream operation failed with an exception : " +
+                std::string(e.what()));
+            return false;
+        }
+    }
+
+    // Uncorrectable ECC data/Incorrect ECC size
+    return false;
+}
 } // namespace vpd

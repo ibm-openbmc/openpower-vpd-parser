@@ -197,6 +197,23 @@ class IpzVpdParser : public ParserInterface
         getRecordDetailsFromVTOC(const types::Record& l_recordName,
                                  const types::RecordOffset& i_vtocOffset);
 
+    /**
+     * @brief API to check if record's ECC is valid
+     *
+     * This API is required to validate the record's ECC.
+     *
+     * @param[in] i_recordDataOffset - Record's data offset.
+     * @param[in] i_recordDataLength - Record's data length.
+     * @param[in] i_recordECCOffset - Record's ECC offset.
+     * @param[in] i_recordECCLength - Record's ECC length.
+     *
+     * @return true if record's ECC is valid, false otherwise.
+     */
+    bool isRecordECCValid(const auto& i_recordDataOffset,
+                          const auto& i_recordDataLength,
+                          const auto& i_recordECCOffset,
+                          const auto& i_recordECCLength);
+
     // Holds VPD data.
     const types::BinaryVector& m_vpdVector;
 
