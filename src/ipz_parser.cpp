@@ -515,49 +515,47 @@ types::BinaryVector IpzVpdParser::getKeywordValueFromRecord(
     throw std::runtime_error("Given keyword not found.");
 }
 
-types::RecordData IpzVpdParser::getRecordDetailsFromVTOC(
-    const types::Record& i_recordName, const types::RecordOffset& i_vtocOffset)
+types::RecordData IpzVpdParser::getRecordDetailsFromPT(
+    const types::Record& i_recordName,
+    const types::BinaryVector& i_ptKeywordData)
 {
-    // Get VTOC's PT keyword value.
-    const auto l_vtocPTKwValue = getKeywordValueFromRecord("VTOC", "PT",
-                                                           i_vtocOffset);
-
-    // Parse through VTOC PT keyword value to find the record which we are
-    // interested in.
-    auto l_vtocPTItr = l_vtocPTKwValue.cbegin();
+    // Parse through PT keyword data to find the record which we are interested
+    // in.
+    auto l_ptKwDataIterator = i_ptKeywordData.cbegin();
 
     types::RecordData l_recordData;
 
-    while (l_vtocPTItr < l_vtocPTKwValue.cend())
+    while (l_ptKwDataIterator < i_ptKeywordData.cend())
     {
         if (i_recordName ==
-            std::string(l_vtocPTItr, l_vtocPTItr + Length::RECORD_NAME))
+            std::string(l_ptKwDataIterator,
+                        l_ptKwDataIterator + Length::RECORD_NAME))
         {
             // Record found in VTOC PT keyword. Get offset
-            std::ranges::advance(l_vtocPTItr,
+            std::ranges::advance(l_ptKwDataIterator,
                                  Length::RECORD_NAME + Length::RECORD_TYPE,
-                                 l_vtocPTKwValue.cend());
-            const auto l_recordOffset = readUInt16LE(l_vtocPTItr);
+                                 i_ptKeywordData.cend());
+            const auto l_recordOffset = readUInt16LE(l_ptKwDataIterator);
 
-            std::ranges::advance(l_vtocPTItr, Length::RECORD_OFFSET,
-                                 l_vtocPTKwValue.cend());
-            const auto l_recordLength = readUInt16LE(l_vtocPTItr);
+            std::ranges::advance(l_ptKwDataIterator, Length::RECORD_OFFSET,
+                                 i_ptKeywordData.cend());
+            const auto l_recordLength = readUInt16LE(l_ptKwDataIterator);
 
-            std::ranges::advance(l_vtocPTItr, Length::RECORD_LENGTH,
-                                 l_vtocPTKwValue.cend());
-            const auto l_eccOffset = readUInt16LE(l_vtocPTItr);
+            std::ranges::advance(l_ptKwDataIterator, Length::RECORD_LENGTH,
+                                 i_ptKeywordData.cend());
+            const auto l_eccOffset = readUInt16LE(l_ptKwDataIterator);
 
-            std::ranges::advance(l_vtocPTItr, Length::RECORD_ECC_OFFSET,
-                                 l_vtocPTKwValue.cend());
-            const auto l_eccLength = readUInt16LE(l_vtocPTItr);
+            std::ranges::advance(l_ptKwDataIterator, Length::RECORD_ECC_OFFSET,
+                                 i_ptKeywordData.cend());
+            const auto l_eccLength = readUInt16LE(l_ptKwDataIterator);
 
             l_recordData = std::make_tuple(l_recordOffset, l_recordLength,
                                            l_eccOffset, l_eccLength);
             break;
         }
 
-        std::ranges::advance(l_vtocPTItr, Length::SKIP_A_RECORD_IN_PT,
-                             l_vtocPTKwValue.cend());
+        std::ranges::advance(l_ptKwDataIterator, Length::SKIP_A_RECORD_IN_PT,
+                             i_ptKeywordData.cend());
     }
 
     return l_recordData;
@@ -618,9 +616,10 @@ types::DbusVariantType IpzVpdParser::readKeywordFromHardware(
         throw types::DbusInvalidArgument();
     }
 
-    // Get record offset from VTOC's PT keyword value.
-    auto l_recordData = getRecordDetailsFromVTOC(l_record, l_vtocOffset);
-    const auto l_recordOffset = std::get<0>(l_recordData);
+    // Get record details from PT keyword data.
+    auto l_recordDetails = getRecordDetailsFromPT(
+        l_record, getKeywordValueFromRecord("VTOC", "PT", l_vtocOffset));
+    const auto l_recordOffset = std::get<0>(l_recordDetails);
 
     if (l_recordOffset == 0)
     {

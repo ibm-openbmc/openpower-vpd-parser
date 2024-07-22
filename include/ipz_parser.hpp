@@ -182,20 +182,20 @@ class IpzVpdParser : public ParserInterface
         const types::RecordOffset& i_recordDataOffset);
 
     /**
-     * @brief Get record's details from VTOC's PT keyword value
+     * @brief Get record's details from PT keyword value
      *
-     * This API parses through VTOC's PT keyword value and returns the given
+     * This API parses through the PT keyword value and returns the given
      * record's offset, record's length, ECC offset and ECC length.
      *
-     * @param[in] i_record - Record's name.
-     * @param[in] i_vtocOffset - Offset to VTOC record
+     * @param[in] i_recordName - Record's name.
+     * @param[in] i_ptKeywordData - PT keyword data.
      *
      * @return On success return record's details, on failure return empty
      * buffer.
      */
     types::RecordData
-        getRecordDetailsFromVTOC(const types::Record& l_recordName,
-                                 const types::RecordOffset& i_vtocOffset);
+        getRecordDetailsFromPT(const types::Record& i_recordName,
+                               const types::BinaryVector& i_ptKeywordData);
 
     // Holds VPD data.
     const types::BinaryVector& m_vpdVector;
