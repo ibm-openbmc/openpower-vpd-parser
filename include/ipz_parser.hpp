@@ -40,6 +40,8 @@ class IpzVpdParser : public ParserInterface
     {
         try
         {
+            m_vpdFileStream.exceptions(std::ifstream::badbit |
+                                       std::ifstream::failbit);
             m_vpdFileStream.open(vpdFilePath, std::ios::in | std::ios::out |
                                                   std::ios::binary);
         }
@@ -87,6 +89,22 @@ class IpzVpdParser : public ParserInterface
      */
     types::DbusVariantType
         readKeywordFromHardware(const types::ReadVpdParams i_paramsToReadData);
+
+    /**
+     * @brief API to write keyword's value on hardware.
+     *
+     * @param[in] i_paramsToWriteData - Data required to perform write.
+     *
+     * @throw sdbusplus::xyz::openbmc_project::Common::Error::InvalidArgument.
+     * @throw sdbusplus::xyz::openbmc_project::Common::Error::NotAllowed.
+     * @throw DataException
+     * @throw EccException
+     *
+     *
+     * @return On success returns number of bytes written on hardware, On
+     * failure throws exception.
+     */
+    int writeKeywordOnHardware(const types::WriteVpdParams i_paramsToWriteData);
 
   private:
     /**
@@ -196,6 +214,46 @@ class IpzVpdParser : public ParserInterface
     types::RecordData
         getRecordDetailsFromVTOC(const types::Record& l_recordName,
                                  const types::RecordOffset& i_vtocOffset);
+
+    /**
+     * @brief API to update record's ECC
+     *
+     * This API is required to update the record's ECC based on the record's
+     * current data.
+     *
+     * @param[in] i_recordDataOffset - Record's data offset
+     * @param[in] i_recordDataLength - Record's data length
+     * @param[in] i_recordECCOffset - Record's ECC offset
+     * @param[in] i_recordECCLength - Record's ECC length
+     * @param[in,out] io_vpdVector - FRU VPD in vector to update record's ECC.
+     *
+     * @throw EccException
+     */
+    void updateRecordECC(const auto& i_recordDataOffset,
+                         const auto& i_recordDataLength,
+                         const auto& i_recordECCOffset,
+                         size_t i_recordECCLength,
+                         types::BinaryVector& io_vpdVector);
+
+    /**
+     * @brief API to set record's keyword's value on hardware.
+     *
+     * @param[in] i_recordName - Record name.
+     * @param[in] i_keywordName - Keyword name.
+     * @param[in] i_keywordData - Keyword data.
+     * @param[in] i_recordDataOffset - Offset to record's data.
+     * @param[in,out] io_vpdVector - FRU VPD in vector to read and write
+     * keyword's value.
+     *
+     * @throw DataException
+     *
+     * @return On success returns number of bytes set. On failure returns -1.
+     */
+    int setKeywordValueInRecord(const types::Record& i_recordName,
+                                const types::Keyword& i_keywordName,
+                                const types::BinaryVector& i_keywordData,
+                                const types::RecordOffset& i_recordDataOffset,
+                                types::BinaryVector& io_vpdVector);
 
     // Holds VPD data.
     const types::BinaryVector& m_vpdVector;

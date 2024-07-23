@@ -625,4 +625,219 @@ types::DbusVariantType IpzVpdParser::readKeywordFromHardware(
     return types::DbusVariantType{
         getKeywordValueFromRecord(l_record, l_keyword, l_recordOffset)};
 }
+
+void IpzVpdParser::updateRecordECC(const auto& i_recordDataOffset,
+                                   const auto& i_recordDataLength,
+                                   const auto& i_recordECCOffset,
+                                   size_t i_recordECCLength,
+                                   types::BinaryVector& io_vpdVector)
+{
+    auto l_recordDataBegin = std::next(io_vpdVector.begin(),
+                                       i_recordDataOffset);
+
+    auto l_recordECCBegin = std::next(io_vpdVector.begin(), i_recordECCOffset);
+
+    auto l_eccStatus = vpdecc_create_ecc(
+        const_cast<uint8_t*>(&l_recordDataBegin[0]), i_recordDataLength,
+        const_cast<uint8_t*>(&l_recordECCBegin[0]), &i_recordECCLength);
+
+    if (l_eccStatus != VPD_ECC_OK)
+    {
+        throw(EccException("ECC update failed with error " + l_eccStatus));
+    }
+
+    auto l_recordECCEnd = std::next(l_recordECCBegin, i_recordECCLength);
+
+    m_vpdFileStream.seekp(m_vpdStartOffset + i_recordECCOffset, std::ios::beg);
+
+    std::copy(l_recordECCBegin, l_recordECCEnd,
+              std::ostreambuf_iterator<char>(m_vpdFileStream));
+}
+
+int IpzVpdParser::setKeywordValueInRecord(
+    const types::Record& i_recordName, const types::Keyword& i_keywordName,
+    const types::BinaryVector& i_keywordData,
+    const types::RecordOffset& i_recordDataOffset,
+    types::BinaryVector& io_vpdVector)
+{
+    auto l_iterator = io_vpdVector.begin();
+
+    // Go to the record name in the given record's offset
+    std::ranges::advance(l_iterator,
+                         i_recordDataOffset + Length::JUMP_TO_RECORD_NAME,
+                         io_vpdVector.end());
+
+    const std::string l_recordFound(
+        l_iterator,
+        std::ranges::next(l_iterator, Length::RECORD_NAME, io_vpdVector.end()));
+
+    // Check if the record is present in the given record's offset
+    if (i_recordName != l_recordFound)
+    {
+        throw(DataException("Given record found at the offset " +
+                            std::to_string(i_recordDataOffset) + " is : " +
+                            l_recordFound + " and not " + i_recordName));
+    }
+
+    std::ranges::advance(l_iterator, Length::RECORD_NAME, io_vpdVector.end());
+
+    std::string l_kwName = std::string(
+        l_iterator,
+        std::ranges::next(l_iterator, Length::KW_NAME, io_vpdVector.end()));
+
+    // Iterate through the keywords until the last keyword PF is found.
+    while (l_kwName != constants::LAST_KW)
+    {
+        // First character required for #D keyword check
+        char l_kwNameStart = *l_iterator;
+
+        std::ranges::advance(l_iterator, Length::KW_NAME, io_vpdVector.end());
+
+        // Find the keyword's data length
+        size_t l_kwdDataLength = 0;
+
+        if (constants::POUND_KW == l_kwNameStart)
+        {
+            l_kwdDataLength = readUInt16LE(l_iterator);
+            std::ranges::advance(l_iterator, sizeof(types::PoundKwSize),
+                                 io_vpdVector.end());
+        }
+        else
+        {
+            l_kwdDataLength = *l_iterator;
+            std::ranges::advance(l_iterator, sizeof(types::KwSize),
+                                 io_vpdVector.end());
+        }
+
+        if (l_kwName == i_keywordName)
+        {
+            // Before writing the keyword's value, get the maximum size that can
+            // be updated.
+            const auto l_lengthToUpdate =
+                i_keywordData.size() <= l_kwdDataLength ? i_keywordData.size()
+                                                        : l_kwdDataLength;
+
+            // Set the keyword's value on vector. This is required to update the
+            // record's ECC based on the new value set.
+            const auto i_keywordDataEnd = std::ranges::next(
+                i_keywordData.cbegin(), l_lengthToUpdate, i_keywordData.cend());
+
+            std::copy(i_keywordData.cbegin(), i_keywordDataEnd, l_iterator);
+
+            // Set the keyword's value on hardware
+            const auto l_kwdDataOffset = std::distance(io_vpdVector.begin(),
+                                                       l_iterator);
+            m_vpdFileStream.seekp(m_vpdStartOffset + l_kwdDataOffset,
+                                  std::ios::beg);
+
+            std::copy(i_keywordData.cbegin(), i_keywordDataEnd,
+                      std::ostreambuf_iterator<char>(m_vpdFileStream));
+
+            // return no of bytes set
+            return l_lengthToUpdate;
+        }
+
+        // next keyword search
+        std::ranges::advance(l_iterator, l_kwdDataLength, io_vpdVector.end());
+
+        // next keyword name
+        l_kwName = std::string(
+            l_iterator,
+            std::ranges::next(l_iterator, Length::KW_NAME, io_vpdVector.end()));
+    }
+
+    // Keyword not found
+    throw(DataException("Keyword " + i_keywordName + " not found in record " +
+                        i_recordName));
+}
+
+int IpzVpdParser::writeKeywordOnHardware(
+    const types::WriteVpdParams i_paramsToWriteData)
+{
+    int l_sizeWritten = -1;
+
+    try
+    {
+        types::Record l_recordName;
+        types::Keyword l_keywordName;
+        types::BinaryVector l_keywordData;
+
+        // Extract record, keyword and value from i_paramsToWriteData
+        if (const types::IpzData* l_ipzData =
+                std::get_if<types::IpzData>(&i_paramsToWriteData))
+        {
+            l_recordName = std::get<0>(*l_ipzData);
+            l_keywordName = std::get<1>(*l_ipzData);
+            l_keywordData = std::get<2>(*l_ipzData);
+        }
+        else
+        {
+            logging::logMessage(
+                "Input parameter type provided isn't compatible with the given FRU's VPD type.");
+            throw types::DbusInvalidArgument();
+        }
+
+        if (l_recordName == "VHDR" || l_recordName == "VTOC")
+        {
+            logging::logMessage(
+                "Write operation not allowed on the given record : " +
+                l_recordName);
+            throw types::DbusNotAllowed();
+        }
+
+        if (l_keywordData.size() == 0)
+        {
+            logging::logMessage(
+                "Write operation not allowed as the given keyword's data length is 0.");
+            throw types::DbusInvalidArgument();
+        }
+
+        auto l_vpdBegin = m_vpdVector.begin();
+
+        // Get VTOC offset
+        std::ranges::advance(l_vpdBegin, Offset::VTOC_PTR, m_vpdVector.end());
+        auto l_vtocOffset = readUInt16LE(l_vpdBegin);
+
+        // Get the details of user given record from VTOC
+        const types::RecordData& l_inputRecordDetails =
+            getRecordDetailsFromVTOC(l_recordName, l_vtocOffset);
+
+        const auto& l_inputRecordOffset = std::get<0>(l_inputRecordDetails);
+
+        if (l_inputRecordOffset == 0)
+        {
+            throw(DataException("Record not found in VTOC PT keyword."));
+        }
+
+        // Create a local copy of m_vpdVector to perform keyword update and ecc
+        // update on filestream.
+        types::BinaryVector l_vpdVector = m_vpdVector;
+
+        // write keyword's value on hardware
+        l_sizeWritten =
+            setKeywordValueInRecord(l_recordName, l_keywordName, l_keywordData,
+                                    l_inputRecordOffset, l_vpdVector);
+
+        if (l_sizeWritten <= 0)
+        {
+            throw(DataException("Unable to set value on " + l_recordName + ":" +
+                                l_keywordName));
+        }
+
+        // Update the record's ECC
+        updateRecordECC(l_inputRecordOffset, std::get<1>(l_inputRecordDetails),
+                        std::get<2>(l_inputRecordDetails),
+                        std::get<3>(l_inputRecordDetails), l_vpdVector);
+
+        logging::logMessage(l_sizeWritten +
+                            " bytes updated successfully on hardware for " +
+                            l_recordName + ":" + l_keywordName);
+    }
+    catch (const std::exception& l_exception)
+    {
+        throw;
+    }
+
+    return l_sizeWritten;
+}
 } // namespace vpd

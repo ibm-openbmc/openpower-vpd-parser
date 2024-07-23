@@ -132,6 +132,8 @@ using RecordData = std::tuple<RecordOffset, RecordLength, ECCOffset, ECCLength>;
 
 using DbusInvalidArgument =
     sdbusplus::xyz::openbmc_project::Common::Error::InvalidArgument;
+using DbusNotAllowed = sdbusplus::xyz::openbmc_project::Common::Error::NotAllowed;
+
 using InvalidArgument = phosphor::logging::xyz::openbmc_project::Common::InvalidArgument;
 
 namespace DeviceError = sdbusplus::xyz::openbmc_project::Common::Device::Error;
