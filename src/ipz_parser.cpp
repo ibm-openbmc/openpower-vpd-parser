@@ -631,4 +631,100 @@ types::DbusVariantType IpzVpdParser::readKeywordFromHardware(
     return types::DbusVariantType{
         getKeywordValueFromRecord(l_record, l_keyword, l_recordOffset)};
 }
+
+int IpzVpdParser::setKeywordValueInRecord(
+    const types::Record& i_recordName, const types::Keyword& i_keywordName,
+    const types::BinaryVector& i_keywordData,
+    const types::RecordOffset& i_recordDataOffset)
+{
+    auto l_iterator = m_vpdVector.begin();
+
+    // Go to the record name in the given record's offset
+    std::ranges::advance(l_iterator,
+                         i_recordDataOffset + Length::JUMP_TO_RECORD_NAME,
+                         m_vpdVector.cend());
+
+    // Check if the record is present in the given record's offset
+    if (i_recordName !=
+        std::string(l_iterator,
+                    std::ranges::next(l_iterator, Length::RECORD_NAME,
+                                      m_vpdVector.cend())))
+    {
+        throw std::runtime_error(
+            "Given record is not present in the offset provided");
+    }
+
+    std::ranges::advance(l_iterator, Length::RECORD_NAME, m_vpdVector.cend());
+
+    std::string l_kwName = std::string(
+        l_iterator,
+        std::ranges::next(l_iterator, Length::KW_NAME, m_vpdVector.cend()));
+
+    // Iterate through the keywords until the last keyword PF is found.
+    while (l_kwName != constants::LAST_KW)
+    {
+        // First character required for #D keyword check
+        char l_kwNameStart = *l_iterator;
+
+        std::ranges::advance(l_iterator, Length::KW_NAME, m_vpdVector.cend());
+
+        // Get the keyword's data length
+        size_t l_kwdDataLength = 0;
+
+        if (constants::POUND_KW == l_kwNameStart)
+        {
+            l_kwdDataLength = readUInt16LE(l_iterator);
+            std::ranges::advance(l_iterator, sizeof(types::PoundKwSize),
+                                 m_vpdVector.cend());
+        }
+        else
+        {
+            l_kwdDataLength = *l_iterator;
+            std::ranges::advance(l_iterator, sizeof(types::KwSize),
+                                 m_vpdVector.cend());
+        }
+
+        if (l_kwName == i_keywordName)
+        {
+            // Before writing the keyword's value, get the maximum size that can
+            // be updated.
+            const auto l_lengthToUpdate =
+                i_keywordData.size() <= l_kwdDataLength ? i_keywordData.size()
+                                                        : l_kwdDataLength;
+
+            // Set the keyword's value on vector. This is required to update the
+            // record's ECC based on the new value set.
+            const auto i_keywordDataEnd = std::ranges::next(
+                i_keywordData.cbegin(), l_lengthToUpdate, i_keywordData.cend());
+
+            std::copy(i_keywordData.cbegin(), i_keywordDataEnd, l_iterator);
+
+            // Set the keyword's value on hardware
+            m_vpdFileStream.exceptions(std::ifstream::badbit |
+                                       std::ifstream::failbit);
+
+            const auto l_kwdDataOffset = std::distance(m_vpdVector.begin(),
+                                                       l_iterator);
+            m_vpdFileStream.seekp(m_vpdStartOffset + l_kwdDataOffset,
+                                  std::ios::beg);
+
+            std::copy(i_keywordData.cbegin(), i_keywordDataEnd,
+                      std::ostreambuf_iterator<char>(m_vpdFileStream));
+
+            // return no of bytes set
+            return l_lengthToUpdate;
+        }
+
+        // next keyword search
+        std::ranges::advance(l_iterator, l_kwdDataLength, m_vpdVector.cend());
+
+        // next keyword name
+        l_kwName = std::string(
+            l_iterator,
+            std::ranges::next(l_iterator, Length::KW_NAME, m_vpdVector.cend()));
+    }
+
+    // Keyword not found
+    throw std::runtime_error("Given keyword not found.");
+}
 } // namespace vpd
