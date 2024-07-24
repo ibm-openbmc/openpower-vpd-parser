@@ -60,14 +60,14 @@ std::tuple<types::VPDMapVariant, types::VPDMapVariant>
         }
 
         std::string l_srcVpdPath;
-        types::VPDMapVariant l_srcVpdMap;
+        types::VPDMapVariant l_srcVpdVariant;
         if (l_srcVpdPath = m_backupAndRestoreCfgJsonObj["source"].value(
                 "hardwarePath", "");
             !l_srcVpdPath.empty() && std::filesystem::exists(l_srcVpdPath))
         {
             std::shared_ptr<Parser> l_vpdParser =
                 std::make_shared<Parser>(l_srcVpdPath, m_sysCfgJsonObj);
-            l_srcVpdMap = l_vpdParser->parse();
+            l_srcVpdVariant = l_vpdParser->parse();
         }
         else if (l_srcVpdPath = m_backupAndRestoreCfgJsonObj["source"].value(
                      "inventoryPath", "");
@@ -79,14 +79,14 @@ std::tuple<types::VPDMapVariant, types::VPDMapVariant>
         }
 
         std::string l_dstVpdPath;
-        types::VPDMapVariant l_dstVpdMap;
+        types::VPDMapVariant l_dstVpdVariant;
         if (l_dstVpdPath = m_backupAndRestoreCfgJsonObj["destination"].value(
                 "hardwarePath", "");
             !l_dstVpdPath.empty() && std::filesystem::exists(l_dstVpdPath))
         {
             std::shared_ptr<Parser> l_vpdParser =
                 std::make_shared<Parser>(l_dstVpdPath, m_sysCfgJsonObj);
-            l_dstVpdMap = l_vpdParser->parse();
+            l_dstVpdVariant = l_vpdParser->parse();
         }
         else if (l_dstVpdPath =
                      m_backupAndRestoreCfgJsonObj["destination"].value(
@@ -103,39 +103,35 @@ std::tuple<types::VPDMapVariant, types::VPDMapVariant>
                                                                          "");
         if (l_backupAndRestoreType.compare("IPZ") == constants::STR_CMP_SUCCESS)
         {
-            types::IPZVpdMap* l_srcVpdPtr = nullptr;
-            if (!(l_srcVpdPtr = std::get_if<types::IPZVpdMap>(&l_srcVpdMap)))
+            types::IPZVpdMap l_srcVpdMap;
+            if (auto l_srcVpdPtr =
+                    std::get_if<types::IPZVpdMap>(&l_srcVpdVariant))
             {
-                if (std::holds_alternative<std::monostate>(l_srcVpdMap))
-                {
-                    l_srcVpdPtr = new types::IPZVpdMap();
-                }
-                else
-                {
-                    logging::logMessage("Source VPD is not of IPZ type.");
-                    return l_emptyVariantPair;
-                }
+                l_srcVpdMap = *l_srcVpdPtr;
+            }
+            else if (!std::holds_alternative<std::monostate>(l_srcVpdVariant))
+            {
+                logging::logMessage("Source VPD is not of IPZ type.");
+                return l_emptyVariantPair;
             }
 
-            types::IPZVpdMap* l_dstVpdPtr = nullptr;
-            if (!(l_dstVpdPtr = std::get_if<types::IPZVpdMap>(&l_dstVpdMap)))
+            types::IPZVpdMap l_dstVpdMap;
+            if (auto l_dstVpdPtr =
+                    std::get_if<types::IPZVpdMap>(&l_dstVpdVariant))
             {
-                if (std::holds_alternative<std::monostate>(l_dstVpdMap))
-                {
-                    l_dstVpdPtr = new types::IPZVpdMap();
-                }
-                else
-                {
-                    logging::logMessage("Destination VPD is not of IPZ type.");
-                    return l_emptyVariantPair;
-                }
+                l_dstVpdMap = *l_dstVpdPtr;
+            }
+            else if (!std::holds_alternative<std::monostate>(l_dstVpdVariant))
+            {
+                logging::logMessage("Destination VPD is not of IPZ type.");
+                return l_emptyVariantPair;
             }
 
-            backupAndRestoreIpzVpd(*l_srcVpdPtr, *l_dstVpdPtr, l_srcVpdPath,
+            backupAndRestoreIpzVpd(l_srcVpdMap, l_dstVpdMap, l_srcVpdPath,
                                    l_dstVpdPath);
             m_backupAndRestoreStatus = BackupAndRestoreStatus::Completed;
 
-            return std::make_tuple(*l_srcVpdPtr, *l_dstVpdPtr);
+            return std::make_tuple(l_srcVpdMap, l_dstVpdMap);
         }
         // Note: add implementation here to support any other VPD type.
     }
