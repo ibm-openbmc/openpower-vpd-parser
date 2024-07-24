@@ -73,7 +73,8 @@ common_SOURCES = ['src/logger.cpp',
                   'src/isdimm_parser.cpp',
                   'src/parser.cpp',
                   'src/worker.cpp',
-                  'src/backup_restore.cpp']
+                  'src/backup_restore.cpp',
+                  'src/gpioMonitor.cpp']
 
 vpd_manager_SOURCES = ['src/manager_main.cpp',
                     'src/manager.cpp',
