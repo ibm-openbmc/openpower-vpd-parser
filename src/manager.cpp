@@ -216,12 +216,90 @@ void Manager::SetTimerToDetectVpdCollectionStatus()
 int Manager::updateKeyword(const types::Path i_vpdPath,
                            const types::WriteVpdParams i_paramsToWriteData)
 {
-    // Code to supress unused variable warning. To be removed.
-    (void)i_vpdPath;
-    (void)i_paramsToWriteData;
+    if (i_vpdPath.empty())
+    {
+        logging::logMessage("Given VPD path is empty.");
+        return -1;
+    }
 
-    // On success return number of bytes written. On failure return -1.
-    return -1;
+    nlohmann::json l_sysCfgJsonObj{};
+
+    if (m_worker.get() != nullptr)
+    {
+        l_sysCfgJsonObj = m_worker->getSysCfgJsonObj();
+    }
+
+    types::Path l_fruPath = i_vpdPath;
+    types::Path l_inventoryObjPath;
+    types::Path l_redundantFruPath;
+
+    if (!l_sysCfgJsonObj.empty())
+    {
+        try
+        {
+            // Get hardware path from system config JSON.
+            const types::Path& l_tempPath =
+                jsonUtility::getFruPathFromJson(l_sysCfgJsonObj, i_vpdPath);
+
+            if (!l_tempPath.empty())
+            {
+                // Save the FRU path to update on hardware
+                l_fruPath = l_tempPath;
+
+                // Get inventory object path from system config JSON
+                l_inventoryObjPath = jsonUtility::getInventoryObjPathFromJson(
+                    l_sysCfgJsonObj, i_vpdPath);
+
+                // Get redundant hardware path if present in system config JSON
+                l_redundantFruPath =
+                    jsonUtility::getRedundantEepromPathFromJson(l_sysCfgJsonObj,
+                                                                i_vpdPath);
+            }
+        }
+        catch (const std::exception& e)
+        {
+            return -1;
+        }
+    }
+
+    // Update keyword's value on hardware
+    int l_bytesUpdatedOnHardware = updateKeywordOnHardware(
+        l_fruPath, l_sysCfgJsonObj, i_paramsToWriteData);
+
+    if (l_bytesUpdatedOnHardware == -1)
+    {
+        return l_bytesUpdatedOnHardware;
+    }
+
+    // Update keyword's value on inventory object path if present
+    if (!l_inventoryObjPath.empty())
+    {
+        int l_bytesUpdatedOnDbus = updateKeywordOnDbus(
+            l_inventoryObjPath, l_fruPath, i_paramsToWriteData);
+
+        if (l_bytesUpdatedOnDbus == -1)
+        {
+            return l_bytesUpdatedOnDbus;
+        }
+    }
+
+    // Update keyword's value on redundant hardware if present
+    if (!l_redundantFruPath.empty())
+    {
+        int l_bytesUpdatedOnRedundantHw = updateKeywordOnHardware(
+            l_redundantFruPath, l_sysCfgJsonObj, i_paramsToWriteData);
+
+        if (l_bytesUpdatedOnRedundantHw == -1)
+        {
+            return l_bytesUpdatedOnRedundantHw;
+        }
+    }
+
+    // TODO: Check if revert is required when any of the writes fails.
+    // TODO: Handle error logging
+
+    // All updates are successful.
+    return l_bytesUpdatedOnHardware;
 }
 
 types::DbusVariantType
@@ -531,4 +609,25 @@ types::ListOfPaths Manager::getFrusByExpandedLocationCode(
 
 void Manager::performVPDRecollection() {}
 
+int Manager::updateKeywordOnHardware(
+    const types::Path& i_fruPath, const nlohmann::json& i_sysCfgJsonObj,
+    const types::WriteVpdParams i_paramsToWriteData)
+{
+    (void)i_fruPath;
+    (void)i_sysCfgJsonObj;
+    (void)i_paramsToWriteData;
+
+    return -1;
+}
+
+int Manager::updateKeywordOnDbus(
+    const types::Path& i_inventoryObjPath, const types::Path& i_fruPath,
+    const types::WriteVpdParams i_paramsToWriteData)
+{
+    (void)i_inventoryObjPath;
+    (void)i_fruPath;
+    (void)i_paramsToWriteData;
+
+    return -1;
+}
 } // namespace vpd
