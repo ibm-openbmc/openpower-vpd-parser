@@ -271,15 +271,54 @@ int Manager::updateKeyword(const types::Path i_vpdPath,
         return l_bytesUpdatedOnHardware;
     }
 
-    // Update keyword's value on inventory object path if present
+    // If inventory D-bus object path is present, perform update
     if (!l_inventoryObjPath.empty())
     {
-        int l_bytesUpdatedOnDbus = updateKeywordOnDbus(
-            l_inventoryObjPath, l_fruPath, i_paramsToWriteData);
+        types::Record l_recordName;
+        std::string l_interfaceName;
+        std::string l_propertyName;
+        types::DbusVariantType l_keywordValue;
 
-        if (l_bytesUpdatedOnDbus == -1)
+        if (const types::IpzData* l_ipzData =
+                std::get_if<types::IpzData>(&i_paramsToWriteData))
         {
-            return l_bytesUpdatedOnDbus;
+            l_recordName = std::get<0>(*l_ipzData);
+            l_interfaceName = constants::ipzVpdInf + l_recordName;
+            l_propertyName = std::get<1>(*l_ipzData);
+
+            try
+            {
+                // Read keyword's value from hardware to write the same on
+                // D-bus.
+                l_keywordValue =
+                    readKeyword(l_fruPath, types::ReadVpdParams(std::make_tuple(
+                                               l_recordName, l_propertyName)));
+            }
+            catch (const std::exception& l_exception)
+            {
+                // TODO: Log PEL
+                // Unable to read keyword's value from hardware.
+                return -1;
+            }
+        }
+        else
+        {
+            // Input parameter type provided isn't compatible to perform update.
+            return -1;
+        }
+
+        // Create D-bus object map
+        types::ObjectMap l_dbusObjMap = {std::make_pair(
+            l_inventoryObjPath,
+            types::InterfaceMap{std::make_pair(
+                l_interfaceName, types::PropertyMap{std::make_pair(
+                                     l_propertyName, l_keywordValue)})})};
+
+        // Call PIM's Notify method to perform update
+        if (!dbusUtility::callPIM(std::move(l_dbusObjMap)))
+        {
+            // Call to PIM's Notify method failed.
+            return -1;
         }
     }
 
@@ -629,16 +668,5 @@ int Manager::updateKeywordOnHardware(
         // TODO : Log PEL
         return -1;
     }
-}
-
-int Manager::updateKeywordOnDbus(
-    const types::Path& i_inventoryObjPath, const types::Path& i_fruPath,
-    const types::WriteVpdParams i_paramsToWriteData)
-{
-    (void)i_inventoryObjPath;
-    (void)i_fruPath;
-    (void)i_paramsToWriteData;
-
-    return -1;
 }
 } // namespace vpd

@@ -244,20 +244,6 @@ class Manager
         const types::Path& i_fruPath, const nlohmann::json& i_sysCfgJsonObj,
         const types::WriteVpdParams i_paramsToWriteData);
 
-    /**
-     * @brief API to update keyword's value on D-bus.
-     *
-     * @param[in] i_inventoryObjPath - Inventory object path.
-     * @param[in] i_fruPath - FRU path.
-     * @param[in] i_paramsToWriteData - Data required to perform write.
-     *
-     * @return On success returns number of bytes written. On failure returns
-     * -1.
-     */
-    int updateKeywordOnDbus(const types::Path& i_inventoryObjPath,
-                            const types::Path& i_fruPath,
-                            const types::WriteVpdParams i_paramsToWriteData);
-
     // Shared pointer to asio context object.
     const std::shared_ptr<boost::asio::io_context>& m_ioContext;
 
