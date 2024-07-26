@@ -12,7 +12,7 @@
             "sourceKeyword": "BR",
             "destinationRecord": "VSYS",
             "destinationKeyword": "BR",
-            "defaultValue": [20, 20],
+            "defaultValue": [32, 32],
             "isPelRequired": true,
             "isManufactureResetRequired": true
         },
@@ -21,7 +21,7 @@
             "sourceKeyword": "TM",
             "destinationRecord": "VSYS",
             "destinationKeyword": "TM",
-            "defaultValue": [20, 20, 20, 20, 20, 20, 20, 20],
+            "defaultValue": [32, 32, 32, 32, 32, 32, 32, 32],
             "isPelRequired": true,
             "isManufactureResetRequired": true
         },
@@ -30,7 +30,7 @@
             "sourceKeyword": "SE",
             "destinationRecord": "VSYS",
             "destinationKeyword": "SE",
-            "defaultValue": [20, 20, 20, 20, 20, 20, 20],
+            "defaultValue": [32, 32, 32, 32, 32, 32, 32],
             "isPelRequired": true,
             "isManufactureResetRequired": true
         },
@@ -39,7 +39,7 @@
             "sourceKeyword": "SU",
             "destinationRecord": "VSYS",
             "destinationKeyword": "SU",
-            "defaultValue": [20, 20, 20, 20, 20, 20],
+            "defaultValue": [32, 32, 32, 32, 32, 32],
             "isPelRequired": true,
             "isManufactureResetRequired": true
         },
@@ -48,7 +48,7 @@
             "sourceKeyword": "RB",
             "destinationRecord": "VSYS",
             "destinationKeyword": "RB",
-            "defaultValue": [20, 20, 20, 20],
+            "defaultValue": [32, 32, 32, 32],
             "isPelRequired": true,
             "isManufactureResetRequired": true
         },
@@ -57,7 +57,7 @@
             "sourceKeyword": "WN",
             "destinationRecord": "VSYS",
             "destinationKeyword": "WN",
-            "defaultValue": [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
+            "defaultValue": [32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32],
             "isPelRequired": true,
             "isManufactureResetRequired": true
         },
@@ -66,7 +66,7 @@
             "sourceKeyword": "RG",
             "destinationRecord": "VSYS",
             "destinationKeyword": "RG",
-            "defaultValue": [20, 20, 20, 20],
+            "defaultValue": [32, 32, 32, 32],
             "isPelRequired": true,
             "isManufactureResetRequired": true
         },
@@ -76,8 +76,8 @@
             "destinationRecord": "VSYS",
             "destinationKeyword": "FV",
             "defaultValue": [
-                20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20,
-                20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20
+                32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
+                32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32
             ],
             "isPelRequired": false,
             "isManufactureResetRequired": true
@@ -87,7 +87,7 @@
             "sourceKeyword": "FC",
             "destinationRecord": "VCEN",
             "destinationKeyword": "FC",
-            "defaultValue": [20, 20, 20, 20, 20, 20, 20, 20],
+            "defaultValue": [32, 32, 32, 32, 32, 32, 32, 32],
             "isPelRequired": true,
             "isManufactureResetRequired": false
         },
@@ -96,7 +96,7 @@
             "sourceKeyword": "SE",
             "destinationRecord": "VCEN",
             "destinationKeyword": "SE",
-            "defaultValue": [20, 20, 20, 20, 20, 20, 20],
+            "defaultValue": [32, 32, 32, 32, 32, 32, 32],
             "isPelRequired": true,
             "isManufactureResetRequired": true
         },
