@@ -47,29 +47,41 @@ inline std::unordered_map<std::string, functionPtr> funcionMap{
 /**
  * @brief API to read VPD offset from JSON file.
  *
- * @param[in] parsedJson - Parsed JSON file for the system.
- * @param[in] vpdFilePath - path to the VPD file.
- * @return Offset of VPD in VPD file.
+ * @param[in] i_sysCfgJsonObj - Parsed system config JSON object.
+ * @param[in] i_vpdFilePath - VPD file path.
+ * @return VPD offset if found in JSON, 0 otherwise.
  */
-inline size_t getVPDOffset(const nlohmann::json& parsedJson,
-                           const std::string& vpdFilePath)
+inline size_t getVPDOffset(const nlohmann::json& i_sysCfgJsonObj,
+                           const std::string& i_vpdFilePath)
 {
-    size_t vpdOffset = 0;
-    if (!vpdFilePath.empty())
+    if (i_vpdFilePath.empty() || (i_sysCfgJsonObj.empty()) ||
+        (!i_sysCfgJsonObj.contains("frus")))
     {
-        if (parsedJson["frus"].contains(vpdFilePath))
+        return 0;
+    }
+
+    if (i_sysCfgJsonObj["frus"].contains(i_vpdFilePath))
+    {
+        return i_sysCfgJsonObj["frus"][i_vpdFilePath].at(0).value("offset", 0);
+    }
+
+    const nlohmann::json& l_fruList =
+        i_sysCfgJsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
+
+    for (const auto& l_fru : l_fruList.items())
+    {
+        const auto l_fruPath = l_fru.key();
+
+        // check if given path is redundant FRU path
+        if (i_vpdFilePath == i_sysCfgJsonObj["frus"][l_fruPath].at(0).value(
+                                 "redundantEeprom", ""))
         {
-            for (const auto& item : parsedJson["frus"][vpdFilePath])
-            {
-                if (item.find("offset") != item.end())
-                {
-                    vpdOffset = item["offset"];
-                    break;
-                }
-            }
+            // Return the offset of redundant EEPROM taken from JSON.
+            return i_sysCfgJsonObj["frus"][l_fruPath].at(0).value("offset", 0);
         }
     }
-    return vpdOffset;
+
+    return 0;
 }
 
 /**
