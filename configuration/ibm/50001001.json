@@ -930,9 +930,11 @@
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/lcd_op_panel_hill",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "pollingRequired": {
-                    "gpioPresence": {
-                        "pin": "RUSSEL_OPPANEL_PRESENCE_N",
-                        "value": 0
+                    "hotPlugging": {
+                        "gpioPresence": {
+                            "pin": "RUSSEL_OPPANEL_PRESENCE_N",
+                            "value": 0
+                        }
                     }
                 },
                 "preAction": {

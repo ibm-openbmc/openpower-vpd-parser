@@ -41,7 +41,7 @@ Manager::Manager(
 
         // Instantiate GpioMonitor class
         m_gpioMonitor = std::make_shared<GpioMonitor>(
-            m_worker->getSysCfgJsonObj(), m_ioContext);
+            m_worker->getSysCfgJsonObj(), m_worker, m_ioContext);
 
 #endif
         // Register methods under com.ibm.VPD.Manager interface

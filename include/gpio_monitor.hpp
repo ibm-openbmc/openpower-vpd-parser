@@ -1,5 +1,8 @@
 #pragma once
 
+#include "worker.hpp"
+
+#include <boost/asio/steady_timer.hpp>
 #include <nlohmann/json.hpp>
 #include <sdbusplus/asio/connection.hpp>
 
@@ -11,9 +14,9 @@ namespace vpd
  * @brief class for GPIO event handling.
  *
  * Responsible for detecting events and handling them. It continuously
- * monitors the presence of the FRU. If any attachment or detachment is
- * detected, it enables or disables the FRU's output GPIO and binds or
- * unbinds the driver accordingly.
+ * monitors the presence of the FRU. If it detects any change, performs
+ * deletion of FRU VPD if FRU is not present, otherwise performs VPD
+ * collection if FRU gets added.
  */
 class GpioEventHandler
 {
@@ -28,38 +31,29 @@ class GpioEventHandler
     /**
      * @brief Constructor
      *
-     * @param[in] i_presencePin - GPIO presence pin
-     * @param[in] i_presenceValue - holds the value of presence pin.
-     * @param[in] i_inventoryPath - inventory path of the FRU.
+     * @param[in] i_fruPath - EEPROM path of the FRU.
+     * @param[in] i_worker - pointer to the worker object.
      * @param[in] i_ioContext - pointer to the io context object
      */
     GpioEventHandler(
-        const std::string& i_presencePin, const bool& i_presenceValue,
-        const std::string& i_inventoryPath,
+        const std::string i_fruPath, const std::shared_ptr<Worker>& i_worker,
         const std::shared_ptr<boost::asio::io_context>& i_ioContext) :
-        m_presencePin(i_presencePin), m_presenceValue(i_presenceValue),
-        m_inventoryPath(i_inventoryPath)
+        m_fruPath(i_fruPath), m_worker(i_worker)
     {
         setEventHandlerForGpioPresence(i_ioContext);
     }
 
   private:
     /**
-     * @brief API to read the GPIO presence pin value.
+     * @brief API to take action based on GPIO presence pin value.
      *
-     *  @returns GPIO presence pin value.
-     */
-    bool getPresencePinValue();
-
-    /**
-     * @brief API to toggle the output GPIO pin.
+     * This API takes action based on the change in the presence pin value.
+     * It performs deletion of FRU VPD if FRU is not present, otherwise performs
+     * VPD collection if FRU gets added.
      *
-     * This API toggles the output GPIO pin based on the presence
-     * state of the FRU. If there is any change in the presence pin,
-     * it updates the output pin and binds or unbinds the driver
-     * accordingly.
+     * @param[in] i_isFruPresent - Holds the present status of the FRU.
      */
-    void toggleGpio();
+    void handleChangeInGpioPin(const bool& i_isFruPresent);
 
     /**
      * @brief An API to set event handler for FRUs GPIO presence.
@@ -72,14 +66,25 @@ class GpioEventHandler
     void setEventHandlerForGpioPresence(
         const std::shared_ptr<boost::asio::io_context>& i_ioContext);
 
-    // Indicates presence/absence of fru
-    const std::string& m_presencePin;
+    /**
+     * @brief API to handle timer expiry.
+     *
+     * This API handles timer expiry and checks on the GPIO presence state,
+     * takes action if there is any change in the GPIO presence value.
+     *
+     * @param[in] i_errorCode - Error Code
+     * @param[in] i_timerObj - Pointer to timer Object.
+     */
+    void handleTimerExpiry(
+        const boost::system::error_code& i_errorCode,
+        const std::shared_ptr<boost::asio::steady_timer>& i_timerObj);
 
-    // Value of GPIO input pin
-    const bool& m_presenceValue;
+    const std::string m_fruPath;
 
-    // Inventory path of the FRU
-    const std::string& m_inventoryPath;
+    const std::shared_ptr<Worker>& m_worker;
+
+    // Preserves the GPIO pin value to compare. Default value is false.
+    bool m_prevPresencePinValue = false;
 };
 
 class GpioMonitor
@@ -96,15 +101,22 @@ class GpioMonitor
      * @brief constructor
      *
      * @param[in] i_sysCfgJsonObj - System config JSON Object.
+     * @param[in] i_worker - pointer to the worker object.
      * @param[in] i_ioContext - pointer to IO context object.
      */
     GpioMonitor(const nlohmann::json i_sysCfgJsonObj,
+                const std::shared_ptr<Worker>& i_worker,
                 const std::shared_ptr<boost::asio::io_context>& i_ioContext) :
         m_sysCfgJsonObj(i_sysCfgJsonObj)
     {
         if (!m_sysCfgJsonObj.empty())
         {
-            initHandlerForGpio(i_ioContext);
+            initHandlerForGpio(i_ioContext, i_worker);
+        }
+        else
+        {
+            throw std::runtime_error(
+                "Gpio Monitoring can't be instantiated with empty config JSON");
         }
     }
 
@@ -116,9 +128,11 @@ class GpioMonitor
      * and instantiate event handler for GPIO pins.
      *
      * @param[in] i_ioContext - Pointer to IO context object.
+     * @param[in] i_worker - Pointer to worker class.
      */
     void initHandlerForGpio(
-        const std::shared_ptr<boost::asio::io_context>& i_ioContext);
+        const std::shared_ptr<boost::asio::io_context>& i_ioContext,
+        const std::shared_ptr<Worker>& i_worker);
 
     // Array of event handlers for all the attachable FRUs.
     std::vector<std::shared_ptr<GpioEventHandler>> m_gpioEventHandlerObjects;

@@ -29,10 +29,6 @@ using PendingBIOSAttrItem =
     std::pair<std::string, std::tuple<std::string, BiosAttributePendingValue>>;
 using PendingBIOSAttrs = std::vector<PendingBIOSAttrItem>;
 
-// GPIO parameters required for polling, tuple<GPIO presence pin, presence pin
-// value, Inventory path of the FRU>
-using GpioPollingParameters = std::tuple<std::string, uint8_t, std::string>;
-
 using BinaryVector = std::vector<uint8_t>;
 
 // This covers mostly all the data type supported over Dbus for a property.
