@@ -4,6 +4,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <mutex>
 #include <tuple>
 
 namespace vpd
@@ -391,5 +392,8 @@ class Worker
     // Note: This variable does not give information about successfull or failed
     // collection. It just states, if the VPD collection process is over or not.
     bool m_isAllFruCollected = false;
+
+    // Mutex to guard critical resource m_activeCollectionThreadCount.
+    std::mutex m_mutex;
 };
 } // namespace vpd
