@@ -19,4 +19,11 @@ void GpioEventHandler::setEventHandlerForGpioPresence(
     // ToDo Add implementation.
     (void)i_ioContext;
 }
+
+void GpioMonitor::initHandlerForGpio(
+    const std::shared_ptr<boost::asio::io_context>& i_ioContext)
+{
+    // ToDo Add implementation.
+    (void)i_ioContext;
+}
 } // namespace vpd

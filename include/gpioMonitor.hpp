@@ -1,6 +1,9 @@
 #pragma once
 
+#include <nlohmann/json.hpp>
 #include <sdbusplus/asio/connection.hpp>
+
+#include <vector>
 
 namespace vpd
 {
@@ -89,4 +92,47 @@ class GpioEventHandler
     const std::string& m_inventoryPath;
 };
 
+class GpioMonitor
+{
+  public:
+    GpioMonitor() = delete;
+    ~GpioMonitor() = default;
+    GpioMonitor(const GpioMonitor&) = delete;
+    GpioMonitor& operator=(const GpioMonitor&) = delete;
+    GpioMonitor(GpioMonitor&&) = delete;
+    GpioMonitor& operator=(GpioMonitor&&) = delete;
+
+    /**
+     * @brief constructor
+     *
+     * @param[in] i_sysCfgJsonObj - System config JSON Object.
+     * @param[in] i_ioContext - pointer to IO context object.
+     */
+    GpioMonitor(const nlohmann::json i_sysCfgJsonObj,
+                const std::shared_ptr<boost::asio::io_context>& i_ioContext) :
+        m_sysCfgJsonObj(i_sysCfgJsonObj)
+    {
+        if (!m_sysCfgJsonObj.empty())
+        {
+            initHandlerForGpio(i_ioContext);
+        }
+    }
+
+  private:
+    /**
+     * @brief API to instantiate GpioEventHandler for GPIO pins.
+     *
+     * This API will extract the GPIO information from system config JSON
+     * and instantiate event handler for GPIO pins.
+     *
+     * @param[in] i_ioContext - Pointer to IO context object.
+     */
+    void initHandlerForGpio(
+        const std::shared_ptr<boost::asio::io_context>& i_ioContext);
+
+    // Array of event handlers for all the attachable FRUs.
+    std::vector<std::shared_ptr<GpioEventHandler>> m_gpioObjects;
+
+    const nlohmann::json& m_sysCfgJsonObj;
+};
 } // namespace vpd

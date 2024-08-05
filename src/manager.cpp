@@ -39,6 +39,10 @@ Manager::Manager(
 
         // set async timer to detect if VPD collection is done.
         SetTimerToDetectVpdCollectionStatus();
+
+        // Instantiate GpioMonitor class
+        m_gpioMonitor = std::make_shared<GpioMonitor>(
+            m_worker->getSysCfgJsonObj(), m_ioContext);
 #endif
 
         // Register methods under com.ibm.VPD.Manager interface

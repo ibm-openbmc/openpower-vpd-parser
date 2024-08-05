@@ -1,6 +1,7 @@
 #pragma once
 
 #include "constants.hpp"
+#include "gpioMonitor.hpp"
 #include "types.hpp"
 #include "worker.hpp"
 
@@ -240,6 +241,9 @@ class Manager
 
     // Shared pointer to worker class
     std::shared_ptr<Worker> m_worker;
+
+    // Shared pointer to GpioMonitor class
+    std::shared_ptr<GpioMonitor> m_gpioMonitor;
 };
 
 } // namespace vpd
