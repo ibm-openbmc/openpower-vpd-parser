@@ -8,6 +8,7 @@
 #include <utility/common_utility.hpp>
 
 #include <fstream>
+#include <type_traits>
 #include <unordered_map>
 
 namespace vpd
@@ -649,6 +650,150 @@ inline bool isBackupAndRestoreRequired(const nlohmann::json& i_sysCfgJsonObj)
         logging::logMessage(ex.what());
     }
     return false;
+}
+
+/**
+ * @brief An API to check if FRU qualifies for polling.
+ *
+ * This API checks for "pollingRequired" tag in system config JSON.
+ *
+ * @param[in] i_sysCfgJsonObj -  System config JSON object.
+ * @param[in] i_vpdFilePath - VPD file path.
+ *
+ * @return true if polling is required, false otherwise.
+ */
+inline bool isPollingRequired(const nlohmann::json& i_sysCfgJsonObj,
+                              const std::string& i_vpdFilePath)
+{
+    if (i_sysCfgJsonObj.empty() || i_vpdFilePath.empty())
+    {
+        logging::logMessage("Invalid parameters");
+        return false;
+    }
+
+    if (!i_sysCfgJsonObj.contains("frus"))
+    {
+        logging::logMessage("Missing frus section in system config JSON");
+        return false;
+    }
+
+    if (i_sysCfgJsonObj["frus"][i_vpdFilePath].at(0).contains(
+            "pollingRequired"))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * @brief API to return parameters required for polling.
+ *
+ * This API checks for "gpioPresence" tag under "pollingRequired" in system
+ * config JSON. If present returns the parameters for GPIO polling.
+ *
+ * @throw Exceptions, if JSON does not contain "pin" and "value" tags
+ * under "gpioPresence". And std::runtime_error for invalid parameters and
+ * if JSON does not conatin "gpioPresence" under the given VPD file path.
+ *
+ * @param[in] i_sysCfgJsonObj -  System config JSON object.
+ * @param[in] i_vpdFilePath - VPD file path.
+ *
+ * @return GPIO parameters if present, otherwise returns empty tuple.
+ */
+inline types::GpioPollingParameters
+    getGpioPollingParameters(const nlohmann::json& i_sysCfgJsonObj,
+                             const std::string& i_vpdFilePath)
+{
+    if (i_sysCfgJsonObj.empty() || i_vpdFilePath.empty())
+    {
+        throw std::runtime_error("Invalid parameters");
+    }
+
+    if (!i_sysCfgJsonObj.contains("frus"))
+    {
+        throw std::runtime_error("Missing frus section in system config JSON");
+    }
+
+    types::GpioPollingParameters l_pollingParameters;
+
+    if (isPollingRequired(i_sysCfgJsonObj, i_vpdFilePath))
+    {
+        if (i_sysCfgJsonObj["frus"][i_vpdFilePath]
+                .at(0)["pollingRequired"]
+                .contains("gpioPresence"))
+        {
+            std::get<0>(l_pollingParameters) =
+                i_sysCfgJsonObj["frus"][i_vpdFilePath].at(
+                    0)["pollingRequired"]["gpioPresence"]["pin"];
+
+            std::get<1>(l_pollingParameters) =
+                i_sysCfgJsonObj["frus"][i_vpdFilePath].at(
+                    0)["pollingRequired"]["gpioPresence"]["value"];
+
+            std::get<2>(l_pollingParameters) =
+                i_sysCfgJsonObj["frus"][i_vpdFilePath].at(0)["inventoryPath"];
+        }
+        else
+        {
+            throw std::runtime_error(
+                "Missing gpioPresence tag under pollingRequired");
+        }
+    }
+
+    return l_pollingParameters;
+}
+
+/**
+ * @brief An API to return list of FRUs parameters that needs Polling.
+ *
+ * An API that checks for the FRUs that requires GPIO polling and returns
+ * a list of FRUs with polling parameters. Returns an empty list if there are
+ * no FRUs that requires polling.
+ *
+ * @throw std::runtime_error
+ *
+ * @param[in] i_sysCfgJsonObj - System config JSON object.
+ *
+ * @return list of FRUs parameters that needs polling.
+ */
+inline std::vector<types::GpioPollingParameters>
+    getListOfPollingParamsForFrus(const nlohmann::json& i_sysCfgJsonObj)
+{
+    if (i_sysCfgJsonObj.empty())
+    {
+        throw std::runtime_error("Invalid Parameters");
+    }
+
+    if (!i_sysCfgJsonObj.contains("frus"))
+    {
+        throw std::runtime_error("Missing frus section in system config JSON");
+    }
+
+    std::vector<types::GpioPollingParameters> l_pollingRequiredFrusParamsList;
+
+    for (const auto& l_fru : i_sysCfgJsonObj["frus"].items())
+    {
+        const auto l_fruPath = l_fru.key();
+
+        try
+        {
+            types::GpioPollingParameters l_pollingParameters =
+                jsonUtility::getGpioPollingParameters(i_sysCfgJsonObj,
+                                                      l_fruPath);
+
+            if (!std::get<0>(l_pollingParameters).empty())
+            {
+                l_pollingRequiredFrusParamsList.push_back(l_pollingParameters);
+            }
+        }
+        catch (const std::exception& l_ex)
+        {
+            logging::logMessage(l_ex.what());
+        }
+    }
+
+    return l_pollingRequiredFrusParamsList;
 }
 } // namespace jsonUtility
 } // namespace vpd

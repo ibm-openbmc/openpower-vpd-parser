@@ -121,7 +121,7 @@ class GpioMonitor
         const std::shared_ptr<boost::asio::io_context>& i_ioContext);
 
     // Array of event handlers for all the attachable FRUs.
-    std::vector<std::shared_ptr<GpioEventHandler>> m_gpioObjects;
+    std::vector<std::shared_ptr<GpioEventHandler>> m_gpioEventHandlerObjects;
 
     const nlohmann::json& m_sysCfgJsonObj;
 };
