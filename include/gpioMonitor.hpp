@@ -19,7 +19,7 @@ class GpioEventHandler
 {
   public:
     GpioEventHandler() = delete;
-    ~GpioEventHandler() = delete;
+    ~GpioEventHandler() = default;
     GpioEventHandler(const GpioEventHandler&) = delete;
     GpioEventHandler& operator=(const GpioEventHandler&) = delete;
     GpioEventHandler(GpioEventHandler&&) = delete;
