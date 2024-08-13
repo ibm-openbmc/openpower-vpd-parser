@@ -43,6 +43,9 @@ Manager::Manager(
         // Instantiate GpioMonitor class
         m_gpioMonitor = std::make_shared<GpioMonitor>(
             m_worker->getSysCfgJsonObj(), m_ioContext);
+
+        // Create an instance of the BIOS handler
+        m_biosHandler = std::make_shared<BiosHandler>(m_asioConnection);
 #endif
 
         // Register methods under com.ibm.VPD.Manager interface

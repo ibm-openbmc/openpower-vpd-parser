@@ -1,5 +1,6 @@
 #pragma once
 
+#include "biosHandler.hpp"
 #include "constants.hpp"
 #include "gpioMonitor.hpp"
 #include "types.hpp"
@@ -244,6 +245,9 @@ class Manager
 
     // Shared pointer to GpioMonitor class
     std::shared_ptr<GpioMonitor> m_gpioMonitor;
+
+    // Shared pointer to BIOS handler class
+    std::shared_ptr<BiosHandler> m_biosHandler;
 };
 
 } // namespace vpd
