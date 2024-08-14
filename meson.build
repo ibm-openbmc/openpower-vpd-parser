@@ -32,6 +32,8 @@ if not build_tests.disabled()
     subdir('test')
 endif
 
+subdir('vpd-tool')
+
 compiler = meson.get_compiler('cpp')
 
 conf_data = configuration_data()
