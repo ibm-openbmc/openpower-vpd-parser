@@ -4,6 +4,7 @@
 #include "logger.hpp"
 
 #include <sdbusplus/bus/match.hpp>
+#include <utility/dbus_utility.hpp>
 
 namespace vpd
 {
@@ -14,7 +15,7 @@ void BiosHandler::checkAndListenPldmService()
         std::make_shared<sdbusplus::bus::match_t>(
             *m_asioConn,
             sdbusplus::bus::match::rules::nameOwnerChanged(
-                "xyz.openbmc_project.PLDM"),
+                constants::pldmServiceName),
             [this](sdbusplus::message_t& l_msg) {
         if (l_msg.is_method_error())
         {
@@ -30,7 +31,7 @@ void BiosHandler::checkAndListenPldmService()
         l_msg.read(l_name, l_oldOwner, l_newOwner);
 
         if (!l_newOwner.empty() &&
-            (l_name.compare("xyz.openbmc_project.PLDM") ==
+            (l_name.compare(constants::pldmServiceName) ==
              constants::STR_CMP_SUCCESS))
         {
             // TODO: Restore BIOS attribute from here.
@@ -41,17 +42,10 @@ void BiosHandler::checkAndListenPldmService()
 
     // Based on PLDM service status reset owner match registered above and
     // trigger BIOS attribute sync.
-    if (isPldmServiceRunning())
+    if (dbusUtility::isServiceRunning(constants::pldmServiceName))
     {
         l_nameOwnerMatch.reset();
         // TODO: retore BIOS attribute from here.
     }
-}
-
-bool BiosHandler::isPldmServiceRunning()
-{
-    // TODO: implementation. Returning a dummy value till the implementation is
-    // in progress.
-    return true;
 }
 } // namespace vpd
