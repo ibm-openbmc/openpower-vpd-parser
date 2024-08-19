@@ -29,8 +29,9 @@ class BiosHandler
      *
      * @param[in] connection - Asio connection object.
      */
-    BiosHandler(std::shared_ptr<sdbusplus::asio::connection>& connection) :
-        m_asioConn(connection)
+    BiosHandler(
+        const std::shared_ptr<sdbusplus::asio::connection>& i_connection) :
+        m_asioConn(i_connection)
     {
         checkAndListenPldmService();
     }
@@ -58,6 +59,6 @@ class BiosHandler
     bool isPldmServiceRunning();
 
     // Reference to the connection.
-    std::shared_ptr<sdbusplus::asio::connection>& m_asioConn;
+    const std::shared_ptr<sdbusplus::asio::connection>& m_asioConn;
 };
 } // namespace vpd
