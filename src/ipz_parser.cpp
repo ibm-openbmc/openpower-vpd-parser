@@ -44,12 +44,6 @@ enum Length
     JUMP_TO_RECORD_NAME = 6
 }; // enum Length
 
-static constexpr auto toHex(size_t aChar)
-{
-    constexpr auto map = "0123456789abcdef";
-    return map[aChar];
-}
-
 /**
  * @brief API to read 2 bytes LE data.
  *

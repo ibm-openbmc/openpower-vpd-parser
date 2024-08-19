@@ -5,7 +5,7 @@
 
 #include <gpiod.hpp>
 #include <nlohmann/json.hpp>
-#include <utility/vpd_specific_utility.hpp>
+#include <utility/common_utility.hpp>
 
 #include <fstream>
 #include <unordered_map>
@@ -212,12 +212,12 @@ inline bool processSystemCmdTag(const nlohmann::json& i_parsedConfigJson,
 
     try
     {
-        const std::string& l_bindCommand =
+        const std::string& l_systemCommand =
             i_parsedConfigJson["frus"][i_vpdFilePath].at(
                 0)[i_baseAction][i_flagToProcess]["systemCmd"]["cmd"];
 
-        logging::logMessage("Bind command = " + l_bindCommand);
-        vpdSpecificUtility::executeCmd(l_bindCommand);
+        logging::logMessage("Command = " + l_systemCommand);
+        commonUtility::executeCmd(l_systemCommand);
         return true;
     }
     catch (const std::exception& e)

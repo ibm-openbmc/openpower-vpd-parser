@@ -6,6 +6,7 @@
 #include "logger.hpp"
 #include "types.hpp"
 
+#include <utility/common_utility.hpp>
 #include <utility/dbus_utility.hpp>
 
 #include <filesystem>
@@ -16,17 +17,6 @@ namespace vpd
 {
 namespace vpdSpecificUtility
 {
-/** @brief Return the hex representation of the incoming byte.
- *
- * @param [in] aByte - The input byte
- * @returns The hex representation of the byte as a character.
- */
-constexpr auto toHex(size_t aByte)
-{
-    constexpr auto map = "0123456789abcdef";
-    return map[aByte];
-}
-
 /**
  * @brief API to generate file name for bad VPD.
  *
@@ -108,61 +98,6 @@ inline void dumpBadVpd(const std::string& vpdFilePath,
 }
 
 /**
- * @brief API to return null at the end of variadic template args.
- *
- * @return empty string.
- */
-inline std::string getCommand()
-{
-    return "";
-}
-
-/**
- * @brief API to arrange create command.
- *
- * @param[in] arguments to create the command
- * @return cmd - command string
- */
-template <typename T, typename... Types>
-inline std::string getCommand(T arg1, Types... args)
-{
-    std::string cmd = " " + arg1 + getCommand(args...);
-
-    return cmd;
-}
-
-/**
- * @brief API to create shell command and execute.
- *
- * Note: Throws exception on any failure. Caller needs to handle.
- *
- * @param[in] arguments for command
- * @returns output of that command
- */
-template <typename T, typename... Types>
-inline std::vector<std::string> executeCmd(T&& path, Types... args)
-{
-    std::vector<std::string> cmdOutput;
-    std::array<char, 128> buffer;
-
-    std::string cmd = path + getCommand(args...);
-
-    std::unique_ptr<FILE, decltype(&pclose)> cmdPipe(popen(cmd.c_str(), "r"),
-                                                     pclose);
-    if (!cmdPipe)
-    {
-        std::cerr << "popen failed with error" << strerror(errno) << std::endl;
-        throw std::runtime_error("popen failed!");
-    }
-    while (fgets(buffer.data(), buffer.size(), cmdPipe.get()) != nullptr)
-    {
-        cmdOutput.emplace_back(buffer.data());
-    }
-
-    return cmdOutput;
-}
-
-/**
  * @brief An API to read value of a keyword.
  *
  * Note: Throws exception. Caller needs to handle.
@@ -207,13 +142,13 @@ inline std::string encodeKeyword(const std::string& keyword,
     {
         result.clear();
         size_t firstByte = keyword[0];
-        result += toHex(firstByte >> 4);
-        result += toHex(firstByte & 0x0f);
+        result += commonUtility::toHex(firstByte >> 4);
+        result += commonUtility::toHex(firstByte & 0x0f);
         for (size_t i = 1; i < keyword.size(); ++i)
         {
             result += ":";
-            result += toHex(keyword[i] >> 4);
-            result += toHex(keyword[i] & 0x0f);
+            result += commonUtility::toHex(keyword[i] >> 4);
+            result += commonUtility::toHex(keyword[i] & 0x0f);
         }
     }
     else if (encoding == "DATE")

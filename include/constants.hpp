@@ -98,6 +98,8 @@ constexpr uint8_t EXP_LOCATION_CODE_MIN_LENGTH = 17;
 static constexpr auto SE_KWD_LENGTH = 7;
 static constexpr auto INVALID_NODE_NUMBER = -1;
 
+static constexpr auto CMD_BUFFER_LENGTH = 256;
+
 // To be explicitly used for string comparision.
 static constexpr auto STR_CMP_SUCCESS = 0;
 } // namespace constants

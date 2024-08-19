@@ -85,7 +85,7 @@ void Worker::enableMuxChips()
 
             logging::logMessage("Enabling mux with command = " + cmd);
 
-            vpdSpecificUtility::executeCmd(cmd);
+            commonUtility::executeCmd(cmd);
             continue;
         }
 
@@ -158,7 +158,7 @@ void Worker::performInitialSetup()
 static std::string readFitConfigValue()
 {
     std::vector<std::string> output =
-        vpdSpecificUtility::executeCmd("/sbin/fw_printenv");
+        commonUtility::executeCmd("/sbin/fw_printenv");
     std::string fitConfigValue;
 
     for (const auto& entry : output)
@@ -402,7 +402,7 @@ void Worker::getSystemJson(std::string& systemJson,
 static void setEnvAndReboot(const std::string& key, const std::string& value)
 {
     // set env and reboot and break.
-    vpdSpecificUtility::executeCmd("/sbin/fw_setenv", key, value);
+    commonUtility::executeCmd("/sbin/fw_setenv", key, value);
     logging::logMessage("Rebooting BMC to pick up new device tree");
 
     // make dbus call to reboot
