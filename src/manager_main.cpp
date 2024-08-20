@@ -1,5 +1,6 @@
 #include "config.h"
 
+#include "bios_handler.hpp"
 #include "logger.hpp"
 #include "manager.hpp"
 
@@ -27,6 +28,10 @@ int main(int, char**)
 
         auto vpdManager = std::make_shared<vpd::Manager>(io_con, interface,
                                                          connection);
+
+        auto biosHandler =
+            std::make_shared<vpd::BiosHandler<vpd::IbmBiosHandler>>(connection);
+
         interface->initialize();
 
         vpd::logging::logMessage("Start VPD-Manager event loop");

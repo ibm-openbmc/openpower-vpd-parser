@@ -14,6 +14,13 @@ namespace vpd
 {
 namespace types
 {
+
+using BiosProperty = std::tuple<
+    std::string, bool, std::string, std::string, std::string,
+    std::variant<int64_t, std::string>, std::variant<int64_t, std::string>,
+    std::vector<std::tuple<std::string, std::variant<int64_t, std::string>>>>;
+using BiosBaseTable = std::variant<std::map<std::string, BiosProperty>>;
+using BiosBaseTableType = std::map<std::string, BiosBaseTable>;
 using BinaryVector = std::vector<uint8_t>;
 
 // This covers mostly all the data type supported over Dbus for a property.
