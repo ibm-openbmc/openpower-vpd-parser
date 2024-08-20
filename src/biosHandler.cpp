@@ -8,7 +8,10 @@
 
 namespace vpd
 {
-void BiosHandler::checkAndListenPldmService()
+template class BiosHandler<IbmBiosHandler>;
+
+template <typename T>
+void BiosHandler<T>::checkAndListenPldmService()
 {
     // Setup a call back match on NameOwnerChanged to determine when PLDM is up.
     static std::shared_ptr<sdbusplus::bus::match_t> l_nameOwnerMatch =
@@ -36,7 +39,10 @@ void BiosHandler::checkAndListenPldmService()
         {
             //  We don't need the match anymore
             l_nameOwnerMatch.reset();
-            backUpOrRestoreBiosAttributes();
+            specificBiosHandler->backUpOrRestoreBiosAttributes();
+
+            // Start listener now that we have done the restore.
+            listenBiosAttributes();
         }
     });
 
@@ -45,58 +51,63 @@ void BiosHandler::checkAndListenPldmService()
     if (dbusUtility::isServiceRunning(constants::pldmServiceName))
     {
         l_nameOwnerMatch.reset();
-        backUpOrRestoreBiosAttributes();
+        specificBiosHandler->backUpOrRestoreBiosAttributes();
+
+        // Start listener now that we have done the restore.
+        listenBiosAttributes();
     }
 }
 
-void BiosHandler::backUpOrRestoreBiosAttributes()
+void IbmBiosHandler::backUpOrRestoreBiosAttributes()
 {
-    auto l_fcoValInVpd = dbusUtility::readDbusProperty(
-        constants::pimServiceName, constants::systemVpdInvPath,
-        "com.ibm.ipzvpd.VSYS", "RG");
+    /* auto l_fcoValInVpd = dbusUtility::readDbusProperty(
+         constants::pimServiceName, constants::systemVpdInvPath,
+         "com.ibm.ipzvpd.VSYS", "RG");
 
-    auto l_mmmValInVpd = dbusUtility::readDbusProperty(
-        constants::pimServiceName, constants::systemVpdInvPath,
-        "com.ibm.ipzvpd.UTIL", "D0");
+     if (auto l_fcoValue = std::get_if<std::string>(&l_fcoValInVpd))
+     {
+         // defined just for readability.
+         std::string fourEmptySpace = "    ";
 
-    auto l_keepAndClearValInVpd = dbusUtility::readDbusProperty(
-        constants::pimServiceName, constants::systemVpdInvPath,
-        "com.ibm.ipzvpd.UTIL", "D1");
+         // Check if field core override value is default in VPD.
+         if (*l_fcoValInVpd == fourEmptySpace)
+         {
+             // TODO: Save the data to VPD.
+         }
+         else
+         {
+             // TODO: Save data to BIOS.
+         }
+     }
 
-    // TODO: Implemet APIs to read the vlaues from BIOS table.
+     auto l_mmmValInVpd = dbusUtility::readDbusProperty(
+         constants::pimServiceName, constants::systemVpdInvPath,
+         "com.ibm.ipzvpd.UTIL", "D0");
 
-    // defined just for readability.
-    static constexpr auto fourEmptySpace = "    ";
+     auto l_keepAndClearValInVpd = dbusUtility::readDbusProperty(
+         constants::pimServiceName, constants::systemVpdInvPath,
+         "com.ibm.ipzvpd.UTIL", "D1");
 
-    // Check if field core override value is default in VPD.
-    if (l_fcoValInVpd == fourEmptySpace)
-    {
-        // TODO: Save the data to VPD.
-    }
-    else
-    {
-        // TODO: Save data to BIOS.
-    }
+     // TODO: Implemet APIs to read the vlaues from BIOS table.
 
-    // Check if memory mirror mode value is default in VPD.
-    if (l_mmmValInVpd.at(0) == 0)
-    {
-        // TODO: Save mmm to VPD.
-    }
-    else
-    {
-        // TODO: save to BIOS.
-    }
+     // Check if memory mirror mode value is default in VPD.
+     if (l_mmmValInVpd.at(0) == 0)
+     {
+         // TODO: Save mmm to VPD.
+     }
+     else
+     {
+         // TODO: save to BIOS.
+     }
 
-    // TODO: Sync keep And Clear in BIOS. No default handling required here as
-    // the default value of VPD keyword is also a valid value which will be
-    // compared while syncing the value.
-
-    // Start listener now that we have done the restore.
-    listenBiosAttributes();
+     // TODO: Sync keep And Clear in BIOS. No default handling required here as
+     // the default value of VPD keyword is also a valid value which will be
+     // compared while syncing the value.
+     */
 }
 
-void BiosHandler::listenBiosAttributes()
+template <typename T>
+void BiosHandler<T>::listenBiosAttributes()
 {
     static std::shared_ptr<sdbusplus::bus::match_t> l_biosMatch =
         std::make_shared<sdbusplus::bus::match_t>(
@@ -105,11 +116,11 @@ void BiosHandler::listenBiosAttributes()
                 "/xyz/openbmc_project/bios_config/manager",
                 "xyz.openbmc_project.BIOSConfig.Manager"),
             [this](sdbusplus::message_t& l_msg) {
-        biosAttribsCallback(l_msg);
+        specificBiosHandler->biosAttribsCallback(l_msg);
     });
 }
 
-void BiosHandler::biosAttribsCallback(sdbusplus::message_t& i_msg)
+void IbmBiosHandler::biosAttribsCallback(sdbusplus::message_t& i_msg)
 {
     if (i_msg.is_method_error())
     {
@@ -135,6 +146,7 @@ void BiosHandler::biosAttribsCallback(sdbusplus::message_t& i_msg)
             if (auto l_val = std::get_if<std::string>(
                     &(std::get<5>(std::get<1>(l_anAttribute)))))
             {
+                (void)l_val; // use when APIs are implemented.
                 std::string l_attributeName = std::get<0>(l_anAttribute);
                 if (l_attributeName == "hb_memory_mirror_mode")
                 {
@@ -162,6 +174,7 @@ void BiosHandler::biosAttribsCallback(sdbusplus::message_t& i_msg)
             if (auto l_val = std::get_if<int64_t>(
                     &(std::get<5>(std::get<1>(l_anAttribute)))))
             {
+                (void)l_val; // use when APIs are implemented.
                 std::string l_attributeName = std::get<0>(l_anAttribute);
                 if (l_attributeName == "hb_field_core_override")
                 {

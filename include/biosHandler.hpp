@@ -4,6 +4,28 @@
 
 namespace vpd
 {
+
+class BiosHandlerInterface
+{
+  public:
+    virtual void backUpOrRestoreBiosAttributes() = 0;
+};
+
+class IbmBiosHandler : public BiosHandlerInterface
+{
+  public:
+    /**
+     * @brief API to back up or restore BIOS attributes.
+     *
+     * The API reads the required BIOS attribute and VPD keywords. Based on
+     * value read, the attributes are either backed up in VPD keyword or BIOS
+     * attribute is restored.
+     */
+    void backUpOrRestoreBiosAttributes();
+
+    void biosAttribsCallback(sdbusplus::message_t& i_msg);
+};
+
 /**
  * @brief A class to operate upon and back up some of the BIOS attributes.
  *
@@ -14,6 +36,7 @@ namespace vpd
  *
  * It also initiates API to back up those data in VPD keywords.
  */
+template <typename T>
 class BiosHandler
 {
   public:
@@ -33,6 +56,7 @@ class BiosHandler
         const std::shared_ptr<sdbusplus::asio::connection>& i_connection) :
         m_asioConn(i_connection)
     {
+        specificBiosHandler = std::make_shared<T>();
         checkAndListenPldmService();
     }
 
@@ -46,15 +70,6 @@ class BiosHandler
      * restore can be performed.
      */
     void checkAndListenPldmService();
-
-    /**
-     * @brief API to back up or restore BIOS attributes.
-     *
-     * The API reads the required BIOS attribute and VPD keywords. Based on
-     * value read, the attributes are either backed up in VPD keyword or BIOS
-     * attribute is restored.
-     */
-    void backUpOrRestoreBiosAttributes();
 
     /**
      * @brief Register listener for BIOS attribute property change.
@@ -73,9 +88,12 @@ class BiosHandler
      *
      * @param[in] i_msg - The callback message.
      */
-    void biosAttribsCallback(sdbusplus::message_t& i_msg);
+    // void biosAttribsCallback(sdbusplus::message_t& i_msg);
 
     // Reference to the connection.
     const std::shared_ptr<sdbusplus::asio::connection>& m_asioConn;
+
+    // shared pointer to specific BIOS handler.
+    std::shared_ptr<T> specificBiosHandler;
 };
 } // namespace vpd
