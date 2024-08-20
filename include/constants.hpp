@@ -87,6 +87,7 @@ constexpr auto kwdVpdInf = "com.ibm.ipzvpd.VINI";
 constexpr auto kwdCCIN = "CC";
 constexpr auto locationCodeInf = "com.ibm.ipzvpd.Location";
 constexpr auto pldmServiceName = "xyz.openbmc_project.PLDM";
+constexpr auto pimServiceName = "xyz.openbmc_project.Inventory.Manager";
 
 static constexpr auto BD_YEAR_END = 4;
 static constexpr auto BD_MONTH_END = 7;

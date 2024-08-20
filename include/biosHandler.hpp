@@ -47,6 +47,34 @@ class BiosHandler
      */
     void checkAndListenPldmService();
 
+    /**
+     * @brief API to back up or restore BIOS attributes.
+     *
+     * The API reads the required BIOS attribute and VPD keywords. Based on
+     * value read, the attributes are either backed up in VPD keyword or BIOS
+     * attribute is restored.
+     */
+    void backUpOrRestoreBiosAttributes();
+
+    /**
+     * @brief Register listener for BIOS attribute property change.
+     *
+     * The VPD manager needs to listen for property change of certain BIOS
+     * attributes that are backed in VPD. When the attributes change, the new
+     * value is written back to the VPD keywords that backs them up.
+     */
+    void listenBiosAttributes();
+
+    /**
+     * @brief Callback for BIOS Attribute change.
+     *
+     * Checks if the BIOS attribute(s) changed are those backed up by VPD. If
+     * yes, it will update the VPD with the new attribute value.
+     *
+     * @param[in] i_msg - The callback message.
+     */
+    void biosAttribsCallback(sdbusplus::message_t& i_msg);
+
     // Reference to the connection.
     const std::shared_ptr<sdbusplus::asio::connection>& m_asioConn;
 };
