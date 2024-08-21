@@ -82,9 +82,62 @@ void IbmBiosHandler::biosAttributesCallback(sdbusplus::message_t& i_msg)
         return;
     }
 
-    /*
-    TODO: Process specific BIOS attributes
-    */
+    std::string l_objPath;
+    types::BiosBaseTableType l_propMap;
+    i_msg.read(l_objPath, l_propMap);
+
+    for (auto l_property : l_propMap)
+    {
+        if (l_property.first != "BaseBIOSTable")
+        {
+            // Looking for change in Base BIOS table only.
+            continue;
+        }
+
+        auto l_attributeList = std::get<0>(l_property.second);
+
+        for (const auto& l_attribute : l_attributeList)
+        {
+            if (auto l_val = std::get_if<std::string>(
+                    &(std::get<5>(std::get<1>(l_attribute)))))
+            {
+                (void)l_val; // use when APIs are implemented.
+                std::string l_attributeName = std::get<0>(l_attribute);
+                if (l_attributeName == "hb_memory_mirror_mode")
+                {
+                    // TODO: Save MMM to VPD.
+                }
+
+                if (l_attributeName == "pvm_keep_and_clear")
+                {
+                    // TODO: Save keep and clear to VPD.
+                }
+
+                if (l_attributeName == "pvm_create_default_lpar")
+                {
+                    // TODO: Save lpar to VPD.
+                }
+
+                if (l_attributeName == "pvm_clear_nvram")
+                {
+                    // TODO: Save clear nvram to VPD.
+                }
+
+                continue;
+            }
+
+            if (auto l_val = std::get_if<int64_t>(
+                    &(std::get<5>(std::get<1>(l_attribute)))))
+            {
+                (void)l_val; // use when APIs are implemented.
+                std::string l_attributeName = std::get<0>(l_attribute);
+                if (l_attributeName == "hb_field_core_override")
+                {
+                    // TODO: Save FCO to VPD.
+                }
+            }
+        }
+    }
 }
 
 void IbmBiosHandler::backUpOrRestoreBiosAttributes()
