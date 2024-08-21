@@ -11,8 +11,8 @@
 #include "parser_interface.hpp"
 #include "types.hpp"
 #include "utility/dbus_utility.hpp"
-#include "utility/generic_utility.hpp"
 #include "utility/json_utility.hpp"
+#include "utility/vpd_specific_utility.hpp"
 
 #include <boost/asio/steady_timer.hpp>
 #include <sdbusplus/message.hpp>

@@ -1,7 +1,7 @@
 #include "parser.hpp"
 
-#include <utility/generic_utility.hpp>
 #include <utility/json_utility.hpp>
+#include <utility/vpd_specific_utility.hpp>
 
 #include <fstream>
 
@@ -20,8 +20,8 @@ Parser::Parser(const std::string& vpdFilePath, nlohmann::json parsedJson) :
 std::shared_ptr<vpd::ParserInterface> Parser::getVpdParserInstance()
 {
     // Read the VPD data into a vector.
-    genericUtility::getVpdDataInVector(m_vpdFilePath, m_vpdVector,
-                                       m_vpdStartOffset);
+    vpdSpecificUtility::getVpdDataInVector(m_vpdFilePath, m_vpdVector,
+                                           m_vpdStartOffset);
 
     // This will detect the type of parser required.
     std::shared_ptr<vpd::ParserInterface> l_parser =

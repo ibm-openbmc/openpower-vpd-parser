@@ -14,7 +14,7 @@
 
 namespace vpd
 {
-namespace genericUtility
+namespace vpdSpecificUtility
 {
 /** @brief Return the hex representation of the incoming byte.
  *
@@ -442,5 +442,5 @@ inline void getVpdDataInVector(const std::string& vpdFilePath,
         throw;
     }
 }
-} // namespace genericUtility
+} // namespace vpdSpecificUtility
 } // namespace vpd

@@ -12,8 +12,8 @@
 #include "parser_interface.hpp"
 
 #include <utility/dbus_utility.hpp>
-#include <utility/generic_utility.hpp>
 #include <utility/json_utility.hpp>
+#include <utility/vpd_specific_utility.hpp>
 
 #include <filesystem>
 #include <fstream>
@@ -85,7 +85,7 @@ void Worker::enableMuxChips()
 
             logging::logMessage("Enabling mux with command = " + cmd);
 
-            genericUtility::executeCmd(cmd);
+            vpdSpecificUtility::executeCmd(cmd);
             continue;
         }
 
@@ -158,7 +158,7 @@ void Worker::performInitialSetup()
 static std::string readFitConfigValue()
 {
     std::vector<std::string> output =
-        genericUtility::executeCmd("/sbin/fw_printenv");
+        vpdSpecificUtility::executeCmd("/sbin/fw_printenv");
     std::string fitConfigValue;
 
     for (const auto& entry : output)
@@ -333,7 +333,7 @@ void Worker::fillVPDMap(const std::string& vpdFilePath,
 
             logging::logMessage(ex.what());
             // Need to decide once all error handling is implemented.
-            // genericUtility::dumpBadVpd(vpdFilePath,vpdVector);
+            // vpdSpecificUtility::dumpBadVpd(vpdFilePath,vpdVector);
 
             // throw generic error from here to inform main caller about
             // failure.
@@ -402,7 +402,7 @@ void Worker::getSystemJson(std::string& systemJson,
 static void setEnvAndReboot(const std::string& key, const std::string& value)
 {
     // set env and reboot and break.
-    genericUtility::executeCmd("/sbin/fw_setenv", key, value);
+    vpdSpecificUtility::executeCmd("/sbin/fw_setenv", key, value);
     logging::logMessage("Rebooting BMC to pick up new device tree");
 
     // make dbus call to reboot
@@ -621,8 +621,10 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                 if (property.compare("LocationCode") == 0 &&
                     interface.compare("com.ibm.ipzvpd.Location") == 0)
                 {
-                    std::string value = genericUtility::getExpandedLocationCode(
-                        propValuePair.value().get<std::string>(), parsedVpdMap);
+                    std::string value =
+                        vpdSpecificUtility::getExpandedLocationCode(
+                            propValuePair.value().get<std::string>(),
+                            parsedVpdMap);
                     propertyMap.emplace(property, value);
                 }
                 else
@@ -667,7 +669,7 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                         (*ipzVpdMap).count(record) &&
                         (*ipzVpdMap).at(record).count(keyword))
                     {
-                        auto encoded = genericUtility::encodeKeyword(
+                        auto encoded = vpdSpecificUtility::encodeKeyword(
                             ((*ipzVpdMap).at(record).at(keyword)), encoding);
                         propertyMap.emplace(property, encoded);
                     }
@@ -680,20 +682,22 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                         if (auto kwValue = std::get_if<types::BinaryVector>(
                                 &(*kwdVpdMap).at(keyword)))
                         {
-                            auto encodedValue = genericUtility::encodeKeyword(
-                                std::string((*kwValue).begin(),
-                                            (*kwValue).end()),
-                                encoding);
+                            auto encodedValue =
+                                vpdSpecificUtility::encodeKeyword(
+                                    std::string((*kwValue).begin(),
+                                                (*kwValue).end()),
+                                    encoding);
 
                             propertyMap.emplace(property, encodedValue);
                         }
                         else if (auto kwValue = std::get_if<std::string>(
                                      &(*kwdVpdMap).at(keyword)))
                         {
-                            auto encodedValue = genericUtility::encodeKeyword(
-                                std::string((*kwValue).begin(),
-                                            (*kwValue).end()),
-                                encoding);
+                            auto encodedValue =
+                                vpdSpecificUtility::encodeKeyword(
+                                    std::string((*kwValue).begin(),
+                                                (*kwValue).end()),
+                                    encoding);
 
                             propertyMap.emplace(property, encodedValue);
                         }
@@ -711,8 +715,8 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                 }
             }
         }
-        genericUtility::insertOrMerge(interfaceMap, interface,
-                                      move(propertyMap));
+        vpdSpecificUtility::insertOrMerge(interfaceMap, interface,
+                                          move(propertyMap));
     }
 }
 
@@ -772,9 +776,9 @@ bool Worker::primeInventory(const std::string& i_vpdFilePath)
             l_propertyValueMap["Present"] = true;
         }
 
-        genericUtility::insertOrMerge(l_interfaces,
-                                      "xyz.openbmc_project.Inventory.Item",
-                                      move(l_propertyValueMap));
+        vpdSpecificUtility::insertOrMerge(l_interfaces,
+                                          "xyz.openbmc_project.Inventory.Item",
+                                          move(l_propertyValueMap));
 
         if (l_Fru.value("inherit", true) &&
             m_parsedJson.contains("commonInterfaces"))
@@ -817,7 +821,7 @@ void Worker::processEmbeddedAndSynthesizedFrus(const nlohmann::json& singleFru,
     {
         types::PropertyMap presProp;
         presProp.emplace("Present", true);
-        genericUtility::insertOrMerge(
+        vpdSpecificUtility::insertOrMerge(
             interfaces, "xyz.openbmc_project.Inventory.Item", move(presProp));
     }
 }
@@ -839,7 +843,8 @@ void Worker::processExtraInterfaces(const nlohmann::json& singleFru,
             }
 
             std::string pgKeywordValue;
-            genericUtility::getKwVal(itrToRec->second, "PG", pgKeywordValue);
+            vpdSpecificUtility::getKwVal(itrToRec->second, "PG",
+                                         pgKeywordValue);
             if (!pgKeywordValue.empty())
             {
                 if (isCPUIOGoodOnly(pgKeywordValue))
@@ -906,7 +911,7 @@ bool Worker::processFruWithCCIN(const nlohmann::json& singleFru,
         }
 
         std::string ccinFromVpd;
-        genericUtility::getKwVal(itrToRec->second, "CC", ccinFromVpd);
+        vpdSpecificUtility::getKwVal(itrToRec->second, "CC", ccinFromVpd);
         if (ccinFromVpd.empty())
         {
             return false;

@@ -216,8 +216,8 @@ void BackupAndRestore::backupAndRestoreIpzVpd(types::IPZVpdMap& io_srcVpdMap,
         std::string l_srcStrValue;
         if (!io_srcVpdMap.empty())
         {
-            genericUtility::getKwVal(io_srcVpdMap.at(l_srcRecordName),
-                                     l_srcKeywordName, l_srcStrValue);
+            vpdSpecificUtility::getKwVal(io_srcVpdMap.at(l_srcRecordName),
+                                         l_srcKeywordName, l_srcStrValue);
             l_srcBinaryValue = types::BinaryVector(l_srcStrValue.begin(),
                                                    l_srcStrValue.end());
         }
@@ -238,8 +238,8 @@ void BackupAndRestore::backupAndRestoreIpzVpd(types::IPZVpdMap& io_srcVpdMap,
         std::string l_dstStrValue;
         if (!io_dstVpdMap.empty())
         {
-            genericUtility::getKwVal(io_dstVpdMap.at(l_dstRecordName),
-                                     l_dstKeywordName, l_dstStrValue);
+            vpdSpecificUtility::getKwVal(io_dstVpdMap.at(l_dstRecordName),
+                                         l_dstKeywordName, l_dstStrValue);
             l_dstBinaryValue = types::BinaryVector(l_dstStrValue.begin(),
                                                    l_dstStrValue.end());
         }
