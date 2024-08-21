@@ -347,8 +347,88 @@ types::DbusVariantType
 void Manager::collectSingleFruVpd(
     const sdbusplus::message::object_path& i_dbusObjPath)
 {
-    // Dummy code to supress unused variable warning. To be removed.
-    logging::logMessage(std::string(i_dbusObjPath));
+    try
+    {
+        // TODO: Check if CM flag enabled for the given D-bus object path in
+        // system config JSON.
+
+        // Check if BMC reaches Ready state
+        const auto l_dbusValue = dbusUtility::readDbusProperty(
+            constants::bmcStateService, constants::bmcZeroStateObject,
+            constants::bmcStateInterface, constants::currentBMCStateProperty);
+
+        if (const auto l_currentBMCSate =
+                std::get_if<std::string>(&l_dbusValue))
+        {
+            if (*l_currentBMCSate != constants::bmcReadyState)
+            {
+                throw std::runtime_error(
+                    "BMC not ready. Single FRU VPD collection failed for " +
+                    std::string(i_dbusObjPath));
+            }
+        }
+
+        // Get system config JSON object from worker class
+        nlohmann::json l_sysCfgJsonObj{};
+
+        if (m_worker.get() != nullptr)
+        {
+            l_sysCfgJsonObj = m_worker->getSysCfgJsonObj();
+        }
+
+        // Check if system config JSON is present
+        if (l_sysCfgJsonObj.empty())
+        {
+            throw std::runtime_error(
+                "System config JSON object not present. Single FRU VPD collection failed for " +
+                std::string(i_dbusObjPath));
+        }
+
+        // Get FRU path for the given D-bus object path from JSON
+        const std::string& l_fruPath =
+            jsonUtility::getFruPathFromJson(l_sysCfgJsonObj, i_dbusObjPath);
+
+        if (l_fruPath.empty())
+        {
+            throw std::runtime_error(
+                "D-bus object path not present in JSON. Single FRU VPD collection failed for " +
+                std::string(i_dbusObjPath));
+        }
+
+        // Parse VPD
+        types::VPDMapVariant l_parsedVpd = m_worker->parseVpdFile(l_fruPath);
+
+        // If l_parsedVpd is pointing to std::monostate
+        if (l_parsedVpd.index() == 0)
+        {
+            throw std::runtime_error("VPD parsing failed for " +
+                                     std::string(i_dbusObjPath));
+        }
+
+        // Get D-bus object map from worker class
+        types::ObjectMap l_dbusObjectMap;
+        m_worker->populateDbus(l_parsedVpd, l_dbusObjectMap, l_fruPath);
+
+        if (l_dbusObjectMap.empty())
+        {
+            throw std::runtime_error(
+                "Failed to create D-bus object map. Single FRU VPD collection failed for " +
+                std::string(i_dbusObjPath));
+        }
+
+        // Call PIM's Notify method
+        if (!dbusUtility::callPIM(move(l_dbusObjectMap)))
+        {
+            throw std::runtime_error(
+                "Notify PIM failed. Single FRU VPD collection failed for " +
+                std::string(i_dbusObjPath));
+        }
+    }
+    catch (const std::exception& l_error)
+    {
+        // TODO: Log PEL
+        logging::logMessage(std::string(l_error.what()));
+    }
 }
 
 void Manager::deleteSingleFruVpd(

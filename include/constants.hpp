@@ -106,5 +106,12 @@ static constexpr auto CMD_BUFFER_LENGTH = 256;
 
 // To be explicitly used for string comparision.
 static constexpr auto STR_CMP_SUCCESS = 0;
+
+constexpr auto bmcStateService = "xyz.openbmc_project.State.BMC";
+constexpr auto bmcZeroStateObject = "/xyz/openbmc_project/state/bmc0";
+constexpr auto bmcStateInterface = "xyz.openbmc_project.State.BMC";
+constexpr auto currentBMCStateProperty = "CurrentBMCState";
+constexpr auto bmcReadyState = "xyz.openbmc_project.State.BMC.BMCState.Ready";
+
 } // namespace constants
 } // namespace vpd
