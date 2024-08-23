@@ -125,5 +125,9 @@ constexpr auto bmcStateInterface = "xyz.openbmc_project.State.BMC";
 constexpr auto currentBMCStateProperty = "CurrentBMCState";
 constexpr auto bmcReadyState = "xyz.openbmc_project.State.BMC.BMCState.Ready";
 
+static constexpr auto eventLoggingServiceName = "xyz.openbmc_project.Logging";
+static constexpr auto eventLoggingObjectPath = "/xyz/openbmc_project/logging";
+static constexpr auto eventLoggingInterface =
+    "xyz.openbmc_project.Logging.Create";
 } // namespace constants
 } // namespace vpd

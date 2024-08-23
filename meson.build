@@ -77,7 +77,8 @@ common_SOURCES = ['src/logger.cpp',
                   'src/worker.cpp',
                   'src/backup_restore.cpp',
                   'src/gpio_monitor.cpp',
-                  'src/bios_handler.cpp']
+                  'src/bios_handler.cpp',
+                  'src/event_logger.cpp']
 
 vpd_manager_SOURCES = ['src/manager_main.cpp',
                     'src/manager.cpp',

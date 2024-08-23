@@ -135,5 +135,48 @@ using DbusInvalidArgument =
 using InvalidArgument = phosphor::logging::xyz::openbmc_project::Common::InvalidArgument;
 
 namespace DeviceError = sdbusplus::xyz::openbmc_project::Common::Device::Error;
+
+/* PEL Severity enum as defined in [xyz.openbmc_project.Logging.Entry.Level]log.hpp from 'phosphor-logging' repo. */
+enum SeverityType
+{
+    Notice,
+    Informational,
+    Debug,
+    Warning,
+    Critical,
+    Emergency,
+    Alert,
+    Error
+};
+
+/* PEL callout priority from 'phosphor-logging' pel_types.hpp. If any change in 'phosphor-logging', it needs update here as well. */
+enum CalloutPriority
+{
+    High,
+    Medium,
+    MediumGroupA,
+    MediumGroupB,
+    MediumGroupC,
+    Low
+};
+
+/* The Message property of the event entry for creating PEL, to introduce new message needs to be added in 'phosphor-logging' message_registry.json as well. */
+enum ErrorType
+{
+    DefaultValue,
+    InvalidVpdMessage,
+    VpdMismatch,
+    InvalidEeprom,
+    EccCheckFailed,
+    JsonFailure,
+    DbusFailure,
+    InvalidSystem,
+    EssentialFru,
+    GpioError
+};
+
+using InventoryCalloutData = std::tuple<std::string, CalloutPriority>;
+using DeviceCalloutData = std::tuple<std::string, std::string>;
+using I2cBusCalloutData = std::tuple<std::string, std::string, std::string>;
 } // namespace types
 } // namespace vpd
