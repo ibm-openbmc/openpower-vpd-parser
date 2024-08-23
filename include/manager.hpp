@@ -1,8 +1,8 @@
 #pragma once
 
-#include "biosHandler.hpp"
+#include "bios_handler.hpp"
 #include "constants.hpp"
-#include "gpioMonitor.hpp"
+#include "gpio_monitor.hpp"
 #include "types.hpp"
 #include "worker.hpp"
 
