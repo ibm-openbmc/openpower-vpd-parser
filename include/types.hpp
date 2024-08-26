@@ -22,6 +22,9 @@ using BiosProperty = std::tuple<
 using BiosBaseTable = std::variant<std::map<std::string, BiosProperty>>;
 using BiosBaseTableType = std::map<std::string, BiosBaseTable>;
 using BinaryVector = std::vector<uint8_t>;
+using BiosAttributeValue = std::variant<int64_t, std::string>;
+using BiosGetAttrRetType =
+    std::tuple<std::string, BiosAttributeValue, BiosAttributeValue>;
 
 // This covers mostly all the data type supported over Dbus for a property.
 // clang-format off

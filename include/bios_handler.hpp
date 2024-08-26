@@ -1,4 +1,6 @@
 #pragma once
+#include "types.hpp"
+
 #include <sdbusplus/asio/connection.hpp>
 #include <sdbusplus/bus.hpp>
 
@@ -60,6 +62,56 @@ class IbmBiosHandler : public BiosHandlerInterface
      * @param[in] i_msg - The callback message.
      */
     virtual void biosAttributesCallback(sdbusplus::message_t& i_msg);
+
+  private:
+    /**
+     * @brief API to read given attribute from BIOS table.
+     *
+     * @param[in] attributeName - Attribute to be read.
+     * @return - Bios attribute type.
+     */
+    types::BiosAttributeValue
+        readBiosAttribute(const std::string& attributeName);
+
+    /**
+     * @brief API to process "hb_field_core_override" attribute.
+     *
+     * The API checks value stored in VPD. If found default then the BIOS value
+     * is saved to VPD else VPD value is restored in BIOS attribute.
+     */
+    void processFieldCoreOverride();
+
+    /**
+     * @brief API to process "hb_memory_mirror_mode" attribute.
+     *
+     * The API checks value stored in VPD. If found default then the BIOS value
+     * is saved to VPD else VPD value is restored in BIOS attribute.
+     */
+    void processMemoryMirrorMode();
+
+    /**
+     * @brief API to process "pvm_keep_and_clear" attribute.
+     *
+     * The API reads the value from VPD and restore it to the BIOS attribute
+     * in BIOS table.
+     */
+    void processKeepAndClear();
+
+    /**
+     * @brief API to process "pvm_create_default_lpar" attribute.
+     *
+     * The API reads the value from VPD and restore it to the BIOS attribute
+     * in BIOS table.
+     */
+    void processLpar();
+
+    /**
+     * @brief API to process "pvm_clear_nvram" attribute.
+     *
+     * The API reads the value from VPD and restore it to the BIOS attribute
+     * in BIOS table.
+     */
+    void processClearNvRam();
 };
 
 /**
