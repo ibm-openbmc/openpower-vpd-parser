@@ -80,17 +80,25 @@ static constexpr auto SHIFT_BITS_0 = 0;
 static constexpr auto SHIFT_BITS_3 = 3;
 static constexpr auto SHIFT_BITS_5 = 5;
 
+static constexpr auto ASCII_OF_SPACE = 32;
+
 constexpr auto pimPath = "/xyz/openbmc_project/inventory";
 constexpr auto pimIntf = "xyz.openbmc_project.Inventory.Manager";
 constexpr auto ipzVpdInf = "com.ibm.ipzvpd.";
 constexpr auto kwdVpdInf = "com.ibm.ipzvpd.VINI";
+constexpr auto vsysInf = "com.ibm.ipzvpd.VSYS";
 constexpr auto kwdCCIN = "CC";
+constexpr auto kwdRG = "RG";
 constexpr auto locationCodeInf = "com.ibm.ipzvpd.Location";
 constexpr auto pldmServiceName = "xyz.openbmc_project.PLDM";
 constexpr auto pimServiceName = "xyz.openbmc_project.Inventory.Manager";
 constexpr auto biosConfigMgrObjPath =
     "/xyz/openbmc_project/bios_config/manager";
 constexpr auto biosConfigMgrService = "xyz.openbmc_project.BIOSConfig.Manager";
+constexpr auto biosConfigMgrInterface =
+    "xyz.openbmc_project.BIOSConfig.Manager";
+constexpr auto systemVpdInvPath =
+    "/xyz/openbmc_project/inventory/system/chassis/motherboard";
 
 static constexpr auto BD_YEAR_END = 4;
 static constexpr auto BD_MONTH_END = 7;

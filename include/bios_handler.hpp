@@ -1,4 +1,6 @@
 #pragma once
+#include "types.hpp"
+
 #include <sdbusplus/asio/connection.hpp>
 #include <sdbusplus/bus.hpp>
 
@@ -60,6 +62,25 @@ class IbmBiosHandler : public BiosHandlerInterface
      * @param[in] i_msg - The callback message.
      */
     virtual void biosAttributesCallback(sdbusplus::message_t& i_msg);
+
+  private:
+    /**
+     * @brief API to read given attribute from BIOS table.
+     *
+     * @param[in] attributeName - Attribute to be read.
+     * @return - Bios attribute current value.
+     */
+    types::BiosAttributeCurrentValue
+        readBiosAttribute(const std::string& attributeName);
+
+    /**
+     * @brief API to process "hb_field_core_override" attribute.
+     *
+     * The API checks value stored in VPD. If found default then the BIOS value
+     * is saved to VPD else VPD value is restored in BIOS pending attribute
+     * table.
+     */
+    void processFieldCoreOverride();
 };
 
 /**

@@ -142,6 +142,63 @@ void IbmBiosHandler::biosAttributesCallback(sdbusplus::message_t& i_msg)
 
 void IbmBiosHandler::backUpOrRestoreBiosAttributes()
 {
-    // TODO: Implement IBM specific logic to back up and restore.
+    // process FCO
+    processFieldCoreOverride();
+}
+
+types::BiosAttributeCurrentValue
+    IbmBiosHandler::readBiosAttribute(const std::string& i_attributeName)
+{
+    types::BiosAttributeCurrentValue l_attrValueVariant =
+        dbusUtility::biosGetAttributeMethodCall(i_attributeName);
+
+    return l_attrValueVariant;
+}
+
+void IbmBiosHandler::processFieldCoreOverride()
+{
+    // TODO: Should we avoid doing this at runtime?
+
+    // Read required keyword from Dbus.
+    auto l_kwdValueVariant = dbusUtility::readDbusProperty(
+        constants::pimServiceName, constants::systemVpdInvPath,
+        constants::vsysInf, constants::kwdRG);
+
+    if (auto l_fcoInVpd = std::get_if<types::BinaryVector>(&l_kwdValueVariant))
+    {
+        // default length of the keyword is 4 bytes.
+        if (l_fcoInVpd->size() != constants::VALUE_4)
+        {
+            logging::logMessage(
+                "Invalid value read for FCO from D-Bus. Skipping.");
+        }
+
+        //  If FCO in VPD contains anything other that ASCII Space, restore to
+        //  BIOS
+        if (std::any_of(l_fcoInVpd->cbegin(), l_fcoInVpd->cend(),
+                        [](uint8_t l_val) {
+            return l_val != constants::ASCII_OF_SPACE;
+        }))
+        {
+            // Restore the data to BIOS.
+            // TODO: saveFcoToBios(*l_fcoInVpd);
+        }
+        else
+        {
+            types::BiosAttributeCurrentValue l_attrValueVariant =
+                readBiosAttribute("hb_field_core_override");
+
+            if (auto l_fcoInBios = std::get_if<int64_t>(&l_attrValueVariant))
+            {
+                (void)l_fcoInBios;
+                // TODO: Save FCO to VPD.
+
+                return;
+            }
+            logging::logMessage("Invalid type recieved for FCO from BIOS.");
+        }
+        return;
+    }
+    logging::logMessage("Invalid type recieved for FCO from VPD.");
 }
 } // namespace vpd
