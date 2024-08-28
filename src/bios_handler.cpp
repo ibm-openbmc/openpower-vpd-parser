@@ -129,11 +129,10 @@ void IbmBiosHandler::biosAttributesCallback(sdbusplus::message_t& i_msg)
             if (auto l_val = std::get_if<int64_t>(
                     &(std::get<5>(std::get<1>(l_attribute)))))
             {
-                (void)l_val; // use when APIs are implemented.
                 std::string l_attributeName = std::get<0>(l_attribute);
                 if (l_attributeName == "hb_field_core_override")
                 {
-                    // TODO: Save FCO to VPD.
+                    saveFcoToVpd(*l_val);
                 }
             }
         }
@@ -190,8 +189,8 @@ void IbmBiosHandler::processFieldCoreOverride()
 
             if (auto l_fcoInBios = std::get_if<int64_t>(&l_attrValueVariant))
             {
-                (void)l_fcoInBios;
-                // TODO: Save FCO to VPD.
+                // save the BIOS data to VPD
+                saveFcoToVpd(*l_fcoInBios);
 
                 return;
             }
@@ -200,5 +199,20 @@ void IbmBiosHandler::processFieldCoreOverride()
         return;
     }
     logging::logMessage("Invalid type recieved for FCO from VPD.");
+}
+
+void IbmBiosHandler::saveFcoToVpd(int64_t i_fcoInBios)
+{
+    if (i_fcoInBios < 0)
+    {
+        logging::logMessage("Invalid FCO value in BIOS. Skip updating to VPD");
+        return;
+    }
+
+    // convert to VPD value type
+    types::BinaryVector l_biosValInVpdFormat = {
+        0, 0, 0, static_cast<uint8_t>(i_fcoInBios)};
+
+    // TODO:  Call Manager API to write keyword data using inventory path.
 }
 } // namespace vpd

@@ -81,6 +81,13 @@ class IbmBiosHandler : public BiosHandlerInterface
      * table.
      */
     void processFieldCoreOverride();
+
+    /**
+     * @brief API to save FCO data into VPD.
+     *
+     * @param[in] i_fcoInBios - FCO value.
+     */
+    void saveFcoToVpd(int64_t i_fcoInBios);
 };
 
 /**
