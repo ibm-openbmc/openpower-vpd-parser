@@ -16,6 +16,8 @@ static constexpr uint8_t KW_VPD_PAIR_START_TAG = 0x84;
 static constexpr uint8_t ALT_KW_VPD_PAIR_START_TAG = 0x90;
 static constexpr uint8_t KW_VPD_END_TAG = 0x78;
 static constexpr uint8_t KW_VAL_PAIR_END_TAG = 0x79;
+static constexpr uint8_t AMM_ENABLED_IN_VPD = 2;
+static constexpr uint8_t AMM_DISABLED_IN_VPD = 1;
 
 static constexpr auto DDIMM_11S_BARCODE_START = 416;
 static constexpr auto DDIMM_11S_BARCODE_START_TAG = "11S";
@@ -89,12 +91,13 @@ constexpr auto kwdVpdInf = "com.ibm.ipzvpd.VINI";
 constexpr auto vsysInf = "com.ibm.ipzvpd.VSYS";
 constexpr auto kwdCCIN = "CC";
 constexpr auto kwdRG = "RG";
+constexpr auto kwdD0 = "D0";
 constexpr auto locationCodeInf = "com.ibm.ipzvpd.Location";
 constexpr auto pldmServiceName = "xyz.openbmc_project.PLDM";
 constexpr auto pimServiceName = "xyz.openbmc_project.Inventory.Manager";
 constexpr auto biosConfigMgrObjPath =
     "/xyz/openbmc_project/bios_config/manager";
-constexpr auto biosConfigMgrService = "xyz.openbmc_project.BIOSConfig.Manager";
+constexpr auto biosConfigMgrService = "xyz.openbmc_project.BIOSConfigManager";
 constexpr auto biosConfigMgrInterface =
     "xyz.openbmc_project.BIOSConfig.Manager";
 constexpr auto systemVpdInvPath =

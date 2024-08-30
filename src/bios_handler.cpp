@@ -68,7 +68,7 @@ void BiosHandler<T>::listenBiosAttributes()
             *m_asioConn,
             sdbusplus::bus::match::rules::propertiesChanged(
                 constants::biosConfigMgrObjPath,
-                constants::biosConfigMgrService),
+                constants::biosConfigMgrInterface),
             [this](sdbusplus::message_t& l_msg) {
         m_specificBiosHandler->biosAttributesCallback(l_msg);
     });
@@ -101,11 +101,10 @@ void IbmBiosHandler::biosAttributesCallback(sdbusplus::message_t& i_msg)
             if (auto l_val = std::get_if<std::string>(
                     &(std::get<5>(std::get<1>(l_attribute)))))
             {
-                (void)l_val; // use when APIs are implemented.
                 std::string l_attributeName = std::get<0>(l_attribute);
                 if (l_attributeName == "hb_memory_mirror_mode")
                 {
-                    // TODO: Save MMM to VPD.
+                    saveAmmToVpd(*l_val);
                 }
 
                 if (l_attributeName == "pvm_keep_and_clear")
@@ -214,5 +213,21 @@ void IbmBiosHandler::saveFcoToVpd(int64_t i_fcoInBios)
         0, 0, 0, static_cast<uint8_t>(i_fcoInBios)};
 
     // TODO:  Call Manager API to write keyword data using inventory path.
+}
+
+void IbmBiosHandler::saveAmmToVpd(const std::string& i_memoryMirrorMode)
+{
+    if (i_memoryMirrorMode.empty())
+    {
+        logging::logMessage(
+            "Empty memory mirror mode value from BIOS. Skip writing to VPD");
+        return;
+    }
+
+    types::BinaryVector l_valToUpdateInVpd{
+        (i_memoryMirrorMode == "Enabled" ? constants::AMM_ENABLED_IN_VPD
+                                         : constants::AMM_DISABLED_IN_VPD)};
+
+    // TODO: Call write keyword API to update the value in VPD.
 }
 } // namespace vpd
