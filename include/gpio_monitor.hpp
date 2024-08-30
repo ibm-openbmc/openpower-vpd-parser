@@ -28,21 +28,17 @@ class GpioEventHandler
     /**
      * @brief Constructor
      *
-     * @param[in] i_inputPin - GPIO input pin
-     * @param[in] i_inputValue - holds the value of input pin
-     * @param[in] i_outputPin - GPIO output pin
-     * @param[in] i_outputValue - value of the output pin
+     * @param[in] i_presencePin - GPIO presence pin
+     * @param[in] i_presenceValue - holds the value of presence pin.
      * @param[in] i_inventoryPath - inventory path of the FRU.
      * @param[in] i_ioContext - pointer to the io context object
      */
     GpioEventHandler(
         const std::string& i_presencePin, const bool& i_presenceValue,
-        const std::string& i_outputPin, const bool& i_outputValue,
         const std::string& i_inventoryPath,
         const std::shared_ptr<boost::asio::io_context>& i_ioContext) :
         m_presencePin(i_presencePin),
-        m_presenceValue(i_presenceValue), m_outputPin(i_outputPin),
-        m_outputValue(i_outputValue), m_inventoryPath(i_inventoryPath)
+        m_presenceValue(i_presenceValue), m_inventoryPath(i_inventoryPath)
     {
         setEventHandlerForGpioPresence(i_ioContext);
     }
@@ -81,12 +77,6 @@ class GpioEventHandler
 
     // Value of GPIO input pin
     const bool& m_presenceValue;
-
-    // GPIO pin to enable if fru is present
-    const std::string& m_outputPin;
-
-    // Value to set, to enable the output pin
-    const bool& m_outputValue;
 
     // Inventory path of the FRU
     const std::string& m_inventoryPath;
