@@ -95,6 +95,15 @@ class IbmBiosHandler : public BiosHandlerInterface
      * @param[in] i_memoryMirrorMode - Memory mirror mode value.
      */
     void saveAmmToVpd(const std::string& i_memoryMirrorMode);
+
+    /**
+     * @brief API to process "hb_memory_mirror_mode" attribute.
+     *
+     * The API checks value stored in VPD. If found default then the BIOS value
+     * is saved to VPD else VPD value is restored in BIOS pending attribute
+     * table.
+     */
+    void processActiveMemoryMirror();
 };
 
 /**

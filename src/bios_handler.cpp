@@ -142,6 +142,9 @@ void IbmBiosHandler::backUpOrRestoreBiosAttributes()
 {
     // process FCO
     processFieldCoreOverride();
+
+    // process AMM
+    processActiveMemoryMirror();
 }
 
 types::BiosAttributeCurrentValue
@@ -229,5 +232,43 @@ void IbmBiosHandler::saveAmmToVpd(const std::string& i_memoryMirrorMode)
                                          : constants::AMM_DISABLED_IN_VPD)};
 
     // TODO: Call write keyword API to update the value in VPD.
+}
+
+void IbmBiosHandler::processActiveMemoryMirror()
+{
+    auto l_kwdValueVariant = dbusUtility::readDbusProperty(
+        constants::pimServiceName, constants::systemVpdInvPath,
+        constants::utilInf, constants::kwdAMM);
+
+    if (auto pVal = std::get_if<std::string>(&l_kwdValueVariant))
+    {
+        auto l_ammValInVpd = *pVal;
+
+        // Check if active memory mirror value is default in VPD.
+        if (l_ammValInVpd.at(0) == constants::VALUE_0)
+        {
+            // TODO: Save Amm to VPD.
+        }
+        else
+        {
+            types::BiosAttributeCurrentValue l_attrValueVariant =
+                readBiosAttribute("hb_memory_mirror_mode");
+
+            if (auto pVal = std::get_if<std::string>(&l_attrValueVariant))
+            {
+                std::string l_ammInBios = *pVal;
+                (void)l_ammInBios;
+                // TODO: save to BIOS.
+
+                return;
+            }
+
+            logging::logMessage(
+                "Invalid type recieved for auto memory mirror mode from BIOS.");
+        }
+        return;
+    }
+    logging::logMessage(
+        "Invalid type recieved for auto memory mirror mode from VPD.");
 }
 } // namespace vpd
