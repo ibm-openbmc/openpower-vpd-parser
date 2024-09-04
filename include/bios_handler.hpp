@@ -104,6 +104,29 @@ class IbmBiosHandler : public BiosHandlerInterface
      * table.
      */
     void processActiveMemoryMirror();
+
+    /**
+     * @brief API to process "pvm_create_default_lpar" attribute.
+     *
+     * The API reads the value from VPD and restore it to the BIOS attribute
+     * in BIOS pending attribute table.
+     */
+    void processCreateDefaultLpar();
+
+    /**
+     * @brief API to save given value to "pvm_create_default_lpar" attribute.
+     *
+     * @param[in] i_createDefaultLparVal - Value to be saved;
+     */
+    void saveCreateDefaultLparToBios(const std::string& i_createDefaultLparVal);
+
+    /**
+     * @brief API to save given value to VPD.
+     *
+     * @param[in] i_createDefaultLparVal - Value to be saved.
+     *
+     */
+    void saveCreateDefaultLparToVpd(const std::string& i_createDefaultLparVal);
 };
 
 /**

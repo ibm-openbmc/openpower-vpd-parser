@@ -25,6 +25,9 @@ using BiosAttributeCurrentValue = std::variant<int64_t, std::string>;
 using BiosAttributePendingValue = std::variant<int64_t, std::string>;
 using BiosGetAttrRetType = std::tuple<std::string, BiosAttributeCurrentValue,
                                       BiosAttributePendingValue>;
+using PendingBIOSAttrItem =
+    std::pair<std::string, std::tuple<std::string, BiosAttributePendingValue>>;
+using PendingBIOSAttrs = std::vector<PendingBIOSAttrItem>;
 
 using BinaryVector = std::vector<uint8_t>;
 
@@ -53,7 +56,8 @@ using DbusVariantType = std::variant<
     std::vector<std::tuple<uint32_t, std::vector<uint32_t>>>,
     std::vector<std::tuple<uint32_t, size_t>>,
     std::vector<std::tuple<sdbusplus::message::object_path, std::string,
-                           std::string, std::string>>
+                           std::string, std::string>>,
+    PendingBIOSAttrs
  >;
 
 using MapperGetObject =

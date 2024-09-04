@@ -114,7 +114,7 @@ void IbmBiosHandler::biosAttributesCallback(sdbusplus::message_t& i_msg)
 
                 if (l_attributeName == "pvm_create_default_lpar")
                 {
-                    // TODO: Save lpar to VPD.
+                    saveCreateDefaultLparToVpd(*l_val);
                 }
 
                 if (l_attributeName == "pvm_clear_nvram")
@@ -145,6 +145,9 @@ void IbmBiosHandler::backUpOrRestoreBiosAttributes()
 
     // process AMM
     processActiveMemoryMirror();
+
+    // process LPAR
+    processCreateDefaultLpar();
 }
 
 types::BiosAttributeCurrentValue
@@ -270,5 +273,97 @@ void IbmBiosHandler::processActiveMemoryMirror()
     }
     logging::logMessage(
         "Invalid type recieved for auto memory mirror mode from VPD.");
+}
+
+void IbmBiosHandler::saveCreateDefaultLparToVpd(
+    const std::string& i_createDefaultLparVal)
+{
+    if (i_createDefaultLparVal.empty())
+    {
+        logging::logMessage(
+            "Empty value received for Lpar from BIOS. Skip writing in VPD.");
+        return;
+    }
+
+    // Read required keyword from DBus as we need to set only a Bit.
+    auto l_kwdValueVariant = dbusUtility::readDbusProperty(
+        constants::pimServiceName, constants::systemVpdInvPath,
+        constants::utilInf, constants::kwdClearNVRAM_CreateLPAR);
+
+    if (auto l_pVal = std::get_if<std::string>(&l_kwdValueVariant))
+    {
+        types::BinaryVector l_valToUpdateInVpd;
+        if (i_createDefaultLparVal.compare("Enabled") ==
+            constants::STR_CMP_SUCCESS)
+        {
+            // 2nd Bit is used to store the value.
+            l_valToUpdateInVpd.emplace_back((*l_pVal).at(0) | 0x02);
+        }
+        else
+        {
+            // 2nd Bit is used to store the value.
+            l_valToUpdateInVpd.emplace_back((*l_pVal).at(0) & ~(0x02));
+        }
+
+        // TODO: Write API to be called to update in VPD.
+        return;
+    }
+    logging::logMessage(
+        "Invalid type recieved for create default Lpar from VPD.");
+}
+
+void IbmBiosHandler::saveCreateDefaultLparToBios(
+    const std::string& i_createDefaultLparVal)
+{
+    // checking for exact length as it is a string and can have garbage value.
+    if (i_createDefaultLparVal.size() != constants::VALUE_1)
+    {
+        logging::logMessage(
+            "Bad size for Create default LPAR in VPD. Skip writing to BIOS.");
+        return;
+    }
+
+    std::string l_valtoUpdate =
+        (i_createDefaultLparVal.at(0) & 0x02) ? "Enabled" : "Disabled";
+
+    types::PendingBIOSAttrs l_pendingBiosAttribute;
+    l_pendingBiosAttribute.push_back(std::make_pair(
+        "pvm_create_default_lpar",
+        std::make_tuple(
+            "xyz.openbmc_project.BIOSConfig.Manager.AttributeType.Enumeration",
+            l_valtoUpdate)));
+
+    try
+    {
+        dbusUtility::writeDbusProperty(
+            constants::biosConfigMgrService, constants::biosConfigMgrObjPath,
+            constants::biosConfigMgrInterface, "PendingAttributes",
+            l_pendingBiosAttribute);
+    }
+    catch (const std::exception& l_ex)
+    {
+        logging::logMessage(
+            "DBus call to update lpar value in pending attribute failed. " +
+            std::string(l_ex.what()));
+    }
+
+    return;
+}
+
+void IbmBiosHandler::processCreateDefaultLpar()
+{
+    // Read required keyword from DBus.
+    auto l_kwdValueVariant = dbusUtility::readDbusProperty(
+        constants::pimServiceName, constants::systemVpdInvPath,
+        constants::utilInf, constants::kwdClearNVRAM_CreateLPAR);
+
+    if (auto l_pVal = std::get_if<std::string>(&l_kwdValueVariant))
+    {
+        saveCreateDefaultLparToBios(*l_pVal);
+        return;
+    }
+
+    logging::logMessage(
+        "Invalid type recieved for create default Lpar from VPD.");
 }
 } // namespace vpd

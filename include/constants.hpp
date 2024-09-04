@@ -93,6 +93,7 @@ constexpr auto utilInf = "com.ibm.ipzvpd.UTIL";
 constexpr auto kwdCCIN = "CC";
 constexpr auto kwdRG = "RG";
 constexpr auto kwdAMM = "D0";
+constexpr auto kwdClearNVRAM_CreateLPAR = "D1";
 constexpr auto locationCodeInf = "com.ibm.ipzvpd.Location";
 constexpr auto pldmServiceName = "xyz.openbmc_project.PLDM";
 constexpr auto pimServiceName = "xyz.openbmc_project.Inventory.Manager";
