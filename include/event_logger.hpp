@@ -47,8 +47,6 @@ class EventLogger
      * @param[in] i_procedure - Procedure callout data [optional].
      *
      * @throw exception in case of error.
-     *
-     * @todo Add another async API without having any callbacks.
      */
     static void createAsyncPelWithInventoryCallout(
         const types::ErrorType& i_errorType,
@@ -104,6 +102,34 @@ class EventLogger
         const std::string& i_internalRc,
         const std::optional<std::pair<std::string, std::string>> i_userData1,
         const std::optional<std::pair<std::string, std::string>> i_userData2);
+
+    /**
+     * @brief An API to create a PEL.
+     *
+     * @param[in] i_errorType - Enum to map with event message name.
+     * @param[in] i_severity - Severity of the event.
+     * @param[in] i_fileName - File name.
+     * @param[in] i_funcName - Function name.
+     * @param[in] i_internalRc - Internal return code.
+     * @param[in] i_description - Error description.
+     * @param[in] i_userData1 - Additional user data [optional].
+     * @param[in] i_userData2 - Additional user data [optional].
+     * @param[in] i_symFru - Symblolic FRU callout data [optional].
+     * @param[in] i_procedure - Procedure callout data [optional].
+     *
+     * @todo: Symbolic FRU and procedure callout needs to be handled in this
+     * API.
+     */
+    static void createAsyncPel(const types::ErrorType& i_errorType,
+                               const types::SeverityType& i_severity,
+                               const std::string& i_fileName,
+                               const std::string& i_funcName,
+                               const std::string& i_internalRc,
+                               const std::string& i_description,
+                               const std::optional<std::string> i_userData1,
+                               const std::optional<std::string> i_userData2,
+                               const std::optional<std::string> i_symFru,
+                               const std::optional<std::string> i_procedure);
 
   private:
     static const std::unordered_map<types::SeverityType, std::string>
