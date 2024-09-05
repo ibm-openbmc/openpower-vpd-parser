@@ -4,7 +4,10 @@
 #include "logger.hpp"
 
 #include <sdbusplus/bus/match.hpp>
+#include <utility/common_utility.hpp>
 #include <utility/dbus_utility.hpp>
+
+#include <string>
 
 namespace vpd
 {
@@ -119,7 +122,7 @@ void IbmBiosHandler::biosAttributesCallback(sdbusplus::message_t& i_msg)
 
                 if (l_attributeName == "pvm_clear_nvram")
                 {
-                    // TODO: Save clear nvram to VPD.
+                    saveClearNvramToVpd(*l_val);
                 }
 
                 continue;
@@ -148,6 +151,9 @@ void IbmBiosHandler::backUpOrRestoreBiosAttributes()
 
     // process LPAR
     processCreateDefaultLpar();
+
+    // process clear NVRAM
+    processClearNvram();
 }
 
 types::BiosAttributeCurrentValue
@@ -362,8 +368,96 @@ void IbmBiosHandler::processCreateDefaultLpar()
         saveCreateDefaultLparToBios(*l_pVal);
         return;
     }
-
     logging::logMessage(
         "Invalid type recieved for create default Lpar from VPD.");
+}
+
+void IbmBiosHandler::saveClearNvramToVpd(const std::string& i_clearNvramVal)
+{
+    if (i_clearNvramVal.empty())
+    {
+        logging::logMessage(
+            "Empty value received for clear NVRAM from BIOS. Skip updating to VPD.");
+        return;
+    }
+
+    // Read required keyword from DBus as we need to set only a Bit.
+    auto l_kwdValueVariant = dbusUtility::readDbusProperty(
+        constants::pimServiceName, constants::systemVpdInvPath,
+        constants::utilInf, constants::kwdClearNVRAM_CreateLPAR);
+
+    if (auto l_pVal = std::get_if<std::string>(&l_kwdValueVariant))
+    {
+        commonUtility::toLower(const_cast<std::string&>(i_clearNvramVal));
+
+        types::BinaryVector l_valToUpdateInVpd;
+        if (i_clearNvramVal.compare("enabled") == constants::STR_CMP_SUCCESS)
+        {
+            // 3rd bit is used to store the value.
+            l_valToUpdateInVpd.emplace_back((*l_pVal).at(0) |
+                                            constants::VALUE_4);
+        }
+        else
+        {
+            // 3rd bit is used to store the value.
+            l_valToUpdateInVpd.emplace_back((*l_pVal).at(0) &
+                                            ~(constants::VALUE_4));
+        }
+        // TODO: Write API to be called to update in VPD.
+        return;
+    }
+    logging::logMessage("Invalid type recieved for clear NVRAM from VPD.");
+}
+
+void IbmBiosHandler::saveClearNvramToBios(const std::string& i_clearNvramVal)
+{
+    // Check for the exact length as it is a string and it can have a garbage
+    // value.
+    if (i_clearNvramVal.size() != constants::VALUE_1)
+    {
+        logging::logMessage(
+            "Bad size for clear NVRAM in VPD. Skip writing to BIOS.");
+        return;
+    }
+
+    // 3rd bit is used to store clear NVRAM value.
+    std::string l_valtoUpdate =
+        (i_clearNvramVal.at(0) & constants::VALUE_4) ? "Enabled" : "Disabled";
+
+    types::PendingBIOSAttrs l_pendingBiosAttribute;
+    l_pendingBiosAttribute.push_back(std::make_pair(
+        "pvm_clear_nvram",
+        std::make_tuple(
+            "xyz.openbmc_project.BIOSConfig.Manager.AttributeType.Enumeration",
+            l_valtoUpdate)));
+
+    try
+    {
+        dbusUtility::writeDbusProperty(
+            constants::biosConfigMgrService, constants::biosConfigMgrObjPath,
+            constants::biosConfigMgrInterface, "PendingAttributes",
+            l_pendingBiosAttribute);
+    }
+    catch (const std::exception& l_ex)
+    {
+        logging::logMessage(
+            "DBus call to update NVRAM value in pending attribute failed. " +
+            std::string(l_ex.what()));
+    }
+}
+
+void IbmBiosHandler::processClearNvram()
+{
+    // Read required keyword from VPD.
+    auto l_kwdValueVariant = dbusUtility::readDbusProperty(
+        constants::pimServiceName, constants::systemVpdInvPath,
+        constants::utilInf, constants::kwdClearNVRAM_CreateLPAR);
+
+    if (auto pVal = std::get_if<std::string>(&l_kwdValueVariant))
+    {
+        saveClearNvramToBios(*pVal);
+        return;
+    }
+    logging::logMessage("Invalid type recieved for clear NVRAM from VPD.");
 }
 } // namespace vpd

@@ -1,7 +1,9 @@
 #pragma once
+
 #include "constants.hpp"
 #include "logger.hpp"
 
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
@@ -102,5 +104,14 @@ inline std::vector<std::string> executeCmd(T&& i_path, Types... i_args)
     return l_cmdOutput;
 }
 
+/** @brief Converts string to lower case.
+ *
+ * @param [in] i_string - Input string.
+ */
+inline void toLower(std::string& i_string)
+{
+    std::transform(i_string.begin(), i_string.end(), i_string.begin(),
+                   [](unsigned char l_char) { return std::tolower(l_char); });
+}
 } // namespace commonUtility
 } // namespace vpd
