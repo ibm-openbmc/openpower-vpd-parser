@@ -377,5 +377,29 @@ inline void getVpdDataInVector(const std::string& vpdFilePath,
         throw;
     }
 }
+
+/**
+ * @brief An API to get D-bus representation of given VPD keyword.
+ *
+ * @param[in] i_keywordName - VPD keyword name.
+ *
+ * @return D-bus representation of given keyword.
+ */
+inline std::string getDbusPropNameForGivenKw(const std::string& i_keywordName)
+{
+    // Check for "#" prefixed VPD keyword.
+    if ((i_keywordName.size() == vpd::constants::TWO_BYTES) &&
+        (i_keywordName.at(0) == constants::POUND_KW))
+    {
+        // D-bus doesn't support "#". Replace "#" with "PD_" for those "#"
+        // prefixed keywords.
+        return (std::string(constants::POUND_KW_PREFIX) +
+                i_keywordName.substr(1));
+    }
+
+    // Return the keyword name back, if D-bus representation is same as the VPD
+    // keyword name.
+    return i_keywordName;
+}
 } // namespace vpdSpecificUtility
 } // namespace vpd

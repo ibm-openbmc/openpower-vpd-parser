@@ -108,6 +108,10 @@ int Parser::updateVpdKeyword(const types::WriteVpdParams& i_paramsToWriteData)
             return -1;
         }
 
+        // Get D-bus name for the given keyword
+        l_propertyName =
+            vpdSpecificUtility::getDbusPropNameForGivenKw(l_propertyName);
+
         // Create D-bus object map
         types::ObjectMap l_dbusObjMap = {std::make_pair(
             l_inventoryObjPath,
