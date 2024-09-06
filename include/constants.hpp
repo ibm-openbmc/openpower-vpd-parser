@@ -46,6 +46,7 @@ static constexpr auto SPD_DRAM_TYPE_DDR4 = 0x0C;
 
 static constexpr auto LAST_KW = "PF";
 static constexpr auto POUND_KW = '#';
+static constexpr auto POUND_KW_PREFIX = "PD_";
 static constexpr auto MB_YEAR_END = 4;
 static constexpr auto MB_MONTH_END = 7;
 static constexpr auto MB_DAY_END = 10;

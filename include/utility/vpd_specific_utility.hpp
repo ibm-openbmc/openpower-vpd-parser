@@ -377,5 +377,26 @@ inline void getVpdDataInVector(const std::string& vpdFilePath,
         throw;
     }
 }
+
+/**
+ * @brief An API to get D-bus representation of given property.
+ *
+ * @param[in] i_propertyName - D-bus property name.
+ *
+ * @return D-bus representation of given property.
+ */
+inline std::string getDbusPropertyName(const std::string& i_propertyName)
+{
+    // Check for "#" prefixed VPD keyword.
+    if ((i_propertyName.size() == vpd::constants::TWO_BYTES) &&
+        (i_propertyName.at(0) == constants::POUND_KW))
+    {
+        // D-bus doesn't support "#". Replace "#" with "PD_" for those "#"
+        // prefixed keywords.
+        return (std::string(constants::POUND_KW_PREFIX) +
+                i_propertyName.substr(1));
+    }
+    return i_propertyName;
+}
 } // namespace vpdSpecificUtility
 } // namespace vpd
