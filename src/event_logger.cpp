@@ -61,6 +61,7 @@ void EventLogger::createAsyncPelWithInventoryCallout(
 {
     (void)i_symFru;
     (void)i_procedure;
+    std::cout << "for testing" << std::endl;
 
     try
     {
