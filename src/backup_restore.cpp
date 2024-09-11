@@ -157,6 +157,28 @@ void BackupAndRestore::backupAndRestoreIpzVpd(types::IPZVpdMap& io_srcVpdMap,
         return;
     }
 
+    const std::string l_srcInvPath =
+        jsonUtility::getInventoryObjPathFromJson(m_sysCfgJsonObj, i_srcPath);
+    const std::string l_dstInvPath =
+        jsonUtility::getInventoryObjPathFromJson(m_sysCfgJsonObj, i_dstPath);
+    if (l_srcInvPath.empty() || l_dstInvPath.empty())
+    {
+        logging::logMessage(
+            "Couldn't find either source or destination inventory path.");
+        return;
+    }
+
+    const std::string l_srcServiceName =
+        jsonUtility::getServiceName(m_sysCfgJsonObj, l_srcInvPath);
+    const std::string l_dstServiceName =
+        jsonUtility::getServiceName(m_sysCfgJsonObj, l_dstInvPath);
+    if (l_srcServiceName.empty() || l_dstServiceName.empty())
+    {
+        logging::logMessage(
+            "Couldn't find either source or destination DBus service name.");
+        return;
+    }
+
     for (const auto& l_aRecordKwInfo :
          m_backupAndRestoreCfgJsonObj["backupMap"])
     {
@@ -225,14 +247,16 @@ void BackupAndRestore::backupAndRestoreIpzVpd(types::IPZVpdMap& io_srcVpdMap,
         else
         {
             // Read keyword value from DBus
-            // TODO: Uncomment when readKeyword API implemenation is done,
-            // call the API with required parameters.
-            /* l_srcBinaryValue = utils::readKeyword(i_srcPath,
-            * std::tuple<types::Record, types::Keyword>(l_srcRecordName,
-            l_srcKeywordName)); l_srcStrValue =
-            std::string(l_srcBinaryValue.begin(),
-            l_srcBinaryValue.end());
-            */
+            const auto l_value = dbusUtility::readDbusProperty(
+                l_srcServiceName, l_srcInvPath,
+                constants::ipzVpdInf + l_srcRecordName, l_srcKeywordName);
+            if (const auto l_binaryValue =
+                    std::get_if<types::BinaryVector>(&l_value))
+            {
+                l_srcBinaryValue = *l_binaryValue;
+                l_srcStrValue = std::string(l_srcBinaryValue.begin(),
+                                            l_srcBinaryValue.end());
+            }
         }
 
         types::BinaryVector l_dstBinaryValue;
@@ -247,14 +271,16 @@ void BackupAndRestore::backupAndRestoreIpzVpd(types::IPZVpdMap& io_srcVpdMap,
         else
         {
             // Read keyword value from DBus
-            // TODO: Uncomment when readKeyword API implemenation is done,
-            // call the API with required parameters.
-            /* l_dstBinaryValue = utils::readKeyword(i_dstPath,
-            * std::tuple<types::Record, types::Keyword>(l_dstRecordName,
-            l_dstKeywordName)); l_dstStrValue =
-            std::string(l_dstBinaryValue.begin(),
-            l_dstBinaryValue.end());
-            */
+            const auto l_value = dbusUtility::readDbusProperty(
+                l_dstServiceName, l_dstInvPath,
+                constants::ipzVpdInf + l_dstRecordName, l_dstKeywordName);
+            if (const auto l_binaryValue =
+                    std::get_if<types::BinaryVector>(&l_value))
+            {
+                l_dstBinaryValue = *l_binaryValue;
+                l_dstStrValue = std::string(l_dstBinaryValue.begin(),
+                                            l_dstBinaryValue.end());
+            }
         }
 
         if (l_srcBinaryValue != l_dstBinaryValue)

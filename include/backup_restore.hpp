@@ -85,6 +85,8 @@ class BackupAndRestore
      * @param[in,out] io_dstVpdMap - Destination VPD map.
      * @param[in] i_srcPath - Source EEPROM file path or inventory path.
      * @param[in] i_dstPath - Destination EEPROM file path or inventory path.
+     *
+     * @throw std::runtime_error
      */
     void backupAndRestoreIpzVpd(types::IPZVpdMap& io_srcVpdMap,
                                 types::IPZVpdMap& io_dstVpdMap,

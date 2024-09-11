@@ -796,5 +796,61 @@ inline std::tuple<std::string, std::string, std::string>
     }
     return std::make_tuple(io_vpdPath, l_inventoryObjPath, l_redundantFruPath);
 }
+
+/**
+ * @brief An API to get DBus service name.
+ *
+ * Given DBus inventory path, this API returns DBus service name if present in
+ * the JSON.
+ *
+ * @param[in] i_sysCfgJsonObj - System config JSON object.
+ * @param[in] l_inventoryPath - DBus inventory path.
+ *
+ * @return On success returns the service name present in the system config
+ * JSON, otherwise empty string.
+ *
+ * Note: Caller has to handle in case of empty string received.
+ */
+inline std::string getServiceName(const nlohmann::json& i_sysCfgJsonObj,
+                                  const std::string& l_inventoryPath)
+{
+    try
+    {
+        if (l_inventoryPath.empty())
+        {
+            throw std::runtime_error("Path parameter is empty.");
+        }
+
+        if (!i_sysCfgJsonObj.contains("frus"))
+        {
+            throw std::runtime_error("Missing frus tag in system config JSON.");
+        }
+
+        const nlohmann::json& l_listOfFrus =
+            i_sysCfgJsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
+
+        for (const auto& l_frus : l_listOfFrus.items())
+        {
+            for (const auto& l_inventoryItem : l_frus.value())
+            {
+                if (l_inventoryPath.compare(l_inventoryItem["inventoryPath"]) ==
+                    constants::STR_CMP_SUCCESS)
+                {
+                    return l_inventoryItem["serviceName"];
+                }
+            }
+        }
+        throw std::runtime_error(
+            "Inventory path not found in the system config JSON");
+    }
+    catch (const std::exception& l_exception)
+    {
+        logging::logMessage(
+            "Error while getting DBus service name for given path " +
+            l_inventoryPath + ", error: " + std::string(l_exception.what()));
+        // TODO:log PEL
+    }
+    return std::string{};
+}
 } // namespace jsonUtility
 } // namespace vpd
