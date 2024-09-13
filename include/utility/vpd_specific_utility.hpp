@@ -4,10 +4,15 @@
 
 #include "constants.hpp"
 #include "logger.hpp"
+#include "parser.hpp"
+#include "parser_factory.hpp"
+#include "parser_interface.hpp"
 #include "types.hpp"
 
+#include <nlohmann/json.hpp>
 #include <utility/common_utility.hpp>
 #include <utility/dbus_utility.hpp>
+#include <utility/json_utility.hpp>
 
 #include <filesystem>
 #include <fstream>
@@ -376,6 +381,237 @@ inline void getVpdDataInVector(const std::string& vpdFilePath,
                   << "] error : " << fail.what();
         throw;
     }
+}
+
+/**
+ * @brief Read keyword value.
+ *
+ * API can be used to read VPD keyword from the given input path.
+ *
+ * To read keyword of type IPZ, input parameter for reading should be in the
+ * form of (Record, Keyword). Eg: ("VINI", "SN").
+ *
+ * To read keyword from keyword type VPD, just keyword name has to be
+ * supplied in the input parameter. Eg: ("SN").
+ *
+ * @param[in] i_fruPath - EEPROM path.
+ * @param[in] i_paramsToReadData - Input details.
+ *
+ * @throw
+ * sdbusplus::xyz::openbmc_project::Common::Device::Error::ReadFailure.
+ *
+ * @return On success returns the read value in variant of array of bytes.
+ * On failure throws exception.
+ */
+inline types::DbusVariantType
+    readKeyword(const nlohmann::json& i_sysCfgJsonObj,
+                const types::Path i_fruPath,
+                const types::ReadVpdParams& i_paramsToReadData)
+{
+    try
+    {
+        std::error_code ec;
+
+        // Check if given path is filesystem path
+        if (!std::filesystem::exists(i_fruPath, ec) && (ec))
+        {
+            throw std::runtime_error("Given file path " + i_fruPath +
+                                     " not found.");
+        }
+
+        logging::logMessage("Performing VPD read on " + i_fruPath);
+
+        std::shared_ptr<vpd::Parser> l_parserObj =
+            std::make_shared<vpd::Parser>(i_fruPath, i_sysCfgJsonObj);
+
+        std::shared_ptr<vpd::ParserInterface> l_vpdParserInstance =
+            l_parserObj->getVpdParserInstance();
+
+        return (
+            l_vpdParserInstance->readKeywordFromHardware(i_paramsToReadData));
+    }
+    catch (const std::exception& e)
+    {
+        logging::logMessage(e.what() +
+                            std::string(". VPD read operation failed for ") +
+                            i_fruPath);
+        throw types::DeviceError::ReadFailure();
+    }
+}
+
+/**
+ * @brief API to update keyword's value on hardware
+ *
+ * @param[in] i_fruPath - FRU path.
+ * @param[in] i_sysCfgJsonObj - JSON object.
+ * @param[in] i_paramsToWriteData - Data required to perform write.
+ *
+ * @return On success returns number of bytes written. On failure returns
+ * -1.
+ */
+inline int
+    updateKeywordOnHardware(const types::Path& i_fruPath,
+                            const nlohmann::json& i_sysCfgJsonObj,
+                            const types::WriteVpdParams& i_paramsToWriteData)
+{
+    try
+    {
+        std::shared_ptr<Parser> l_parserObj =
+            std::make_shared<Parser>(i_fruPath, i_sysCfgJsonObj);
+
+        std::shared_ptr<ParserInterface> l_vpdParserInstance =
+            l_parserObj->getVpdParserInstance();
+
+        return (
+            l_vpdParserInstance->writeKeywordOnHardware(i_paramsToWriteData));
+    }
+    catch (const std::exception& l_error)
+    {
+        // TODO : Log PEL
+        return -1;
+    }
+}
+
+/**
+ * @brief Update keyword value.
+ *
+ * This API is used to update keyword value on the given input path and its
+ * redundant path(s) if any taken from system config JSON.
+ *
+ * To update IPZ type VPD, input parameter for writing should be in the form
+ * of (Record, Keyword, Value). Eg: ("VINI", "SN", {0x01, 0x02, 0x03}).
+ *
+ * To update Keyword type VPD, input parameter for writing should be in the
+ * form of (Keyword, Value). Eg: ("PE", {0x01, 0x02, 0x03}).
+ *
+ * @param[in] i_sysCfgJsonObj - System config JSON object.
+ * @param[in] i_vpdPath - Path (inventory object path/FRU EEPROM path).
+ * @param[in] i_paramsToWriteData - Input details.
+ *
+ * @return On success returns number of bytes written, on failure returns
+ * -1.
+ */
+inline int updateKeyword(const nlohmann::json& i_sysCfgJsonObj,
+                         const types::Path& i_vpdPath,
+                         const types::WriteVpdParams& i_paramsToWriteData)
+{
+    if (i_vpdPath.empty())
+    {
+        logging::logMessage("Given VPD path is empty.");
+        return -1;
+    }
+
+    types::Path l_fruPath = i_vpdPath;
+    types::Path l_inventoryObjPath;
+    types::Path l_redundantFruPath;
+
+    if (!i_sysCfgJsonObj.empty())
+    {
+        try
+        {
+            // Get hardware path from system config JSON.
+            const types::Path& l_tempPath =
+                jsonUtility::getFruPathFromJson(i_sysCfgJsonObj, i_vpdPath);
+
+            if (!l_tempPath.empty())
+            {
+                // Save the FRU path to update on hardware
+                l_fruPath = l_tempPath;
+
+                // Get inventory object path from system config JSON
+                l_inventoryObjPath = jsonUtility::getInventoryObjPathFromJson(
+                    i_sysCfgJsonObj, i_vpdPath);
+
+                // Get redundant hardware path if present in system config JSON
+                l_redundantFruPath =
+                    jsonUtility::getRedundantEepromPathFromJson(i_sysCfgJsonObj,
+                                                                i_vpdPath);
+            }
+        }
+        catch (const std::exception& e)
+        {
+            return -1;
+        }
+    }
+
+    // Update keyword's value on hardware
+    int l_bytesUpdatedOnHardware = updateKeywordOnHardware(
+        l_fruPath, i_sysCfgJsonObj, i_paramsToWriteData);
+
+    if (l_bytesUpdatedOnHardware == -1)
+    {
+        return l_bytesUpdatedOnHardware;
+    }
+
+    // If inventory D-bus object path is present, perform update
+    if (!l_inventoryObjPath.empty())
+    {
+        types::Record l_recordName;
+        std::string l_interfaceName;
+        std::string l_propertyName;
+        types::DbusVariantType l_keywordValue;
+
+        if (const types::IpzData* l_ipzData =
+                std::get_if<types::IpzData>(&i_paramsToWriteData))
+        {
+            l_recordName = std::get<0>(*l_ipzData);
+            l_interfaceName = constants::ipzVpdInf + l_recordName;
+            l_propertyName = std::get<1>(*l_ipzData);
+
+            try
+            {
+                // Read keyword's value from hardware to write the same on
+                // D-bus.
+                l_keywordValue = readKeyword(
+                    i_sysCfgJsonObj, l_fruPath,
+                    types::ReadVpdParams(
+                        std::make_tuple(l_recordName, l_propertyName)));
+            }
+            catch (const std::exception& l_exception)
+            {
+                // TODO: Log PEL
+                // Unable to read keyword's value from hardware.
+                return -1;
+            }
+        }
+        else
+        {
+            // Input parameter type provided isn't compatible to perform update.
+            return -1;
+        }
+
+        // Create D-bus object map
+        types::ObjectMap l_dbusObjMap = {std::make_pair(
+            l_inventoryObjPath,
+            types::InterfaceMap{std::make_pair(
+                l_interfaceName, types::PropertyMap{std::make_pair(
+                                     l_propertyName, l_keywordValue)})})};
+
+        // Call PIM's Notify method to perform update
+        if (!dbusUtility::callPIM(std::move(l_dbusObjMap)))
+        {
+            // Call to PIM's Notify method failed.
+            return -1;
+        }
+    }
+
+    // Update keyword's value on redundant hardware if present
+    if (!l_redundantFruPath.empty())
+    {
+        int l_bytesUpdatedOnRedundantHw = updateKeywordOnHardware(
+            l_redundantFruPath, i_sysCfgJsonObj, i_paramsToWriteData);
+
+        if (l_bytesUpdatedOnRedundantHw == -1)
+        {
+            return l_bytesUpdatedOnRedundantHw;
+        }
+    }
+
+    // TODO: Check if revert is required when any of the writes fails.
+    // TODO: Handle error logging
+
+    // All updates are successful.
+    return l_bytesUpdatedOnHardware;
 }
 } // namespace vpdSpecificUtility
 } // namespace vpd
