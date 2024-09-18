@@ -741,5 +741,61 @@ inline std::vector<std::string>
 
     return l_gpioPollingRequiredFrusList;
 }
+
+/**
+ * @brief Get all related path(s) to update keyword value.
+ *
+ * Given FRU EEPROM path/Inventory path needs keyword's value update, this API
+ * returns tuple of FRU EEPROM path, inventory path and redundant EEPROM path if
+ * exists in the system config JSON.
+ *
+ * Note: If the inventory object path or redundant EEPROM path(s) are not found
+ * in the system config JSON, corresponding fields will have empty value in the
+ * returning tuple.
+ *
+ * @param[in] i_sysCfgJsonObj - System config JSON object.
+ * @param[in] i_vpdPath - Inventory object path or FRU EEPROM path.
+ *
+ * @return On success returns tuple of EEPROM path, inventory path & redundant
+ * path, on failure returns tuple with given input path alone.
+ */
+inline std::tuple<std::string, std::string, std::string>
+    getAllPathsToUpdateKeyword(const nlohmann::json& i_sysCfgJsonObj,
+                               const std::string& i_vpdPath)
+{
+    types::Path l_fruPath = i_vpdPath;
+    types::Path l_inventoryObjPath;
+    types::Path l_redundantFruPath;
+    try
+    {
+        if (!i_sysCfgJsonObj.empty())
+        {
+            // Get hardware path from system config JSON.
+            const types::Path l_tmpPath =
+                jsonUtility::getFruPathFromJson(i_sysCfgJsonObj, i_vpdPath);
+
+            if (!l_tmpPath.empty())
+            {
+                l_fruPath = l_tmpPath;
+
+                // Get inventory object path from system config JSON
+                l_inventoryObjPath = jsonUtility::getInventoryObjPathFromJson(
+                    i_sysCfgJsonObj, l_fruPath);
+
+                // Get redundant hardware path if present in system config JSON
+                l_redundantFruPath =
+                    jsonUtility::getRedundantEepromPathFromJson(i_sysCfgJsonObj,
+                                                                l_fruPath);
+            }
+        }
+    }
+    catch (const std::exception& l_exception)
+    {
+        logging::logMessage(
+            "Failed to get all paths to update keyword value, error " +
+            std::string(l_exception.what()));
+    }
+    return std::make_tuple(l_fruPath, l_inventoryObjPath, l_redundantFruPath);
+}
 } // namespace jsonUtility
 } // namespace vpd
