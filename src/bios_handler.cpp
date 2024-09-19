@@ -286,6 +286,40 @@ void IbmBiosHandler::saveAmmToVpd(const std::string& i_memoryMirrorMode)
     // TODO: Call write keyword API to update the value in VPD.
 }
 
+void IbmBiosHandler::saveAmmToBios(const std::string& i_ammVal)
+{
+    if (i_ammVal.size() != constants::VALUE_1)
+    {
+        logging::logMessage("Bad size for AMM received, Skip writing to BIOS");
+        return;
+    }
+
+    const std::string l_valtoUpdate =
+        (i_ammVal.at(0) == constants::VALUE_2) ? "Enabled" : "Disabled";
+
+    types::PendingBIOSAttrs l_pendingBiosAttribute;
+    l_pendingBiosAttribute.push_back(std::make_pair(
+        "hb_memory_mirror_mode",
+        std::make_tuple(
+            "xyz.openbmc_project.BIOSConfig.Manager.AttributeType.Enumeration",
+            l_valtoUpdate)));
+
+    try
+    {
+        dbusUtility::writeDbusProperty(
+            constants::biosConfigMgrService, constants::biosConfigMgrObjPath,
+            constants::biosConfigMgrInterface, "PendingAttributes",
+            l_pendingBiosAttribute);
+    }
+    catch (const std::exception& l_ex)
+    {
+        // TODO: Should we log informational PEL here as well?
+        logging::logMessage(
+            "DBus call to update AMM value in pending attribute failed. " +
+            std::string(l_ex.what()));
+    }
+}
+
 void IbmBiosHandler::processActiveMemoryMirror()
 {
     auto l_kwdValueVariant = dbusUtility::readDbusProperty(
@@ -299,24 +333,21 @@ void IbmBiosHandler::processActiveMemoryMirror()
         // Check if active memory mirror value is default in VPD.
         if (l_ammValInVpd.at(0) == constants::VALUE_0)
         {
-            // TODO: Save Amm to VPD.
-        }
-        else
-        {
             types::BiosAttributeCurrentValue l_attrValueVariant =
                 readBiosAttribute("hb_memory_mirror_mode");
 
             if (auto pVal = std::get_if<std::string>(&l_attrValueVariant))
             {
-                std::string l_ammInBios = *pVal;
-                (void)l_ammInBios;
-                // TODO: save to BIOS.
-
+                saveAmmToVpd(*pVal);
                 return;
             }
-
             logging::logMessage(
                 "Invalid type recieved for auto memory mirror mode from BIOS.");
+            return;
+        }
+        else
+        {
+            saveAmmToBios(l_ammValInVpd);
         }
         return;
     }
