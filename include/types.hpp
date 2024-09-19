@@ -18,10 +18,13 @@ namespace types
 using BiosProperty = std::tuple<
     std::string, bool, std::string, std::string, std::string,
     std::variant<int64_t, std::string>, std::variant<int64_t, std::string>,
-    std::vector<std::tuple<std::string, std::variant<int64_t, std::string>>>>;
-using BiosBaseTable = std::variant<std::map<std::string, BiosProperty>>;
+    std::vector<std::tuple<std::string, std::variant<int64_t, std::string>,
+                           std::string>>>;
+using BiosBaseTable =
+    std::variant<std::monostate, std::map<std::string, BiosProperty>>;
 using BiosBaseTableType = std::map<std::string, BiosBaseTable>;
-using BiosAttributeCurrentValue = std::variant<int64_t, std::string>;
+using BiosAttributeCurrentValue =
+    std::variant<std::monostate, int64_t, std::string>;
 using BiosAttributePendingValue = std::variant<int64_t, std::string>;
 using BiosGetAttrRetType = std::tuple<std::string, BiosAttributeCurrentValue,
                                       BiosAttributePendingValue>;

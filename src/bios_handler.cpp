@@ -97,46 +97,55 @@ void IbmBiosHandler::biosAttributesCallback(sdbusplus::message_t& i_msg)
             continue;
         }
 
-        auto l_attributeList = std::get<0>(l_property.second);
-
-        for (const auto& l_attribute : l_attributeList)
+        if (auto l_attributeList =
+                std::get_if<std::map<std::string, types::BiosProperty>>(
+                    &(l_property.second)))
         {
-            if (auto l_val = std::get_if<std::string>(
-                    &(std::get<5>(std::get<1>(l_attribute)))))
+            for (const auto& l_attribute : *l_attributeList)
             {
-                std::string l_attributeName = std::get<0>(l_attribute);
-                if (l_attributeName == "hb_memory_mirror_mode")
+                if (auto l_val = std::get_if<std::string>(
+                        &(std::get<5>(std::get<1>(l_attribute)))))
                 {
-                    saveAmmToVpd(*l_val);
+                    std::string l_attributeName = std::get<0>(l_attribute);
+                    if (l_attributeName == "hb_memory_mirror_mode")
+                    {
+                        saveAmmToVpd(*l_val);
+                    }
+
+                    if (l_attributeName == "pvm_keep_and_clear")
+                    {
+                        saveKeepAndClearToVpd(*l_val);
+                    }
+
+                    if (l_attributeName == "pvm_create_default_lpar")
+                    {
+                        saveCreateDefaultLparToVpd(*l_val);
+                    }
+
+                    if (l_attributeName == "pvm_clear_nvram")
+                    {
+                        saveClearNvramToVpd(*l_val);
+                    }
+
+                    continue;
                 }
 
-                if (l_attributeName == "pvm_keep_and_clear")
+                if (auto l_val = std::get_if<int64_t>(
+                        &(std::get<5>(std::get<1>(l_attribute)))))
                 {
-                    saveKeepAndClearToVpd(*l_val);
+                    std::string l_attributeName = std::get<0>(l_attribute);
+                    if (l_attributeName == "hb_field_core_override")
+                    {
+                        saveFcoToVpd(*l_val);
+                    }
                 }
-
-                if (l_attributeName == "pvm_create_default_lpar")
-                {
-                    saveCreateDefaultLparToVpd(*l_val);
-                }
-
-                if (l_attributeName == "pvm_clear_nvram")
-                {
-                    saveClearNvramToVpd(*l_val);
-                }
-
-                continue;
             }
-
-            if (auto l_val = std::get_if<int64_t>(
-                    &(std::get<5>(std::get<1>(l_attribute)))))
-            {
-                std::string l_attributeName = std::get<0>(l_attribute);
-                if (l_attributeName == "hb_field_core_override")
-                {
-                    saveFcoToVpd(*l_val);
-                }
-            }
+        }
+        else
+        {
+            // TODO: log a predicitive PEL.
+            logging::logMessage("Invalid typre received from BIOS table.");
+            break;
         }
     }
 }
