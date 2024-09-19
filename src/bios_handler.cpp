@@ -194,7 +194,7 @@ void IbmBiosHandler::processFieldCoreOverride()
         }))
         {
             // Restore the data to BIOS.
-            // TODO: saveFcoToBios(*l_fcoInVpd);
+            saveFcoToBios(*l_fcoInVpd);
         }
         else
         {
@@ -228,6 +228,37 @@ void IbmBiosHandler::saveFcoToVpd(int64_t i_fcoInBios)
         0, 0, 0, static_cast<uint8_t>(i_fcoInBios)};
 
     // TODO:  Call Manager API to write keyword data using inventory path.
+}
+
+void IbmBiosHandler::saveFcoToBios(const types::BinaryVector& i_fcoVal)
+{
+    if (i_fcoVal.size() != constants::VALUE_4)
+    {
+        logging::logMessage("Bad size for FCO received. Skip writing to BIOS");
+        return;
+    }
+
+    types::PendingBIOSAttrs l_pendingBiosAttribute;
+    l_pendingBiosAttribute.push_back(std::make_pair(
+        "hb_field_core_override",
+        std::make_tuple(
+            "xyz.openbmc_project.BIOSConfig.Manager.AttributeType.Integer",
+            std::to_string(i_fcoVal.at(constants::VALUE_3)))));
+
+    try
+    {
+        dbusUtility::writeDbusProperty(
+            constants::biosConfigMgrService, constants::biosConfigMgrObjPath,
+            constants::biosConfigMgrInterface, "PendingAttributes",
+            l_pendingBiosAttribute);
+    }
+    catch (const std::exception& l_ex)
+    {
+        // TODO: Should we log informational PEL here as well?
+        logging::logMessage(
+            "DBus call to update FCO value in pending attribute failed. " +
+            std::string(l_ex.what()));
+    }
 }
 
 void IbmBiosHandler::saveAmmToVpd(const std::string& i_memoryMirrorMode)

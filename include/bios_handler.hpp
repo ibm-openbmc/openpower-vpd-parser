@@ -90,6 +90,13 @@ class IbmBiosHandler : public BiosHandlerInterface
     void saveFcoToVpd(int64_t i_fcoInBios);
 
     /**
+     * @brief API to save given value to "hb_field_core_override" attribute.
+     *
+     * @param[in] i_fcoVal - FCO value.
+     */
+    void saveFcoToBios(const types::BinaryVector& i_fcoVal);
+
+    /**
      * @brief API to save AMM data into VPD.
      *
      * @param[in] i_memoryMirrorMode - Memory mirror mode value.
