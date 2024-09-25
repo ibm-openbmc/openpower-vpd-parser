@@ -402,6 +402,64 @@ inline bool procesSetGpioTag(const nlohmann::json& i_parsedConfigJson,
         return false;
     }
 }
+/**
+ * @brief Process "PostAction" defined in config JSON.
+ *
+ * If any FRU(s) requires any special pre-handling, then this base action can be
+ * defined for that FRU in the config JSON, processing of which will be handled
+ * in this API.
+ *
+ * @throw std::runtime_error
+ *
+ * @param[in] i_parsedConfigJson - config JSON
+ * @param[in] i_vpdFilePath - EEPROM file path
+ * @param[in] i_flagToProcess - To identify which flag(s) needs to be processed
+ * under PostAction tag of config JSON.
+ * @return - false in case of paramter or Json error, true for successful
+ * processing. Throws exception in case of tag failure.
+ */
+inline void executePostAction(const nlohmann::json& i_parsedConfigJson,
+                              const std::string& i_vpdFilePath,
+                              const std::string& i_flagToProcess)
+{
+    if (i_flagToProcess.empty() || i_vpdFilePath.empty() ||
+        i_parsedConfigJson.empty())
+    {
+        logging::logMessage("Invalid parameter");
+        return false;
+    }
+
+    if (!(i_parsedConfigJson["frus"][i_vpdFilePath].at(0))["postAction"]
+             .contains(i_flagToProcess))
+    {
+        logging::logMessage(
+            "Config JSON missing flag " + i_flagToProcess +
+            " to execute Post-action for path = " + i_vpdFilePath);
+
+        return false;
+    }
+
+    const nlohmann::json& l_tagsJson =
+        (i_parsedConfigJson["frus"][i_vpdFilePath].at(
+            0))["postAction"][i_flagToProcess];
+
+    for (const auto& l_tag : l_tagsJson.items())
+    {
+        auto itrToFunction = funcionMap.find(l_tag.key());
+        if (itrToFunction != funcionMap.end())
+        {
+            if (!itrToFunction->second(i_parsedConfigJson, i_vpdFilePath,
+                                       "postAction", i_flagToProcess))
+            {
+                // In case any of the tag fails to execute. Throws the tag to
+                // detect which tag failed
+                throw std::runtime_error(l_tag.key());
+            }
+        }
+    }
+
+    return true;
+}
 
 /**
  * @brief Process "PreAction" defined in config JSON.
@@ -795,6 +853,76 @@ inline std::tuple<std::string, std::string, std::string>
             std::string(l_exception.what()));
     }
     return std::make_tuple(io_vpdPath, l_inventoryObjPath, l_redundantFruPath);
+}
+
+/**
+ * @brief API to check if an action is required or not for given VPD path.
+ *
+ * JSON can contain pre-action, post-action etc defined for a VPD file path. The
+ * API will check that.
+ *
+ * @param[in] i_sysCfgJsonObj - System config JSON object.
+ * @param[in] i_vpdFruPath - EEPROM path.
+ * @param[in] i_baseAction - Base action to be checked.
+ * @param[in] i_flowFlag - Denotes the flow from where the request is being
+ * generated.
+ * @return - True if found, false otherwise.
+ */
+inline bool isActionRequired(const nlohmann::json& const i_sysCfgJsonObj,
+                             std::string& i_vpdFruPath,
+                             const std::string& i_baseAction,
+                             const std::string& i_flowFlag)
+{
+    if (i_vpdFruPath.empty() || i_baseAction.empty() || i_flowFlag.empty())
+    {
+        logging::logMessage("Invalid parameters recieved.");
+        return false;
+    }
+
+    if ((i_sysCfgJsonObj["frus"][i_vpdFruPath].at(0)).contains(i_baseAction))
+    {
+        if ((i_sysCfgJsonObj["frus"][i_vpdFruPath].at(0))["postAction"]
+                .contains(i_flowFlag))
+        {
+            return true;
+        }
+
+        logging::logMessage("Flow flag not found in JSON for path: " +
+                            i_vpdFruPath);
+        return false;
+    }
+
+    logging::logMessage("Base action not found in JSON for path: " +
+                        i_vpdFruPath);
+    return false;
+}
+
+inline std::vector<std::string>
+    getCcinList(const nlohmann::json& const i_sysCfgJsonObj,
+                const std::string& i_vpdFruPath,
+                std::optional<std::string> jsonKeyLevel1 = std::nullopt,
+                std::optional<std::string> jsonKeyLevel2 = std::nullopt)
+{
+    std::vector<std::string> ccinList;
+    if (i_sysCfgJsonObj.empty())
+    {
+        logging::logMessage("Empty Json object.");
+        return ccinList;
+    }
+
+    if (jsonKeyLevel1.has_value())
+    {
+        if (jsonKeyLevel2.has_value())
+        {
+            for (const auto& item :
+                 i_sysCfgJsonObj["frus"][i_vpdFruPath].at(0)[])
+            {
+                if (item.find("ccinList") != item.end())
+                {}
+            }
+            i_sysCfgJsonObj["frus"][i_vpdFruPath]
+        }
+    }
 }
 } // namespace jsonUtility
 } // namespace vpd

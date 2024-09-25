@@ -377,5 +377,21 @@ inline void getVpdDataInVector(const std::string& vpdFilePath,
         throw;
     }
 }
+
+inline bool isValidCcin(const std::string& i_vpdFilePath,
+                        const types::VPDMapVariant& l_parsedVpd)
+{
+    if (i_vpdFilePath.empty())
+    {
+        logging::logMessage("Invalid file path sent");
+        return false;
+    }
+
+    if (auto vpdMap = std::get<types::IPZVpdMap>(&l_parsedVpd))
+    {}
+
+    logging::logMessage("VPD map type not supported.");
+    return false;
+}
 } // namespace vpdSpecificUtility
 } // namespace vpd

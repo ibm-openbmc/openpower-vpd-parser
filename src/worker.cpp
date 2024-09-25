@@ -1074,6 +1074,103 @@ bool Worker::processPreAction(const std::string& i_vpdFilePath,
     return true;
 }
 
+bool Worker::ccinCheckPassedPostFailAction(
+    const std::string& i_vpdFruPath, const std::string& i_flagToProcess,
+    const types::VPDMapVariant& i_parsedVpd)
+{
+    if (i_vpdFruPath.empty() || i_flagToProcess.empty())
+    {
+        logging::logMessage(
+            "Invalid input parameter. Abort processing post action");
+        return false;
+    }
+
+    std::vector<std::string> l_ccinListFromJson;
+    for (std::string l_ccin : m_parsedJson["frus"][i_vpdFruPath].at(
+             0)["postAction"]["collection"]["ccinList"])
+    {
+        transform(l_ccin.begin(), l_ccin.end(), l_ccin.begin(), ::toupper);
+        l_ccinListFromJson.push_back(l_ccin);
+    }
+
+    // If the CCIN list from JSON is not empty
+    if (!l_ccinListFromJson.empty())
+    {
+        // get CCIN from VPD
+        if (auto l_ipzVPDMap = std::get_if<types::IPZVpdMap>(&i_parsedVpd))
+        {
+            auto l_itrToRec = (*l_ipzVPDMap).find("VINI");
+            if (l_itrToRec == (*l_ipzVPDMap).end())
+            {
+                // TODO: Log PEL.
+                logging::logMessage(
+                    "VINI record not found in VPD. Post action CCIN check failed");
+                return false;
+            }
+
+            std::string l_ccinFromVpd;
+            vpdSpecificUtility::getKwVal(l_itrToRec->second, "CC",
+                                         l_ccinFromVpd);
+
+            transform(l_ccinFromVpd.begin(), l_ccinFromVpd.end(),
+                      l_ccinFromVpd.begin(), ::toupper);
+
+            if (find(l_ccinListFromJson.begin(), l_ccinListFromJson.end(),
+                     l_ccinFromVpd) != l_ccinListFromJson.end())
+            {
+                // CCIN check was required and found. Process post action for
+                // this FRU.
+                return true;
+            }
+            return false;
+        }
+
+        logging::logMessage("Invalid VPD type passed.");
+        return false;
+    }
+
+    // CCIN tag is there but the list is empty. ALso Log PEL?
+    throw JsonException("Json missing CCIN Values required for post action",
+                        m_configJsonPath);
+}
+
+bool Worker::processPostAction(const std::string& i_vpdFruPath,
+                               const std::string& i_flagToProcess,
+                               const types::VPDMapVariant& i_parsedVpd)
+{
+    if (i_vpdFruPath.empty() || i_flagToProcess.empty())
+    {
+        logging::logMessage(
+            "Invalid input parameter. Abort processing post action");
+        return false;
+    }
+
+    // Check if post action tag is to be triggered in the flow of collection
+    // based on some CCIN value?
+    if (m_parsedJson["frus"][i_vpdFruPath]
+            .at(0)["postAction"]["collection"]
+            .contains("ccinList"))
+    {
+        if (ccinCheckPassedPostFailAction(i_vpdFruPath, i_flagToProcess,
+                                          i_parsedVpd))
+        {
+            if (!jsonUtility::executePostAction(m_parsedJson, i_vpdFruPath,
+                                                i_flagToProcess))
+            {
+                logging::logMessage(
+                    "Execution of post action failed for path: " +
+                    std::string(i_vpdFruPath));
+
+                // If post action was required and failed then only return
+                // false. In all other case post action is considered passed.
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
 {
     if (i_vpdFilePath.empty())
@@ -1118,7 +1215,24 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
 
     std::shared_ptr<Parser> vpdParser = std::make_shared<Parser>(i_vpdFilePath,
                                                                  m_parsedJson);
-    return vpdParser->parse();
+    types::VPDMapVariant l_parsedVpd = vpdParser->parse();
+
+    // Before returning, as collection is over, check if FRU qualifies for
+    // any post action in the flow of collection. Note: Don't change the order,
+    // post action needs to be processed only after collection for FRU is
+    // successfully done.
+    if (jsonUtility::isActionRequired(m_parsedJson, i_vpdFilePath, "postAction",
+                                      "collection"))
+    {
+        if (!processPostAction(i_vpdFilePath, "collection", l_parsedVpd))
+        {
+            throw std::runtime_error("Required post-Action failed for path " +
+                                     i_vpdFilePath +
+                                     " Aborting collection for this FRU");
+        }
+    }
+
+    return l_parsedVpd;
 }
 
 std::tuple<bool, std::string>
