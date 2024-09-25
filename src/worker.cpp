@@ -5,6 +5,7 @@
 #include "backup_restore.hpp"
 #include "configuration.hpp"
 #include "constants.hpp"
+#include "event_logger.hpp"
 #include "exceptions.hpp"
 #include "logger.hpp"
 #include "parser.hpp"
@@ -65,6 +66,13 @@ void Worker::enableMuxChips()
     if (m_parsedJson.empty())
     {
         // config JSON should not be empty at this point of execution.
+        EventLogger::createAsyncPel(
+            types::ErrorType::JsonFailure, types::SeverityType::Error, __FILE__,
+            __FUNCTION__, 0,
+            std::string("Empty config JSON " + m_configJsonPath +
+                        " Can't enable muxes"),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
+
         throw std::runtime_error("Config JSON is empty. Can't enable muxes");
         return;
     }
@@ -89,6 +97,7 @@ void Worker::enableMuxChips()
             continue;
         }
 
+        // ToDo -- log an Information PEL.
         logging::logMessage(
             "Mux Entry does not have hold idle path. Can't enable the mux");
     }
@@ -111,6 +120,12 @@ static bool isChassisPowerOn()
         }
         return false;
     }
+
+    EventLogger::createAsyncPel(
+        types::ErrorType::DbusFailure, types::SeverityType::Informational,
+        __FILE__, __FUNCTION__, 0,
+        std::string("Dbus call to get chassis power state failed"),
+        std::nullopt, std::nullopt, std::nullopt, std::nullopt);
 
     throw std::runtime_error("Dbus call to get chassis power state failed");
 }
@@ -138,15 +153,37 @@ void Worker::performInitialSetup()
     {
         if (typeid(ex) == std::type_index(typeid(DataException)))
         {
-            // TODO:Catch logic to be implemented once PEL code goes in.
+            EventLogger::createAsyncPelWithInventoryCallout(
+                types::ErrorType::InvalidVpdMessage,
+                types::SeverityType::Warning,
+                {{jsonUtility::getInventoryObjPathFromJson(
+                      m_parsedJson, SYSTEM_VPD_FILE_PATH),
+                  types::CalloutPriority::High}},
+                __FILE__, __FUNCTION__, 0,
+                std::string("performInitialSetup failed , reason: " +
+                            ex.what()),
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
         }
         else if (typeid(ex) == std::type_index(typeid(EccException)))
         {
-            // TODO:Catch logic to be implemented once PEL code goes in.
+            EventLogger::createAsyncPelWithInventoryCallout(
+                types::ErrorType::EccCheckFailed, types::SeverityType::Warning,
+                {{jsonUtility::getInventoryObjPathFromJson(
+                      m_parsedJson, SYSTEM_VPD_FILE_PATH),
+                  types::CalloutPriority::High}},
+                __FILE__, __FUNCTION__, 0,
+                std::string("performInitialSetup failed , reason: " +
+                            ex.what()),
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
         }
         else if (typeid(ex) == std::type_index(typeid(JsonException)))
         {
-            // TODO:Catch logic to be implemented once PEL code goes in.
+            EventLogger::createAsyncPel(
+                types::ErrorType::JsonFailure, types::SeverityType::Warning,
+                __FILE__, __FUNCTION__, 0,
+                std::string("performInitialSetup failed , reason: " +
+                            ex.what()),
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
         }
 
         logging::logMessage(ex.what());
@@ -208,6 +245,13 @@ std::string Worker::getIMValue(const types::IPZVpdMap& parsedVpd) const
 {
     if (parsedVpd.empty())
     {
+        EventLogger::createAsyncPelWithInventoryCallout(
+            types::ErrorType::InvalidVpdMessage, types::SeverityType::Warning,
+            {{jsonUtility::getInventoryObjPathFromJson(m_parsedJson,
+                                                       SYSTEM_VPD_FILE_PATH),
+              types::CalloutPriority::High}},
+            __FILE__, __FUNCTION__, 0, "Empty VPD map. Can't Extract IM value",
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
         throw std::runtime_error("Empty VPD map. Can't Extract IM value");
     }
 
@@ -241,6 +285,13 @@ std::string Worker::getHWVersion(const types::IPZVpdMap& parsedVpd) const
 {
     if (parsedVpd.empty())
     {
+        EventLogger::createAsyncPelWithInventoryCallout(
+            types::ErrorType::InvalidVpdMessage, types::SeverityType::Warning,
+            {{jsonUtility::getInventoryObjPathFromJson(m_parsedJson,
+                                                       SYSTEM_VPD_FILE_PATH),
+              types::CalloutPriority::High}},
+            __FILE__, __FUNCTION__, 0, "Empty VPD map. Can't Extract HW value",
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
         throw std::runtime_error("Empty VPD map. Can't Extract IM value");
     }
 
@@ -301,18 +352,16 @@ void Worker::fillVPDMap(const std::string& vpdFilePath,
         if (typeid(ex) == std::type_index(typeid(DataException)))
         {
             // TODO: Do what needs to be done in case of Data exception.
-            // Uncomment when PEL implementation goes in.
-            /* string errorMsg =
-                 "VPD file is either empty or invalid. Parser failed for [";
-             errorMsg += m_vpdFilePath;
-             errorMsg += "], with error = " + std::string(ex.what());
-
-             additionalData.emplace("DESCRIPTION", errorMsg);
-             additionalData.emplace("CALLOUT_INVENTORY_PATH",
-                                    INVENTORY_PATH + baseFruInventoryPath);
-             createPEL(additionalData, pelSeverity, errIntfForInvalidVPD,
-             nullptr);*/
-
+            EventLogger::createAsyncPelWithInventoryCallout(
+                types::ErrorType::InvalidVpdMessage,
+                types::SeverityType::Warning,
+                {{jsonUtility::getInventoryObjPathFromJson(m_parsedJson,
+                                                           vpdFilePath),
+                  types::CalloutPriority::High}},
+                __FILE__, __FUNCTION__, 0,
+                std::string("VPD parsing failed for " + vpdFilePath +
+                            " with error " + ex.what()),
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
             // throw generic error from here to inform main caller about
             // failure.
             logging::logMessage(ex.what());
@@ -323,13 +372,15 @@ void Worker::fillVPDMap(const std::string& vpdFilePath,
         if (typeid(ex) == std::type_index(typeid(EccException)))
         {
             // TODO: Do what needs to be done in case of ECC exception.
-            // Uncomment when PEL implementation goes in.
-            /* additionalData.emplace("DESCRIPTION", "ECC check failed");
-             additionalData.emplace("CALLOUT_INVENTORY_PATH",
-                                    INVENTORY_PATH + baseFruInventoryPath);
-             createPEL(additionalData, pelSeverity, errIntfForEccCheckFail,
-                       nullptr);
-             */
+            EventLogger::createAsyncPelWithInventoryCallout(
+                types::ErrorType::EccCheckFailed, types::SeverityType::Warning,
+                {{jsonUtility::getInventoryObjPathFromJson(m_parsedJson,
+                                                           vpdFilePath),
+                  types::CalloutPriority::High}},
+                __FILE__, __FUNCTION__, 0,
+                std::string("VPD parsing failed for " + vpdFilePath +
+                            " with error " + ex.what()),
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
 
             logging::logMessage(ex.what());
             // Need to decide once all error handling is implemented.
@@ -442,6 +493,11 @@ void Worker::setDeviceTreeAndJson()
     // JSON is madatory for processing of this API.
     if (m_parsedJson.empty())
     {
+        EventLogger::createAsyncPel(
+            types::ErrorType::JsonFailure, types::SeverityType::Warning,
+            __FILE__, __FUNCTION__, 0,
+            std::string("Empty Json file " + m_configJsonPath), std::nullopt,
+            std::nullopt, std::nullopt, std::nullopt);
         throw std::runtime_error("JSON is empty");
     }
 
@@ -457,7 +513,11 @@ void Worker::setDeviceTreeAndJson()
 
         if (!systemJson.compare(JSON_ABSOLUTE_PATH_PREFIX))
         {
-            // TODO: Log a PEL saying that "System type not supported"
+            EventLogger::createAsyncPel(
+                types::ErrorType::InvalidSystem, types::SeverityType::Error,
+                __FILE__, __FUNCTION__, 0, "Error in getting system JSON.",
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
+
             throw DataException("Error in getting system JSON.");
         }
 
@@ -579,6 +639,7 @@ void Worker::populateKwdVPDpropertyMap(const types::KeywordVpdMap& keyordVPDMap,
             }
             else
             {
+                // ToDo -- log an Information PEL.
                 logging::logMessage("Unknown Keyword =" + kwd +
                                     " found in keyword VPD map");
                 continue;
@@ -586,6 +647,7 @@ void Worker::populateKwdVPDpropertyMap(const types::KeywordVpdMap& keyordVPDMap,
         }
         else
         {
+            // ToDo -- log an Information PEL.
             logging::logMessage(
                 "Unknown variant type found in keyword VPD map.");
             continue;
@@ -708,6 +770,7 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                         }
                         else
                         {
+                            // ToDo -- log an Information PEL.
                             logging::logMessage(
                                 "Unknown keyword found, Keywrod = " + keyword);
                         }
@@ -1163,6 +1226,7 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
             }
         }
 
+        // ToDo --log an information PEL.
         throw std::runtime_error("Could not find file path " + i_vpdFilePath +
                                  "Skipping parser trigger for the EEPROM");
     }
@@ -1214,17 +1278,45 @@ std::tuple<bool, std::string>
         // based on status of execution.
         if (typeid(ex) == std::type_index(typeid(DataException)))
         {
-            // TODO: Add custom handling
+            EventLogger::createAsyncPelWithInventoryCallout(
+                types::ErrorType::InvalidVpdMessage,
+                types::SeverityType::Warning,
+                {{jsonUtility::getInventoryObjPathFromJson(m_parsedJson,
+                                                           i_vpdFilePath),
+                  types::CalloutPriority::High}},
+                __FILE__, __FUNCTION__, 0,
+                std::string("VPD parsing failed for " + i_vpdFilePath +
+                            " with error: " + ex.what()),
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
+
             logging::logMessage(ex.what());
         }
         else if (typeid(ex) == std::type_index(typeid(EccException)))
         {
-            // TODO: Add custom handling
+            EventLogger::createAsyncPelWithInventoryCallout(
+                types::ErrorType::EccCheckFailed, types::SeverityType::Warning,
+                {{jsonUtility::getInventoryObjPathFromJson(m_parsedJson,
+                                                           i_vpdFilePath),
+                  types::CalloutPriority::High}},
+                __FILE__, __FUNCTION__, 0,
+                std::string("VPD parsing failed for " + i_vpdFilePath +
+                            " with error: " + ex.what()),
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
+
             logging::logMessage(ex.what());
         }
         else if (typeid(ex) == std::type_index(typeid(JsonException)))
         {
-            // TODO: Add custom handling
+            EventLogger::createAsyncPelWithInventoryCallout(
+                types::ErrorType::JsonFailure, types::SeverityType::Warning,
+                {{jsonUtility::getInventoryObjPathFromJson(m_parsedJson,
+                                                           i_vpdFilePath),
+                  types::CalloutPriority::High}},
+                __FILE__, __FUNCTION__, 0,
+                std::string("VPD parsing failed for " + i_vpdFilePath +
+                            " with error: " + ex.what()),
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
+
             logging::logMessage(ex.what());
         }
         else
@@ -1236,6 +1328,17 @@ std::tuple<bool, std::string>
         // are not present/processing had some error.
         if (!primeInventory(i_vpdFilePath))
         {
+            EventLogger::createAsyncPelWithInventoryCallout(
+                types::ErrorType::InvalidVpdMessage,
+                types::SeverityType::Informational,
+                {{jsonUtility::getInventoryObjPathFromJson(m_parsedJson,
+                                                           i_vpdFilePath),
+                  types::CalloutPriority::Low}},
+                __FILE__, __FUNCTION__, 0,
+                std::string("Priming of inventory failed for FRU " +
+                            i_vpdFilePath),
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
+
             logging::logMessage("Priming of inventory failed for FRU " +
                                 i_vpdFilePath);
         }
@@ -1344,15 +1447,15 @@ void Worker::performBackupAndRestore(types::VPDMapVariant& io_srcVpdMap)
     catch (const std::exception& ex)
     {
         logging::logMessage(ex.what());
-        // ToDo: Uncomment when PEL implementation goes in.
-        /*std::string l_errorMsg(
+
+        std::string l_errorMsg(
             "Exception caught while backup and restore VPD keyword's. Error: " +
             std::string(ex.what()));
-        inventory::PelAdditionalData l_additionalData{};
-        l_additionalData.emplace("DESCRIPTION", l_errorMsg);
-        createPEL(l_additionalData,
-        PelSeverity::ERROR, errBackupAndRestore, nullptr);
-        */
+
+        EventLogger::createAsyncPel(types::ErrorType::JsonFailure,
+                                    types::SeverityType::Warning, __FILE__,
+                                    __FUNCTION__, 0, l_errorMsg, std::nullopt,
+                                    std::nullopt, std::nullopt, std::nullopt);
     }
 }
 } // namespace vpd
