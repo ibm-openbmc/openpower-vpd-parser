@@ -902,43 +902,7 @@ void Worker::processInheritFlag(const types::VPDMapVariant& parsedVpdMap,
 bool Worker::processFruWithCCIN(const nlohmann::json& singleFru,
                                 const types::VPDMapVariant& parsedVpdMap)
 {
-    if (auto ipzVPDMap = std::get_if<types::IPZVpdMap>(&parsedVpdMap))
-    {
-        auto itrToRec = (*ipzVPDMap).find("VINI");
-        if (itrToRec == (*ipzVPDMap).end())
-        {
-            return false;
-        }
-
-        std::string ccinFromVpd;
-        vpdSpecificUtility::getKwVal(itrToRec->second, "CC", ccinFromVpd);
-        if (ccinFromVpd.empty())
-        {
-            return false;
-        }
-
-        transform(ccinFromVpd.begin(), ccinFromVpd.end(), ccinFromVpd.begin(),
-                  ::toupper);
-
-        std::vector<std::string> ccinList;
-        for (std::string ccin : singleFru["ccin"])
-        {
-            transform(ccin.begin(), ccin.end(), ccin.begin(), ::toupper);
-            ccinList.push_back(ccin);
-        }
-
-        if (ccinList.empty())
-        {
-            return false;
-        }
-
-        if (find(ccinList.begin(), ccinList.end(), ccinFromVpd) ==
-            ccinList.end())
-        {
-            return false;
-        }
-    }
-    return true;
+    return vpdSpecificUtility::findCcinInVpd(singleFru, parsedVpdMap);
 }
 
 void Worker::populateDbus(const types::VPDMapVariant& parsedVpdMap,
@@ -1029,8 +993,8 @@ bool Worker::processPreAction(const std::string& i_vpdFilePath,
         return false;
     }
 
-    if ((!jsonUtility::executePreAction(m_parsedJson, i_vpdFilePath,
-                                        i_flagToProcess)) &&
+    if ((!jsonUtility::executeBaseAction(m_parsedJson, "preAction",
+                                         i_vpdFilePath, i_flagToProcess)) &&
         (i_flagToProcess.compare("collection") == constants::STR_CMP_SUCCESS))
     {
         // TODO: Need a way to delete inventory object from Dbus and persisted
@@ -1071,6 +1035,56 @@ bool Worker::processPreAction(const std::string& i_vpdFilePath,
 
         return false;
     }
+    return true;
+}
+
+bool Worker::processPostAction(
+    const std::string& i_vpdFruPath, const std::string& i_flagToProcess,
+    const std::optional<types::VPDMapVariant> i_parsedVpd)
+{
+    if (i_vpdFruPath.empty() || i_flagToProcess.empty())
+    {
+        logging::logMessage(
+            "Invalid input parameter. Abort processing post action");
+        return false;
+    }
+
+    // Check if post action tag is to be triggered in the flow of collection
+    // based on some CCIN value?
+    if (m_parsedJson["frus"][i_vpdFruPath]
+            .at(0)["postAction"]["collection"]
+            .contains("ccin"))
+    {
+        if (!i_parsedVpd.has_value())
+        {
+            throw std::runtime_error(
+                "Parsed VPD map is mandatory for CCIN match");
+        }
+
+        // CCIN match is required to process post action for this FRU as it
+        // contains the flag.
+        if (!vpdSpecificUtility::findCcinInVpd(
+                m_parsedJson["frus"][i_vpdFruPath].at(
+                    0)["postAction"]["collection"],
+                i_parsedVpd.value()))
+        {
+            // If CCIN is not found, implies post action processing is not
+            // required for this FRU. Let the flow continue.
+            return true;
+        }
+    }
+
+    if (!jsonUtility::executeBaseAction(m_parsedJson, "postAction",
+                                        i_vpdFruPath, i_flagToProcess))
+    {
+        logging::logMessage("Execution of post action failed for path: " +
+                            std::string(i_vpdFruPath));
+
+        // If post action was required and failed only in that case return
+        // false. In all other case post action is considered passed.
+        return false;
+    }
+
     return true;
 }
 
@@ -1118,7 +1132,24 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
 
     std::shared_ptr<Parser> vpdParser = std::make_shared<Parser>(i_vpdFilePath,
                                                                  m_parsedJson);
-    return vpdParser->parse();
+    types::VPDMapVariant l_parsedVpd = vpdParser->parse();
+
+    // Before returning, as collection is over, check if FRU qualifies for
+    // any post action in the flow of collection. Note: Don't change the order,
+    // post action needs to be processed only after collection for FRU is
+    // successfully done.
+    if (jsonUtility::isActionRequired(m_parsedJson, i_vpdFilePath, "postAction",
+                                      "collection"))
+    {
+        if (!processPostAction(i_vpdFilePath, "collection", l_parsedVpd))
+        {
+            throw std::runtime_error("Required post-Action failed for path " +
+                                     i_vpdFilePath +
+                                     " Aborting collection for this FRU");
+        }
+    }
+
+    return l_parsedVpd;
 }
 
 std::tuple<bool, std::string>

@@ -404,42 +404,45 @@ inline bool procesSetGpioTag(const nlohmann::json& i_parsedConfigJson,
 }
 
 /**
- * @brief Process "PreAction" defined in config JSON.
+ * @brief Process base action defined in config JSON.
  *
- * If any FRU(s) requires any special pre-handling, then this base action can be
+ * If any FRU(s) requires any special handling, then this base action can be
  * defined for that FRU in the config JSON, processing of which will be handled
  * in this API.
+ * Examples of base action - preAction, PostAction etc.
  *
  * @param[in] i_parsedConfigJson - config JSON
+ * @param[in] i_baseAction - Base action to be performed.
  * @param[in] i_vpdFilePath - EEPROM file path
  * @param[in] i_flagToProcess - To identify which flag(s) needs to be processed
  * under PreAction tag of config JSON.
  * @return - success or failure
  */
-inline bool executePreAction(const nlohmann::json& i_parsedConfigJson,
-                             const std::string& i_vpdFilePath,
-                             const std::string& i_flagToProcess)
+inline bool executeBaseAction(const nlohmann::json& i_parsedConfigJson,
+                              const std::string& i_baseAction,
+                              const std::string& i_vpdFilePath,
+                              const std::string& i_flagToProcess)
 {
-    if (i_flagToProcess.empty() || i_vpdFilePath.empty() ||
-        i_parsedConfigJson.empty())
+    if (i_flagToProcess.empty() || i_baseAction.empty() ||
+        i_vpdFilePath.empty() || i_parsedConfigJson.empty())
     {
         logging::logMessage("Invalid parameter");
         return false;
     }
 
-    if (!(i_parsedConfigJson["frus"][i_vpdFilePath].at(0))["preAction"]
+    if (!(i_parsedConfigJson["frus"][i_vpdFilePath].at(0))[i_baseAction]
              .contains(i_flagToProcess))
     {
-        logging::logMessage(
-            "Config JSON missing flag " + i_flagToProcess +
-            " to execute Pre-action for path = " + i_vpdFilePath);
+        logging::logMessage("Config JSON missing flag " + i_flagToProcess +
+                            " to execute " + i_baseAction +
+                            " for path = " + i_vpdFilePath);
 
         return false;
     }
 
     const nlohmann::json& l_tagsJson =
         (i_parsedConfigJson["frus"][i_vpdFilePath].at(
-            0))["preAction"][i_flagToProcess];
+            0))[i_baseAction][i_flagToProcess];
 
     for (const auto& l_tag : l_tagsJson.items())
     {
@@ -447,7 +450,7 @@ inline bool executePreAction(const nlohmann::json& i_parsedConfigJson,
         if (itrToFunction != funcionMap.end())
         {
             if (!itrToFunction->second(i_parsedConfigJson, i_vpdFilePath,
-                                       "preAction", i_flagToProcess))
+                                       i_baseAction, i_flagToProcess))
             {
                 // In case any of the tag fails to execute. Mark preAction
                 // as failed for that flag.
@@ -795,6 +798,48 @@ inline std::tuple<std::string, std::string, std::string>
             std::string(l_exception.what()));
     }
     return std::make_tuple(io_vpdPath, l_inventoryObjPath, l_redundantFruPath);
+}
+
+/**
+ * @brief API to check if an action is required or not for given VPD path.
+ *
+ * JSON can contain pre-action, post-action etc defined for a VPD file path. The
+ * API will check that.
+ *
+ * @param[in] i_sysCfgJsonObj - System config JSON object.
+ * @param[in] i_vpdFruPath - EEPROM path.
+ * @param[in] i_baseAction - Base action to be checked.
+ * @param[in] i_flowFlag - Denotes the flow from where the request is being
+ * generated.
+ * @return - True if found, false otherwise.
+ */
+inline bool isActionRequired(const nlohmann::json& i_sysCfgJsonObj,
+                             const std::string& i_vpdFruPath,
+                             const std::string& i_baseAction,
+                             const std::string& i_flowFlag)
+{
+    if (i_vpdFruPath.empty() || i_baseAction.empty() || i_flowFlag.empty())
+    {
+        logging::logMessage("Invalid parameters recieved.");
+        return false;
+    }
+
+    if ((i_sysCfgJsonObj["frus"][i_vpdFruPath].at(0)).contains(i_baseAction))
+    {
+        if ((i_sysCfgJsonObj["frus"][i_vpdFruPath].at(0))["postAction"]
+                .contains(i_flowFlag))
+        {
+            return true;
+        }
+
+        logging::logMessage("Flow flag not found in JSON for path: " +
+                            i_vpdFruPath);
+        return false;
+    }
+
+    logging::logMessage("Base action not found in JSON for path: " +
+                        i_vpdFruPath);
+    return false;
 }
 } // namespace jsonUtility
 } // namespace vpd

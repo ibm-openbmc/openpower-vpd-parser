@@ -3,9 +3,11 @@
 #include "config.h"
 
 #include "constants.hpp"
+#include "exceptions.hpp"
 #include "logger.hpp"
 #include "types.hpp"
 
+#include <nlohmann/json.hpp>
 #include <utility/common_utility.hpp>
 #include <utility/dbus_utility.hpp>
 
@@ -376,6 +378,68 @@ inline void getVpdDataInVector(const std::string& vpdFilePath,
                   << "] error : " << fail.what();
         throw;
     }
+}
+
+/**
+ * @brief API to find CCIN in parsed VPD map.
+ *
+ * Few FRUs need some special handling. To identify those FRUs CCIN are used.
+ * The API will check from parsed VPD map if the FRU is the one with desired
+ * CCIN.
+ *
+ * @throw std::runtime_error
+ * @throw DataException
+ *
+ * @param[in] i_JsonObject - Any JSON which contains CCIN tag to match.
+ * @param[in] i_parsedVpdMap - Parsed VPD map.
+ * @return True if found, false otherwise.
+ */
+inline bool findCcinInVpd(const nlohmann::json& i_JsonObject,
+                          const types::VPDMapVariant& i_parsedVpdMap)
+{
+    if (i_JsonObject.empty())
+    {
+        throw std::runtime_error("Json object is empty. Can't find CCIN");
+    }
+
+    if (auto l_ipzVPDMap = std::get_if<types::IPZVpdMap>(&i_parsedVpdMap))
+    {
+        auto l_itrToRec = (*l_ipzVPDMap).find("VINI");
+        if (l_itrToRec == (*l_ipzVPDMap).end())
+        {
+            throw DataException(
+                "VINI record not found in parsed VPD. Can't find CCIN");
+        }
+
+        std::string l_ccinFromVpd;
+        vpdSpecificUtility::getKwVal(l_itrToRec->second, "CC", l_ccinFromVpd);
+        if (l_ccinFromVpd.empty())
+        {
+            throw DataException("Empty CCIN value in VPD map. Can't find CCIN");
+        }
+
+        transform(l_ccinFromVpd.begin(), l_ccinFromVpd.end(),
+                  l_ccinFromVpd.begin(), ::toupper);
+
+        for (std::string l_ccinValue : i_JsonObject["ccin"])
+        {
+            transform(l_ccinValue.begin(), l_ccinValue.end(),
+                      l_ccinValue.begin(), ::toupper);
+
+            if (l_ccinValue.compare(l_ccinFromVpd) ==
+                constants::STR_CMP_SUCCESS)
+            {
+                // CCIN found
+                return true;
+            }
+        }
+
+        logging::logMessage("No match found for CCIN");
+        return false;
+    }
+
+    logging::logMessage("VPD type not supported. Can't find CCIN");
+    return false;
 }
 } // namespace vpdSpecificUtility
 } // namespace vpd
