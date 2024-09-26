@@ -251,9 +251,19 @@ int Manager::updateKeyword(const types::Path i_vpdPath,
         l_fruPath = i_vpdPath;
     }
 
-    std::shared_ptr<Parser> l_parserObj =
-        std::make_shared<Parser>(l_fruPath, l_sysCfgJsonObj);
-    return l_parserObj->updateVpdKeyword(i_paramsToWriteData);
+    try
+    {
+        std::shared_ptr<Parser> l_parserObj =
+            std::make_shared<Parser>(l_fruPath, l_sysCfgJsonObj);
+        return l_parserObj->updateVpdKeyword(i_paramsToWriteData);
+    }
+    catch (const std::exception& l_exception)
+    {
+        // TODO:: error log needed
+        logging::logMessage("Update keyword failed for file[" + i_vpdPath +
+                            "], reason: " + std::string(l_exception.what()));
+        return -1;
+    }
 }
 
 types::DbusVariantType

@@ -66,9 +66,8 @@ TEST(IpzVpdParserTest, VpdFileDoesNotExist)
     // Vpd file does not exist
     nlohmann::json l_json;
     std::string l_vpdFile("vpd_files/xyz.dat");
-    vpd::Parser l_vpdParser(l_vpdFile, l_json);
 
-    EXPECT_THROW(l_vpdParser.parse(), std::exception);
+    EXPECT_THROW(vpd::Parser(l_vpdFile, l_json), std::runtime_error);
 }
 
 TEST(IpzVpdParserTest, MissingHeader)

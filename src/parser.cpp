@@ -11,6 +11,23 @@ namespace vpd
 Parser::Parser(const std::string& vpdFilePath, nlohmann::json parsedJson) :
     m_vpdFilePath(vpdFilePath), m_parsedJson(parsedJson)
 {
+    std::error_code l_errCode;
+
+    // ToDo: Add minimum file size check in all the concert praser classes,
+    // depends on their VPD type.
+    if (!std::filesystem::exists(m_vpdFilePath, l_errCode))
+    {
+        std::string l_message{"Parser object creation failed, file [" +
+                              m_vpdFilePath + "] doesn't exists."};
+
+        if (l_errCode)
+        {
+            l_message += " Error message: " + l_errCode.message();
+        }
+
+        throw std::runtime_error(l_message);
+    }
+
     // Read VPD offset if applicable.
     if (!m_parsedJson.empty())
     {
