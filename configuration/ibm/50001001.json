@@ -1696,6 +1696,14 @@
                         }
                     }
                 },
+                "postAction": {
+                    "collection": {
+                        "ccin": ["2CE2", "58FF", "6B92", "6B99"],
+                        "systemCmd": {
+                            "cmd": "echo 4-0060 > /sys/bus/i2c/drivers/leds-pca955x/bind"
+                        }
+                    }
+                },
                 "PostFailAction": {
                     "collection": {
                         "setGpio": {
@@ -1770,6 +1778,14 @@
                         },
                         "systemCmd": {
                             "cmd": "echo 5-0050 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
+                },
+                "postAction": {
+                    "collection": {
+                        "ccin": ["2CE2", "58FF", "6B92", "6B99"],
+                        "systemCmd": {
+                            "cmd": "echo 5-0060 > /sys/bus/i2c/drivers/leds-pca955x/bind"
                         }
                     }
                 },
@@ -1850,6 +1866,14 @@
                         }
                     }
                 },
+                "postAction": {
+                    "collection": {
+                        "ccin": ["2CE2", "58FF", "6B92", "6B99"],
+                        "systemCmd": {
+                            "cmd": "echo 5-0061 > /sys/bus/i2c/drivers/leds-pca955x/bind"
+                        }
+                    }
+                },
                 "PostFailAction": {
                     "collection": {
                         "setGpio": {
@@ -1924,6 +1948,14 @@
                         },
                         "systemCmd": {
                             "cmd": "echo 11-0050 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
+                },
+                "postAction": {
+                    "collection": {
+                        "ccin": ["2CE2", "58FF", "6B92", "6B99"],
+                        "systemCmd": {
+                            "cmd": "echo 11-0060 > /sys/bus/i2c/drivers/leds-pca955x/bind"
                         }
                     }
                 },
