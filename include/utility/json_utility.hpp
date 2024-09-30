@@ -478,42 +478,58 @@ inline bool procesSetGpioTag(const nlohmann::json& i_parsedConfigJson,
 }
 
 /**
- * @brief Process "PreAction" defined in config JSON.
+ * @brief Process any action, if defined in config JSON.
  *
- * If any FRU(s) requires any special pre-handling, then this base action can be
+ * If any FRU(s) requires any special handling, then this base action can be
  * defined for that FRU in the config JSON, processing of which will be handled
  * in this API.
+ * Examples of action - preAction, PostAction etc.
  *
  * @param[in] i_parsedConfigJson - config JSON
+ * @param[in] i_action - Base action to be performed.
  * @param[in] i_vpdFilePath - EEPROM file path
  * @param[in] i_flagToProcess - To identify which flag(s) needs to be processed
  * under PreAction tag of config JSON.
  * @return - success or failure
  */
-inline bool executePreAction(const nlohmann::json& i_parsedConfigJson,
-                             const std::string& i_vpdFilePath,
-                             const std::string& i_flagToProcess)
+inline bool executeBaseAction(const nlohmann::json& i_parsedConfigJson,
+                              const std::string& i_action,
+                              const std::string& i_vpdFilePath,
+                              const std::string& i_flagToProcess)
 {
-    if (i_flagToProcess.empty() || i_vpdFilePath.empty() ||
-        i_parsedConfigJson.empty())
+    if (i_flagToProcess.empty() || i_action.empty() || i_vpdFilePath.empty() ||
+        !i_parsedConfigJson.contains("frus"))
     {
         logging::logMessage("Invalid parameter");
         return false;
     }
 
-    if (!(i_parsedConfigJson["frus"][i_vpdFilePath].at(0))["preAction"]
-             .contains(i_flagToProcess))
+    if (!i_parsedConfigJson["frus"].contains(i_vpdFilePath))
     {
-        logging::logMessage(
-            "Config JSON missing flag " + i_flagToProcess +
-            " to execute Pre-action for path = " + i_vpdFilePath);
+        logging::logMessage("File path: " + i_vpdFilePath +
+                            " not found in JSON");
+        return false;
+    }
+
+    if (!i_parsedConfigJson["frus"][i_vpdFilePath].at(0).contains(i_action))
+    {
+        logging::logMessage("Action [" + i_action +
+                            "] not defined for file path:" + i_vpdFilePath);
+        return false;
+    }
+
+    if (!(i_parsedConfigJson["frus"][i_vpdFilePath].at(0))[i_action].contains(
+            i_flagToProcess))
+    {
+        logging::logMessage("Config JSON missing flag [" + i_flagToProcess +
+                            "] to execute action for path = " + i_vpdFilePath);
 
         return false;
     }
 
     const nlohmann::json& l_tagsJson =
         (i_parsedConfigJson["frus"][i_vpdFilePath].at(
-            0))["preAction"][i_flagToProcess];
+            0))[i_action][i_flagToProcess];
 
     for (const auto& l_tag : l_tagsJson.items())
     {
@@ -521,9 +537,9 @@ inline bool executePreAction(const nlohmann::json& i_parsedConfigJson,
         if (itrToFunction != funcionMap.end())
         {
             if (!itrToFunction->second(i_parsedConfigJson, i_vpdFilePath,
-                                       "preAction", i_flagToProcess))
+                                       i_action, i_flagToProcess))
             {
-                // In case any of the tag fails to execute. Mark preAction
+                // In case any of the tag fails to execute. Mark action
                 // as failed for that flag.
                 return false;
             }

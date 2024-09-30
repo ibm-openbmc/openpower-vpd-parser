@@ -5,6 +5,7 @@
 #include <nlohmann/json.hpp>
 
 #include <mutex>
+#include <optional>
 #include <tuple>
 
 namespace vpd
@@ -358,6 +359,44 @@ class Worker
      */
     bool processPreAction(const std::string& i_vpdFilePath,
                           const std::string& i_flagToProcess);
+
+    /**
+     * @brief API to process postAction(base_action) defined in config JSON.
+     *
+     * @note Sequence of tags under any given flag of postAction is EXTREMELY
+     * important to ensure proper processing. The API will process all the
+     * nested items under the base action sequentially. Also if any of the tag
+     * processing fails, the code will not process remaining tags under the
+     * flag.
+     * ******** sample format **************
+     * fru EEPROM path: {
+     *     base_action: {
+     *         flag1: {
+     *           tag1: {
+     *            },
+     *           tag2: {
+     *            }
+     *         }
+     *         flag2: {
+     *           tags: {
+     *            }
+     *         }
+     *     }
+     * }
+     * *************************************
+     * Also, if post action is required to be processed only for FRUs with
+     * certain CCIN then CCIN list can be provided under flag.
+     *
+     * @param[in] i_vpdFruPath - Path to the EEPROM file.
+     * @param[in] i_flagToProcess - To identify which flag(s) needs to be
+     * processed under postAction tag of config JSON.
+     * @param[in] i_parsedVpd - Optional Parsed VPD map. If CCIN match is
+     * required.
+     * @return Execution status.
+     */
+    bool processPostAction(
+        const std::string& i_vpdFruPath, const std::string& i_flagToProcess,
+        const std::optional<types::VPDMapVariant> i_parsedVpd = std::nullopt);
 
     /**
      * @brief Function to enable and bring MUX out of idle state.
