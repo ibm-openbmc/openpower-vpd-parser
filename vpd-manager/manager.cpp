@@ -560,6 +560,14 @@ void Manager::performVPDRecollection()
             singleFru["inventoryPath"]
                 .get_ref<const nlohmann::json::string_t&>();
 
+        inventory::InterfaceMap interfacesPropMap;
+        clearVpdOnRemoval(INVENTORY_PATH + inventoryPath, interfacesPropMap);
+
+        inventory::ObjectMap objectMap;
+        objectMap.emplace(inventoryPath, move(interfacesPropMap));
+
+        common::utility::callPIM(move(objectMap));
+
         bool prePostActionRequired = false;
 
         if ((jsonFile["frus"][item].at(0)).find("preAction") !=
