@@ -124,7 +124,7 @@ class EventLogger
                                const types::SeverityType& i_severity,
                                const std::string& i_fileName,
                                const std::string& i_funcName,
-                               const std::string& i_internalRc,
+                               const uint8_t i_internalRc,
                                const std::string& i_description,
                                const std::optional<std::string> i_userData1,
                                const std::optional<std::string> i_userData2,
