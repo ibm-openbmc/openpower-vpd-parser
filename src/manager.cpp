@@ -388,8 +388,90 @@ void Manager::collectSingleFruVpd(
 void Manager::deleteSingleFruVpd(
     const sdbusplus::message::object_path& i_dbusObjPath)
 {
-    // Dummy code to supress unused variable warning. To be removed.
-    logging::logMessage(std::string(i_dbusObjPath));
+    const std::string l_dbusObjPath{i_dbusObjPath};
+    const nlohmann::json& l_sysCfgJsonObj = m_worker->getSysCfgJsonObj();
+
+    try
+    {
+        if (l_sysCfgJsonObj.empty())
+        {
+            throw std::runtime_error(
+                "System config JSON is not present. deleteFruVpd failed for: " +
+                l_dbusObjPath);
+        }
+
+        const std::string& l_fruPath =
+            jsonUtility::getFruPathFromJson(l_sysCfgJsonObj, l_dbusObjPath);
+
+        if (l_fruPath.empty())
+        {
+            throw std::runtime_error(
+                "DBus object path not present in system config JSON. Cannot perform deletion for: " +
+                l_dbusObjPath);
+        }
+
+        bool l_presentPropValue = std::get<bool>(dbusUtility::readDbusProperty(
+            constants::pimServiceName, l_dbusObjPath,
+            constants::inventoryItemInf, "Present"));
+
+        if (!l_presentPropValue)
+        {
+            logging::logMessage(
+                "Given FRU is not present. Could not perform deletion for " +
+                l_dbusObjPath);
+        }
+        else
+        {
+            if (l_dbusObjPath.find("pcieslot") != std::string::npos)
+            {
+                std::vector<std::string> l_interfaces{
+                    constants::operationalStatusInf};
+
+                types::MapperGetSubTree l_subTreeMap =
+                    dbusUtility::getObjectSubTree(l_dbusObjPath, 0,
+                                                  l_interfaces);
+
+                // Check if cxp_port populated for the FRU.
+                for (const auto& [l_objectPath, l_serviceInterfaceMap] :
+                     l_subTreeMap)
+                {
+                    if (l_objectPath.find("cxp_top") != std::string::npos ||
+                        l_objectPath.find("cxp_bot") != std::string::npos)
+                    {
+                        // ToDo -- Update the functional status for cxp_port.
+                    }
+                }
+
+                if (!jsonUtility::processSystemCmdTag(
+                        l_sysCfgJsonObj, l_fruPath, "postAction", "delete"))
+                {
+                    throw std::runtime_error("Failed to unbind the LED driver");
+                }
+            }
+
+            types::InterfaceMap l_interfaceMap;
+            vpdSpecificUtility::clearVpdOnRemoval(l_dbusObjPath,
+                                                  l_interfaceMap);
+
+            types::ObjectMap l_objectMap;
+            l_objectMap.emplace(i_dbusObjPath, std::move(l_interfaceMap));
+
+            if (!dbusUtility::callPIM(std::move(l_objectMap)))
+            {
+                throw std::runtime_error("call to PIM failed for " +
+                                         l_dbusObjPath);
+            }
+        }
+
+        logging::logMessage("Successfully completed deletion of VPD for " +
+                            l_dbusObjPath);
+    }
+    catch (const std::exception& l_ex)
+    {
+        // ToDo - log PEL
+        logging::logMessage("Failed to delete FRU VPD with error: " +
+                            std::string(l_ex.what()));
+    }
 }
 
 bool Manager::isValidUnexpandedLocationCode(
