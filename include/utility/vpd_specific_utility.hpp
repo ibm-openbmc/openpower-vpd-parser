@@ -355,6 +355,12 @@ inline void getVpdDataInVector(const std::string& vpdFilePath,
 {
     try
     {
+        if (std::filesystem::file_size(vpdFilePath) == 0)
+        {
+            logging::logMessage(vpdFilePath + " file is empty.");
+            return;
+        }
+
         std::fstream vpdFileStream;
         vpdFileStream.exceptions(std::ifstream::badbit |
                                  std::ifstream::failbit);

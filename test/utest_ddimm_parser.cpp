@@ -86,6 +86,16 @@ TEST(DdimmVpdParserTest, EmptyInputVector)
     EXPECT_THROW(DdimmVpdParser(std::move(emptyVector)), DataException);
 }
 
+TEST(DdimmVpdParserTest, EmptyVpd)
+{
+    // Empty VPD file
+    nlohmann::json l_json;
+    std::string l_vpdFile("vpd_files/empty_vpd.dat");
+    Parser l_vpdParser(l_vpdFile, l_json);
+
+    EXPECT_THROW(l_vpdParser.parse(), std::runtime_error);
+}
+
 int main(int i_argc, char** io_argv)
 {
     ::testing::InitGoogleTest(&i_argc, io_argv);
