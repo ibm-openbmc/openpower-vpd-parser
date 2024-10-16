@@ -753,13 +753,10 @@ bool Worker::primeInventory(const std::string& i_vpdFilePath)
                                std::monostate{});
         }
 
+        //TODO: To be revisisted for P12 and replace present with collected.
         types::PropertyMap l_propertyValueMap;
         l_propertyValueMap.emplace("Present", false);
-        if (std::filesystem::exists(i_vpdFilePath))
-        {
-            l_propertyValueMap["Present"] = true;
-        }
-
+        
         vpdSpecificUtility::insertOrMerge(l_interfaces,
                                           "xyz.openbmc_project.Inventory.Item",
                                           move(l_propertyValueMap));
@@ -970,12 +967,25 @@ void Worker::populateDbus(const types::VPDMapVariant& parsedVpdMap,
                 processExtraInterfaces(aFru, interfaces, parsedVpdMap);
             }
 
-            // Process FRUS which are embedded in the parent FRU and whose VPD
-            // will be synthesized.
-            if ((aFru.value("embedded", true)) &&
-                (!aFru.value("synthesized", false)))
+            // Process FRUS whose VPD will be synthesized.
+            if (!aFru.value("synthesized", false))
             {
-                processEmbeddedAndSynthesizedFrus(aFru, interfaces);
+                // which are embedded in the parent FRU
+                if (aFru.value("embedded", true))
+                {
+                    processEmbeddedAndSynthesizedFrus(aFru, interfaces);
+                }
+
+                // Do we need to handle presence?
+                if (aFru.value("handlePresence", true))
+                {
+                    //TODO: Revisit in P12. Present should ne replaced by collected.
+                    types::PropertyMap l_propertyMap;
+                    l_propertyValueMap.emplace("Present", false);
+                    vpdSpecificUtility::insertOrMerge(interfaces,
+                                              constants::inventoryItemInterface,
+                                              std::move(l_propertyMap));
+                }
             }
 
             objectInterfaceMap.emplace(std::move(fruObjectPath),
