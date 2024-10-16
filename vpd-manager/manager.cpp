@@ -454,6 +454,45 @@ void Manager::performVPDRecollection()
             singleFru["inventoryPath"]
                 .get_ref<const nlohmann::json::string_t&>();
 
+        // Before re-collecting clear the CC and Present value. It should be
+        // auto set after re-collection, if re-collection is successful.
+        inventory::ObjectMap objectMap{
+            {inventoryPath,
+             {{"xyz.openbmc_project.State.Decorator.OperationalStatus",
+               {{"Functional", true}}},
+              {"com.ibm.ipzvpd.VINI", {{"CC", Binary{}}}},
+              {"xyz.openbmc_project.Inventory.Item", {{"Present", false}}}}}};
+
+        common::utility::callPIM(move(objectMap));
+
+        // check if any subtree exist under the parent path.
+        std::vector<std::string> interfaceList{
+            "xyz.openbmc_project.Inventory.Item"};
+        MapperResponse subTree = getObjectSubtreeForInterfaces(
+            INVENTORY_PATH + inventoryPath, 0, interfaceList);
+
+        for (auto [objectPath, serviceInterfaceMap] : subTree)
+        {
+            std::string subTreeObjPath{objectPath};
+            // Strip any inventory prefix in path
+            if (subTreeObjPath.find(INVENTORY_PATH) == 0)
+            {
+                subTreeObjPath =
+                    subTreeObjPath.substr(sizeof(INVENTORY_PATH) - 1);
+            }
+
+            // If subtree present, set its presence to false and functional to
+            // true.
+            inventory::ObjectMap objectMap{
+                {subTreeObjPath,
+                 {{"xyz.openbmc_project.State.Decorator.OperationalStatus",
+                   {{"Functional", true}}},
+                  {"xyz.openbmc_project.Inventory.Item",
+                   {{"Present", false}}}}}};
+
+            common::utility::callPIM(move(objectMap));
+        }
+
         bool prePostActionRequired = false;
 
         if ((jsonFile["frus"][item].at(0)).find("preAction") !=
