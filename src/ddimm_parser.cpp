@@ -200,6 +200,94 @@ size_t DdimmVpdParser::getDdr5BasedDdimmSize(
     return constants::CONVERT_GB_TO_KB * l_dimmSize;
 }
 
+size_t DdimmVpdParser::getDdr4BasedDdimmSize(
+    types::BinaryVector::const_iterator i_iterator)
+{
+    size_t l_tmpValue = 0, l_dimmSize = 0;
+
+    // Calculate SDRAM capacity
+    l_tmpValue = i_iterator[constants::SPD_BYTE_4] &
+                 constants::JEDEC_SDRAM_CAP_MASK;
+
+    /* Make sure the bits are not Reserved */
+    if (l_tmpValue > constants::JEDEC_SDRAMCAP_RESERVED)
+    {
+        logging::logMessage(
+            "Bad data in vpd byte 4. Can't calculate SDRAM capacity and so "
+            "dimm size.\n ");
+        return l_dimmSize;
+    }
+
+    size_t l_sdramCapacity = 1;
+    l_sdramCapacity = (l_sdramCapacity << l_tmpValue) *
+                      constants::JEDEC_SDRAMCAP_MULTIPLIER;
+
+    /* Calculate Primary bus width */
+    l_tmpValue = i_iterator[constants::SPD_BYTE_13] &
+                 constants::JEDEC_PRI_BUS_WIDTH_MASK;
+
+    if (l_tmpValue > constants::JEDEC_RESERVED_BITS)
+    {
+        logging::logMessage(
+            "Bad data in vpd byte 13. Can't calculate primary bus width "
+            "and so dimm size.");
+        return l_dimmSize;
+    }
+
+    size_t l_primaryBusWid = 1;
+    l_primaryBusWid = (l_primaryBusWid << l_tmpValue) *
+                      constants::JEDEC_PRI_BUS_WIDTH_MULTIPLIER;
+
+    /* Calculate SDRAM width */
+    l_tmpValue = i_iterator[constants::SPD_BYTE_12] &
+                 constants::JEDEC_SDRAM_WIDTH_MASK;
+
+    if (l_tmpValue > constants::JEDEC_RESERVED_BITS)
+    {
+        logging::logMessage(
+            "Bad data in vpd byte 12. Can't calculate SDRAM width and so "
+            "dimm size.");
+        return l_dimmSize;
+    }
+
+    size_t l_sdramWidth = 1;
+    l_sdramWidth = (l_sdramWidth << l_tmpValue) *
+                   constants::JEDEC_SDRAM_WIDTH_MULTIPLIER;
+
+    // Calculate die count
+    l_tmpValue = i_iterator[constants::SPD_BYTE_6] &
+                 constants::JEDEC_SIGNAL_LOADING_MASK;
+    uint8_t l_dieCount = 1;
+
+    if (l_tmpValue == constants::JEDEC_SINGLE_LOAD_STACK)
+    {
+        // Fetch die count
+        l_tmpValue = i_iterator[constants::SPD_BYTE_6] &
+                     constants::JEDEC_DIE_COUNT_MASK;
+        l_tmpValue >>= constants::JEDEC_DIE_COUNT_RIGHT_SHIFT;
+        l_dieCount = l_tmpValue + 1;
+    }
+
+    /* Calculate Number of ranks */
+    l_tmpValue = i_iterator[constants::SPD_BYTE_12] &
+                 constants::JEDEC_NUM_RANKS_MASK;
+    l_tmpValue >>= constants::JEDEC_RESERVED_BITS;
+
+    if (l_tmpValue > constants::JEDEC_RESERVED_BITS)
+    {
+        logging::logMessage(
+            "Can't calculate number of ranks. Invalid data found.");
+        return l_dimmSize;
+    }
+
+    size_t l_logicalRanksPerDimm = (l_tmpValue + 1) * l_dieCount;
+
+    l_dimmSize = (l_sdramCapacity / constants::JEDEC_PRI_BUS_WIDTH_MULTIPLIER) *
+                 (l_primaryBusWid / l_sdramWidth) * l_logicalRanksPerDimm;
+
+    return (constants::CONVERT_MB_TO_KB * l_dimmSize);
+}
+
 size_t
     DdimmVpdParser::getDdimmSize(types::BinaryVector::const_iterator i_iterator)
 {
@@ -209,11 +297,16 @@ size_t
     {
         l_dimmSize = getDdr5BasedDdimmSize(i_iterator);
     }
+    else if ((i_iterator[constants::SPD_BYTE_2] & constants::SPD_BYTE_MASK) ==
+             constants::SPD_DRAM_TYPE_DDR4)
+    {
+        l_dimmSize = getDdr4BasedDdimmSize(i_iterator);
+    }
     else
     {
-        logging::logMessage("Error: DDIMM is not DDR5. DDIMM Byte 2 value [" +
-                            std::to_string(i_iterator[constants::SPD_BYTE_2]) +
-                            "]");
+        logging::logMessage(
+            "Error: DDIMM is neither DDR4 nor DDR5. DDIMM Byte 2 value [" +
+            std::to_string(i_iterator[constants::SPD_BYTE_2]) + "]");
     }
     return l_dimmSize;
 }

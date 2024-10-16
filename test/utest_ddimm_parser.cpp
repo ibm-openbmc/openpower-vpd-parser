@@ -36,6 +36,29 @@ TEST(DdimmVpdParserTest, GoodTestCase)
               l_ddimmMap == std::get<types::DdimmVpdMap>(l_vpdParser.parse()));
 }
 
+TEST(DdimmVpdParserTest, DDR4GoodTestCase)
+{
+    types::DdimmVpdMap l_ddimmMap{
+        std::pair<std::string, size_t>{"MemorySizeInKB", 0x4000000},
+        std::pair<std::string, types::BinaryVector>{
+            "FN", {0x37, 0x38, 0x50, 0x36, 0x35, 0x37, 0x35}},
+        std::pair<std::string, types::BinaryVector>{
+            "PN", {0x37, 0x38, 0x50, 0x36, 0x35, 0x37, 0x35}},
+        std::pair<std::string, types::BinaryVector>{"SN",
+                                                    {0x59, 0x48, 0x33, 0x35,
+                                                     0x31, 0x54, 0x31, 0x35,
+                                                     0x53, 0x30, 0x44, 0x35}},
+        std::pair<std::string, types::BinaryVector>{"CC",
+                                                    {0x33, 0x32, 0x37, 0x42}}};
+
+    nlohmann::json l_json;
+    std::string l_vpdFile("vpd_files/ddr4_ddimm.dat");
+    Parser l_vpdParser(l_vpdFile, l_json);
+
+    ASSERT_EQ(1,
+              l_ddimmMap == std::get<types::DdimmVpdMap>(l_vpdParser.parse()));
+}
+
 TEST(DdimmVpdParserTest, InvalidDdrType)
 {
     // Invalid DDR type, corrupted at index[2]
