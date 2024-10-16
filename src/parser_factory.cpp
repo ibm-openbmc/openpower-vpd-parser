@@ -124,6 +124,7 @@ std::shared_ptr<ParserInterface>
         }
 
         case vpdType::DDR5_DDIMM_MEMORY_VPD:
+        case vpdType::DDR4_DDIMM_MEMORY_VPD:
         {
             logging::logMessage("DDIMM parser selected for VPD file path: " +
                                 i_vpdFilePath);

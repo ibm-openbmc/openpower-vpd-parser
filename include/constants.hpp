@@ -44,6 +44,21 @@ static constexpr auto SPD_MODULE_TYPE_DDIMM = 0x0A;
 static constexpr auto SPD_DRAM_TYPE_DDR5 = 0x12;
 static constexpr auto SPD_DRAM_TYPE_DDR4 = 0x0C;
 
+static constexpr auto JEDEC_SDRAM_CAP_MASK = 0x0F;
+static constexpr auto JEDEC_PRI_BUS_WIDTH_MASK = 0x07;
+static constexpr auto JEDEC_SDRAM_WIDTH_MASK = 0x07;
+static constexpr auto JEDEC_NUM_RANKS_MASK = 0x38;
+static constexpr auto JEDEC_DIE_COUNT_MASK = 0x70;
+static constexpr auto JEDEC_SINGLE_LOAD_STACK = 0x02;
+static constexpr auto JEDEC_SIGNAL_LOADING_MASK = 0x03;
+
+static constexpr auto JEDEC_SDRAMCAP_MULTIPLIER = 256;
+static constexpr auto JEDEC_PRI_BUS_WIDTH_MULTIPLIER = 8;
+static constexpr auto JEDEC_SDRAM_WIDTH_MULTIPLIER = 4;
+static constexpr auto JEDEC_SDRAMCAP_RESERVED = 7;
+static constexpr auto JEDEC_RESERVED_BITS = 3;
+static constexpr auto JEDEC_DIE_COUNT_RIGHT_SHIFT = 4;
+
 static constexpr auto LAST_KW = "PF";
 static constexpr auto POUND_KW = '#';
 static constexpr auto POUND_KW_PREFIX = "PD_";
