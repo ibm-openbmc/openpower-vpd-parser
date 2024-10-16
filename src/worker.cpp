@@ -1169,24 +1169,44 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
 
     std::shared_ptr<Parser> vpdParser = std::make_shared<Parser>(i_vpdFilePath,
                                                                  m_parsedJson);
-    types::VPDMapVariant l_parsedVpd = vpdParser->parse();
-
-    // Before returning, as collection is over, check if FRU qualifies for
-    // any post action in the flow of collection.
-    // Note: Don't change the order, post action needs to be processed only
-    // after collection for FRU is successfully done.
-    if (jsonUtility::isActionRequired(m_parsedJson, i_vpdFilePath, "postAction",
-                                      "collection"))
+    try
     {
-        if (!processPostAction(i_vpdFilePath, "collection", l_parsedVpd))
-        {
-            throw std::runtime_error("Required post action failed for path " +
-                                     i_vpdFilePath +
-                                     " Aborting collection for this FRU");
-        }
-    }
+        types::VPDMapVariant l_parsedVpd = vpdParser->parse();
 
-    return l_parsedVpd;
+        // Before returning, as collection is over, check if FRU qualifies for
+        // any post action in the flow of collection.
+        // Note: Don't change the order, post action needs to be processed only
+        // after collection for FRU is successfully done.
+        if (jsonUtility::isActionRequired(m_parsedJson, i_vpdFilePath,
+                                          "postAction", "collection"))
+        {
+            if (!processPostAction(i_vpdFilePath, "collection", l_parsedVpd))
+            {
+                throw std::runtime_error(
+                    "Required post action failed for path " + i_vpdFilePath +
+                    " Aborting collection for this FRU");
+            }
+        }
+
+        return l_parsedVpd;
+    }
+    catch (std::exception& ex)
+    {
+        // If VPD parsing fails, and post fail action is required, execute it.
+        if (l_isPostFailActionRequired)
+        {
+            if (!jsonUtility::executePostFailAction(m_parsedJson, i_vpdFilePath,
+                                                    "collection"))
+            {
+                throw std::runtime_error("Post fail action failed for path " +
+                                         i_vpdFilePath +
+                                         " Aborting collection for this FRU");
+            }
+        }
+
+        throw std::runtime_error("VPD parsing failed for " + i_vpdFilePath +
+                                 " due to error: " + ex.what());
+    }
 }
 
 std::tuple<bool, std::string>
