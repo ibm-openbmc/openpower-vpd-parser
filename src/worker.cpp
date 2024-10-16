@@ -753,12 +753,9 @@ bool Worker::primeInventory(const std::string& i_vpdFilePath)
                                std::monostate{});
         }
 
+        // TODO: To be revisisted for P12 and replace present with collected.
         types::PropertyMap l_propertyValueMap;
         l_propertyValueMap.emplace("Present", false);
-        if (std::filesystem::exists(i_vpdFilePath))
-        {
-            l_propertyValueMap["Present"] = true;
-        }
 
         vpdSpecificUtility::insertOrMerge(l_interfaces,
                                           "xyz.openbmc_project.Inventory.Item",
@@ -803,6 +800,7 @@ void Worker::processEmbeddedAndSynthesizedFrus(const nlohmann::json& singleFru,
     // Check if its required to handle presence for this FRU.
     if (singleFru.value("handlePresence", true))
     {
+        // TODO: Present property should be replaced with collected.
         types::PropertyMap presProp;
         presProp.emplace("Present", true);
         vpdSpecificUtility::insertOrMerge(
@@ -971,7 +969,7 @@ void Worker::populateDbus(const types::VPDMapVariant& parsedVpdMap,
             }
 
             // Process FRUS which are embedded in the parent FRU and whose VPD
-            // will be synthesized.
+            // will not be synthesized.
             if ((aFru.value("embedded", true)) &&
                 (!aFru.value("synthesized", false)))
             {
@@ -1129,10 +1127,17 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
             jsonUtility::isActionRequired(m_parsedJson, i_vpdFilePath,
                                           "PostFailAction", "collection"))
         {
+            // TODO: Need a mechanism to detect if presence was defined for the
+            // FRU and mandatory for the visibility of file in user space, and
+            // also what was the result of reading that line. Based on that
+            // Present property needs to be populated.
             l_isPostFailActionRequired = true;
         }
         else
         {
+            // TODO: Need a mechanism to detect if processPreAction failed for
+            // presence line read. Based on that Present property needs to be
+            // populated.
             throw std::runtime_error("Pre-Action failed for path " +
                                      i_vpdFilePath +
                                      " Aborting collection for this FRU");
@@ -1141,6 +1146,9 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
 
     if (!std::filesystem::exists(i_vpdFilePath))
     {
+        // TODO: For FRUs, where setting presence line is not mandatory for
+        // visibility of file in user space. At this point, set the Present
+        // property to false as the file is not visible in user space.
         if (l_isPostFailActionRequired)
         {
             if (!jsonUtility::executePostFailAction(m_parsedJson, i_vpdFilePath,
@@ -1155,6 +1163,10 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
         throw std::runtime_error("Could not find file path " + i_vpdFilePath +
                                  "Skipping parser trigger for the EEPROM");
     }
+
+    // TODO: For FRUs, where setting presence line is not mandatory for
+    // visibility of file in user space. At this point, set the Present property
+    // to true as the file is visible in user space.
 
     std::shared_ptr<Parser> vpdParser = std::make_shared<Parser>(i_vpdFilePath,
                                                                  m_parsedJson);
