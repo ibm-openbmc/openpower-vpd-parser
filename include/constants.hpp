@@ -97,6 +97,10 @@ constexpr auto kwdAMM = "D0";
 constexpr auto kwdClearNVRAM_CreateLPAR = "D1";
 constexpr auto kwdKeepAndClear = "D1";
 constexpr auto locationCodeInf = "com.ibm.ipzvpd.Location";
+constexpr auto operationalStatusInf =
+    "xyz.openbmc_project.State.Decorator.OperationalStatus";
+constexpr auto assetInf = "xyz.openbmc_project.Inventory.Decorator.Asset";
+constexpr auto inventoryItemInf = "xyz.openbmc_project.Inventory.Item";
 constexpr auto pldmServiceName = "xyz.openbmc_project.PLDM";
 constexpr auto pimServiceName = "xyz.openbmc_project.Inventory.Manager";
 constexpr auto biosConfigMgrObjPath =
