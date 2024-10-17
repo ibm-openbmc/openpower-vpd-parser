@@ -711,9 +711,16 @@ inline bool isActionRequired(const nlohmann::json& i_sysCfgJsonObj,
         return false;
     }
 
-    if (i_sysCfgJsonObj.empty() || !(i_sysCfgJsonObj.contains("frus")))
+    if (!i_sysCfgJsonObj.contains("frus"))
     {
         logging::logMessage("Invalid JSON object recieved.");
+        return false;
+    }
+
+    if (!i_sysCfgJsonObj["frus"].contains(i_vpdFruPath))
+    {
+        logging::logMessage("JSON object does not contain EEPROM path " +
+                            i_vpdFruPath);
         return false;
     }
 
