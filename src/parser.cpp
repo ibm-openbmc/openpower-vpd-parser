@@ -11,6 +11,22 @@ namespace vpd
 Parser::Parser(const std::string& vpdFilePath, nlohmann::json parsedJson) :
     m_vpdFilePath(vpdFilePath), m_parsedJson(parsedJson)
 {
+    std::error_code l_errCode;
+    auto l_filesize = -1;
+
+    if (!std::filesystem::exists(m_vpdFilePath, l_errCode) ||
+        ((l_filesize = std::filesystem::file_size(m_vpdFilePath, l_errCode)) ==
+         0))
+    {
+        const std::string l_message{
+            "Parser object creation failed, Reason: file path doesn't exists or file size is zero or file system call failed, file [" +
+            m_vpdFilePath + "], file size [" + std::to_string(l_filesize) +
+            "] , error message [" + l_errCode.message() + "]"};
+
+        logging::logMessage(l_message);
+        throw std::runtime_error(l_message);
+    }
+
     // Read VPD offset if applicable.
     if (!m_parsedJson.empty())
     {
