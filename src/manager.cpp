@@ -111,6 +111,11 @@ Manager::Manager(
     {
         logging::logMessage("VPD-Manager service failed. " +
                             std::string(e.what()));
+
+        /*
+        TODO : Update the exception (e) that tells that VPD manager has failed,
+        along with its original message and throw from here.
+        */
         throw;
     }
 }

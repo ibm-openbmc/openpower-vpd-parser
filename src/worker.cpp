@@ -112,7 +112,17 @@ static bool isChassisPowerOn()
         return false;
     }
 
-    throw std::runtime_error("Dbus call to get chassis power state failed");
+    /*
+        TODO: Add PEL and return false.
+        Callout: Firmware callout
+        Type: Informational
+        Description: Chassis state can't be determined, defaulting to chassis
+       off. : e.what()
+    */
+
+    // Revisit: We don't need to throw from here. Consider any error in reading
+    // chassis state as chassis is off. throw std::runtime_error("Dbus call to
+    // get chassis power state failed");
 }
 
 void Worker::performInitialSetup()
@@ -278,6 +288,7 @@ std::string Worker::getHWVersion(const types::IPZVpdMap& parsedVpd) const
 void Worker::fillVPDMap(const std::string& vpdFilePath,
                         types::VPDMapVariant& vpdMap)
 {
+    // TODO:Remove informational logs.
     logging::logMessage(std::string("Parsing file = ") + vpdFilePath);
 
     if (vpdFilePath.empty())
@@ -307,11 +318,7 @@ void Worker::fillVPDMap(const std::string& vpdFilePath,
              errorMsg += m_vpdFilePath;
              errorMsg += "], with error = " + std::string(ex.what());
 
-             additionalData.emplace("DESCRIPTION", errorMsg);
-             additionalData.emplace("CALLOUT_INVENTORY_PATH",
-                                    INVENTORY_PATH + baseFruInventoryPath);
-             createPEL(additionalData, pelSeverity, errIntfForInvalidVPD,
-             nullptr);*/
+             */
 
             // throw generic error from here to inform main caller about
             // failure.
@@ -325,10 +332,6 @@ void Worker::fillVPDMap(const std::string& vpdFilePath,
             // TODO: Do what needs to be done in case of ECC exception.
             // Uncomment when PEL implementation goes in.
             /* additionalData.emplace("DESCRIPTION", "ECC check failed");
-             additionalData.emplace("CALLOUT_INVENTORY_PATH",
-                                    INVENTORY_PATH + baseFruInventoryPath);
-             createPEL(additionalData, pelSeverity, errIntfForEccCheckFail,
-                       nullptr);
              */
 
             logging::logMessage(ex.what());
@@ -340,6 +343,23 @@ void Worker::fillVPDMap(const std::string& vpdFilePath,
             throw std::runtime_error("Ecc Exception occurred for file path = " +
                                      vpdFilePath);
         }
+
+        /*
+        else
+        {
+        TODO: Add a third case to handle reset of the type of exceptions.
+        }
+        */
+
+        /*
+        TODO: Add PEL
+        Callout: Firmware callout
+        Type: Informational
+        Description: errorMsg : e.what()
+
+        After PEL do a throw with complete msg and stating that PEL has been
+        logged.
+        */
     }
 }
 
@@ -363,6 +383,7 @@ void Worker::getSystemJson(std::string& systemJson,
         auto itrToIM = config::systemType.find(imKwdValue);
         if (itrToIM == config::systemType.end())
         {
+            // TODO: Add imKwdValue to the throw.
             throw DataException("IM keyword does not map to any system type");
         }
 
@@ -421,17 +442,29 @@ void Worker::setDeviceTreeAndJson()
     {
         if (ec)
         {
+            /*
+            TODO: Add PEL
+            Callout: Firmware callout
+            Type: Informational
+            Description: Symlink status unknown with exception : e.what()
+            */
+
+            /*
+            Revisit: Do we need to throw?
             throw std::runtime_error(
                 "File system call to exist failed with error = " +
                 ec.message());
+            */
         }
 
         // implies it is a fresh boot/factory reset.
         // Create the directory for hosting the symlink
+        // TODO: Change to directory from directories with a defect.
         if (!std::filesystem::create_directories(VPD_SYMLIMK_PATH, ec))
         {
             if (ec)
             {
+                // TODO: Add "VPD_SYMLIMK_PATH" into the log that is thrown.
                 throw std::runtime_error(
                     "File system call to create directory failed with error = " +
                     ec.message());
@@ -442,6 +475,7 @@ void Worker::setDeviceTreeAndJson()
     // JSON is madatory for processing of this API.
     if (m_parsedJson.empty())
     {
+        // TODO: Change to JSON exception with details.
         throw std::runtime_error("JSON is empty");
     }
 

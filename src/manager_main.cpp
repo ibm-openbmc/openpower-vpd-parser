@@ -45,6 +45,12 @@ int main(int, char**)
     }
     catch (const std::exception& e)
     {
+        /*
+        TODO: Add PEL
+        Callout: Firmware callout
+        Type: Informational
+        Description: Manager service failed with : e.what()
+        */
         std::cerr << e.what() << std::endl;
     }
     exit(EXIT_FAILURE);

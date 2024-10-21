@@ -120,7 +120,8 @@ inline nlohmann::json getParsedJson(const std::string& pathToJson)
     }
     catch (const nlohmann::json::parse_error& e)
     {
-        throw std::runtime_error("Failed to parse JSON file");
+        throw std::runtime_error("Failed to parse JSON file. Reason [" +
+                                 std::string(e.what()) + "]");
     }
 }
 
