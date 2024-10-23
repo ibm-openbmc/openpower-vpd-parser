@@ -903,5 +903,44 @@ inline std::string getServiceName(const nlohmann::json& i_sysCfgJsonObj,
     }
     return std::string{};
 }
+
+/**
+ * @brief An API to check if a FRU is "powerOffOnly"
+ *
+ * Given the system config JSON and VPD FRU path, this API checks if the FRU
+ * VPD can be collected at Chassis Power Off state only.
+ *
+ * @param[in] i_sysCfgJsonObj - System config JSON object.
+ * @param[in] i_vpdFruPath - EEPROM path.
+ * @return - True if FRU VPD can be collected at Chassis Power Off state only.
+ *           False otherwise
+ */
+inline bool isFruPowerOffOnly(const nlohmann::json& i_sysCfgJsonObj,
+                              const std::string& i_vpdFruPath)
+{
+    if (i_vpdFruPath.empty())
+    {
+        logging::logMessage("FRU path is empty.");
+        return false;
+    }
+
+    if (!i_sysCfgJsonObj.contains("frus"))
+    {
+        logging::logMessage("Missing frus tag in system config JSON.");
+        return false;
+    }
+
+    if (!i_sysCfgJsonObj["frus"].contains(i_vpdFruPath))
+    {
+        logging::logMessage("JSON object does not contain EEPROM path \'" +
+                            i_vpdFruPath + "\'");
+        return false;
+    }
+
+    return ((i_sysCfgJsonObj["frus"][i_vpdFruPath].at(0))
+                .contains("powerOffOnly") &&
+            (i_sysCfgJsonObj["frus"][i_vpdFruPath].at(0)["powerOffOnly"]));
+}
+
 } // namespace jsonUtility
 } // namespace vpd
