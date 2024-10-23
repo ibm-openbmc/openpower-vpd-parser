@@ -65,6 +65,7 @@ using DbusVariantType = std::variant<
 
 using MapperGetObject =
     std::vector<std::pair<std::string, std::vector<std::string>>>;
+using MapperGetSubTree = std::map<std::string, std::map<std::string, std::vector<std::string>>>;
 
 /* A type for holding the innermost map of property::value.*/
 using IPZKwdValueMap = std::unordered_map<std::string, std::string>;

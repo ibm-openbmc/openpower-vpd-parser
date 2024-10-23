@@ -1694,6 +1694,11 @@
                         "systemCmd": {
                             "cmd": "echo 4-0050 > /sys/bus/i2c/drivers/at24/bind"
                         }
+                    },
+                    "deletion": {
+                        "systemCmd": {
+                            "cmd": "echo 4-0060 > /sys/bus/i2c/drivers/leds-pca955x/unbind"
+                        }
                     }
                 },
                 "postAction": {
@@ -1778,6 +1783,11 @@
                         },
                         "systemCmd": {
                             "cmd": "echo 5-0050 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    },
+                    "deletion": {
+                        "systemCmd": {
+                            "cmd": "echo 5-0060 > /sys/bus/i2c/drivers/leds-pca955x/unbind"
                         }
                     }
                 },
@@ -1864,6 +1874,11 @@
                         "systemCmd": {
                             "cmd": "echo 5-0051 > /sys/bus/i2c/drivers/at24/bind"
                         }
+                    },
+                    "deletion": {
+                        "systemCmd": {
+                            "cmd": "echo 5-0061 > /sys/bus/i2c/drivers/leds-pca955x/unbind"
+                        }
                     }
                 },
                 "postAction": {
@@ -1948,6 +1963,11 @@
                         },
                         "systemCmd": {
                             "cmd": "echo 11-0050 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    },
+                    "deletion": {
+                        "systemCmd": {
+                            "cmd": "echo 11-0060 > /sys/bus/i2c/drivers/leds-pca955x/unbind"
                         }
                     }
                 },
