@@ -1,8 +1,11 @@
 #include "config.h"
 
 #include "bios_handler.hpp"
+#include "event_logger.hpp"
+#include "exceptions.hpp"
 #include "logger.hpp"
 #include "manager.hpp"
+#include "types.hpp"
 
 #include <sdbusplus/asio/connection.hpp>
 #include <sdbusplus/asio/object_server.hpp>
@@ -43,9 +46,44 @@ int main(int, char**)
 
         exit(EXIT_SUCCESS);
     }
-    catch (const std::exception& e)
+    catch (const std::exception& l_ex)
     {
-        std::cerr << e.what() << std::endl;
+        if (typeid(l_ex) == typeid(vpd::JsonException))
+        {
+            vpd::EventLogger::createAsyncPel(
+                vpd::types::ErrorType::JsonFailure,
+                vpd::types::SeverityType::Informational, __FILE__, __FUNCTION__,
+                0,
+                std::string("VPD Manager service failed with : ") + l_ex.what(),
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
+        }
+        else if (typeid(l_ex) == typeid(vpd::GpioException))
+        {
+            vpd::EventLogger::createAsyncPel(
+                vpd::types::ErrorType::GpioError,
+                vpd::types::SeverityType::Informational, __FILE__, __FUNCTION__,
+                0,
+                std::string("VPD Manager service failed with: ") + l_ex.what(),
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
+        }
+        else if (typeid(l_ex) == typeid(sdbusplus::exception_t))
+        {
+            vpd::EventLogger::createAsyncPel(
+                vpd::types::ErrorType::DbusFailure,
+                vpd::types::SeverityType::Informational, __FILE__, __FUNCTION__,
+                0,
+                std::string("VPD Manager service failed with : ") + l_ex.what(),
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
+        }
+        else
+        {
+            vpd::EventLogger::createAsyncPel(
+                vpd::types::ErrorType::InvalidVpdMessage,
+                vpd::types::SeverityType::Informational, __FILE__, __FUNCTION__,
+                0,
+                std::string("VPD Manager service failed with : ") + l_ex.what(),
+                "BMC0001", std::nullopt, std::nullopt, std::nullopt);
+        }
     }
     exit(EXIT_FAILURE);
 }
