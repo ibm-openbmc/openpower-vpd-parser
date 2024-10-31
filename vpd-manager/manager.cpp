@@ -560,6 +560,41 @@ void Manager::performVPDRecollection()
             singleFru["inventoryPath"]
                 .get_ref<const nlohmann::json::string_t&>();
 
+        // clear VPD of FRU before re-collection.
+        inventory::InterfaceMap interfacesPropMap;
+        clearVpdOnRemoval(INVENTORY_PATH + inventoryPath, interfacesPropMap);
+
+        inventory::ObjectMap objectMap;
+        objectMap.emplace(inventoryPath, move(interfacesPropMap));
+
+        common::utility::callPIM(move(objectMap));
+
+        // check if any subtree exist under the parent path. If so clear VPD for
+        // them as well.
+        std::vector<std::string> interfaceList{
+            "xyz.openbmc_project.Inventory.Item"};
+        MapperResponse subTree = getObjectSubtreeForInterfaces(
+            INVENTORY_PATH + inventoryPath, 0, interfaceList);
+
+        for (auto [objectPath, serviceInterfaceMap] : subTree)
+        {
+            interfacesPropMap.clear();
+            clearVpdOnRemoval(objectPath, interfacesPropMap);
+
+            std::string subTreeObjPath{objectPath};
+            // Strip any inventory prefix in path
+            if (subTreeObjPath.find(INVENTORY_PATH) == 0)
+            {
+                subTreeObjPath =
+                    subTreeObjPath.substr(sizeof(INVENTORY_PATH) - 1);
+            }
+
+            objectMap.clear();
+            objectMap.emplace(subTreeObjPath, move(interfacesPropMap));
+
+            common::utility::callPIM(move(objectMap));
+        }
+
         bool prePostActionRequired = false;
 
         if ((jsonFile["frus"][item].at(0)).find("preAction") !=
@@ -567,7 +602,7 @@ void Manager::performVPDRecollection()
         {
             try
             {
-                if (executePreAction(jsonFile, item))
+                if (!executePreAction(jsonFile, item))
                 {
                     // if the FRU has preAction defined then its execution
                     // should pass to ensure bind/unbind of data.
@@ -577,9 +612,6 @@ void Manager::performVPDRecollection()
                         "Pre-Action execution failed for the FRU",
                         entry("ERROR=%s",
                               ("Inventory path: " + inventoryPath).c_str()));
-
-                    // As recollection failed delete FRU data.
-                    deleteFRUVPD(inventoryPath);
                     continue;
                 }
             }
@@ -590,10 +622,6 @@ void Manager::performVPDRecollection()
                 additionalData.emplace("DESCRIPTION", e.what());
                 createPEL(additionalData, PelSeverity::WARNING,
                           errIntfForGpioError, sdBus);
-
-                // As recollection failed delete FRU data.
-                deleteFRUVPD(inventoryPath);
-
                 continue;
             }
             prePostActionRequired = true;
@@ -631,9 +659,6 @@ void Manager::performVPDRecollection()
                     {
                         // If not, then take failure postAction
                         executePostFailAction(jsonFile, item);
-
-                        // As recollection failed delete FRU data.
-                        deleteFRUVPD(inventoryPath);
                     }
                     catch (const GpioException& e)
                     {
@@ -641,9 +666,6 @@ void Manager::performVPDRecollection()
                         additionalData.emplace("DESCRIPTION", e.what());
                         createPEL(additionalData, PelSeverity::WARNING,
                                   errIntfForGpioError, sdBus);
-
-                        // As recollection failed delete FRU data.
-                        deleteFRUVPD(inventoryPath);
                     }
                 }
                 else
@@ -875,32 +897,32 @@ void Manager::deleteFRUVPD(const sdbusplus::message::object_path& path)
         // check if we have cxp-port populated for the given object path.
         std::vector<std::string> interfaceList{
             "xyz.openbmc_project.State.Decorator.OperationalStatus"};
-
-        MapperResponse subTree = getObjectSubtreeForInterfaces(
-            INVENTORY_PATH + objPath, 0, interfaceList);
+        MapperResponse subTree = getObjectSubtreeForInterfaces(path, 0,
+                                                               interfaceList);
 
         if (subTree.size() != 0)
         {
             for (auto [objectPath, serviceInterfaceMap] : subTree)
             {
                 std::string subTreeObjPath{objectPath};
-
-                // Strip any inventory prefix in path
-                if (subTreeObjPath.find(INVENTORY_PATH) == 0)
+                if (subTreeObjPath.find("cxp_top") != std::string::npos ||
+                    subTreeObjPath.find("cxp_bot") != std::string::npos)
                 {
-                    subTreeObjPath =
-                        subTreeObjPath.substr(sizeof(INVENTORY_PATH) - 1);
+                    // Strip any inventory prefix in path
+                    if (subTreeObjPath.find(INVENTORY_PATH) == 0)
+                    {
+                        subTreeObjPath =
+                            subTreeObjPath.substr(sizeof(INVENTORY_PATH) - 1);
+                    }
+
+                    inventory::ObjectMap objectMap{
+                        {subTreeObjPath,
+                         {{"xyz.openbmc_project.State.Decorator.OperationalStatus",
+                           {{"Functional", true}}}}}};
+
+                    // objectMap.emplace(objectPath, move(interfaceMap));
+                    common::utility::callPIM(move(objectMap));
                 }
-
-                inventory::ObjectMap objectMap{
-                    {subTreeObjPath,
-                     {{"xyz.openbmc_project.State.Decorator.OperationalStatus",
-                       {{"Functional", true}}},
-                      {"xyz.openbmc_project.Inventory.Item",
-                       {{"Present", false}}}}}};
-
-                // objectMap.emplace(objectPath, move(interfaceMap));
-                common::utility::callPIM(move(objectMap));
             }
         }
 
