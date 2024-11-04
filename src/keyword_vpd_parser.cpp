@@ -133,4 +133,97 @@ void KeywordVpdParser::checkNextBytesValidity(uint8_t i_numberOfBytes)
     }
 }
 
+types::DbusVariantType KeywordVpdParser::readKeywordFromHardware(
+    const types::ReadVpdParams i_paramsToReadData)
+{
+    types::Keyword l_keyword;
+
+    if (const types::Keyword* l_kwData =
+            std::get_if<types::Keyword>(&i_paramsToReadData))
+    {
+        l_keyword = *l_kwData;
+    }
+    else
+    {
+        logging::logMessage("Given VPD type is not supported.");
+        throw types::DbusInvalidArgument();
+    }
+
+    if (l_keyword.empty())
+    {
+        logging::logMessage("Given an empty keyword name.");
+        throw types::DbusInvalidArgument();
+    }
+
+    // Iterate through VPD vector to find the keyword
+    if (findKeyword(l_keyword) != 0)
+    {
+        logging::logMessage("Keyword " + l_keyword + " not found.");
+        throw types::DbusInvalidArgument();
+    }
+
+    // Skip bytes representing the keyword name
+    std::advance(m_vpdIterator, constants::TWO_BYTES);
+
+    // Get size of the keyword
+    const auto l_keywordSize = *m_vpdIterator;
+
+    // Skip bytes representing the size of the keyword
+    std::advance(m_vpdIterator, constants::ONE_BYTE);
+
+    // Read the keyword's value and return
+    return types::DbusVariantType{types::BinaryVector(
+        m_vpdIterator, std::ranges::next(m_vpdIterator, l_keywordSize,
+                                         m_keywordVpdVector.cend()))};
+}
+
+int KeywordVpdParser::findKeyword(const std::string& i_keyword)
+{
+    m_vpdIterator = m_keywordVpdVector.begin();
+
+    // Skip Keyword VPD's start tag
+    std::advance(m_vpdIterator, sizeof(constants::KW_VPD_START_TAG));
+
+    // Get size of the header
+    uint16_t l_dataSize = getKwDataSize();
+
+    // Skip bytes which represents the size of header + Skip header data
+    std::advance(m_vpdIterator, constants::TWO_BYTES + l_dataSize);
+
+    // Skip Keyword VPD pair's start tag
+    std::advance(m_vpdIterator, constants::ONE_BYTE);
+
+    // Get total size of keyword value pairs
+    auto l_totalSize = getKwDataSize();
+
+    if (l_totalSize <= 0)
+    {
+        // Keyword not found
+        return -1;
+    }
+
+    // Skip bytes which represents the total size of kw-value pairs
+    std::advance(m_vpdIterator, constants::TWO_BYTES);
+
+    while (l_totalSize > 0)
+    {
+        // Get keyword name
+        std::string l_keywordName(m_vpdIterator,
+                                  m_vpdIterator + constants::TWO_BYTES);
+
+        if (l_keywordName == i_keyword)
+        {
+            // Keyword successfully found
+            return 0;
+        }
+        std::advance(m_vpdIterator, constants::TWO_BYTES);
+        size_t l_kwSize = *m_vpdIterator;
+
+        std::advance(m_vpdIterator, constants::ONE_BYTE + l_kwSize);
+        l_totalSize -= constants::TWO_BYTES + constants::ONE_BYTE + l_kwSize;
+    }
+
+    // Keyword not found
+    return -1;
+}
 } // namespace vpd

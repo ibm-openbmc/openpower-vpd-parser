@@ -41,6 +41,19 @@ class KeywordVpdParser : public ParserInterface
      */
     types::VPDMapVariant parse();
 
+    /**
+     * @brief API to read keyword's value from hardware
+     *
+     * @param[in] i_paramsToReadData - Data required to perform read
+     *
+     * @throw
+     * sdbusplus::xyz::openbmc_project::Common::Error::InvalidArgument
+     *
+     * @return On success return the value read. On failure throw exception.
+     */
+    types::DbusVariantType
+        readKeywordFromHardware(const types::ReadVpdParams i_paramsToReadData);
+
   private:
     /**
      * @brief Parse the VPD data and emplace them as pair into the Map.
@@ -87,6 +100,19 @@ class KeywordVpdParser : public ParserInterface
      * @throw DataException - Truncated VPD data, check VPD.
      */
     void checkNextBytesValidity(uint8_t numberOfBytes);
+
+    /**
+     * @brief API to iterate through the VPD vector to find the given keyword.
+     *
+     * This API iterates through VPD vector using m_vpdIterator and finds the
+     * given keyword. m_vpdIterator points to the keyword name if find is
+     * successful.
+     *
+     * @param[in] i_keyword - Keyword name.
+     *
+     * @return 0 On successful find, -1 on failure.
+     */
+    int findKeyword(const std::string& i_keyword);
 
     /*Vector of keyword VPD data*/
     const types::BinaryVector& m_keywordVpdVector;
