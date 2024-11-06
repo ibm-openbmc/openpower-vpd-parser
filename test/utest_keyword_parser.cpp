@@ -139,7 +139,7 @@ TEST(KeywordVpdParserTest, EmptyInput)
 {
     // Blank keyword VPD
     types::BinaryVector emptyVector{};
-    KeywordVpdParser l_keywordParser(std::move(emptyVector));
+    KeywordVpdParser l_keywordParser(std::move(emptyVector), std::string());
 
     EXPECT_THROW(l_keywordParser.parse(), std::exception);
 }

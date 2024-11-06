@@ -120,7 +120,8 @@ std::shared_ptr<ParserInterface>
         {
             logging::logMessage("KWD vpd parser selected for VPD file path " +
                                 i_vpdFilePath);
-            return std::make_shared<KeywordVpdParser>(i_vpdVector);
+            return std::make_shared<KeywordVpdParser>(i_vpdVector,
+                                                      i_vpdFilePath);
         }
 
         case vpdType::DDR5_DDIMM_MEMORY_VPD:

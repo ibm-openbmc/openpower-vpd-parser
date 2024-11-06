@@ -25,9 +25,10 @@ class KeywordVpdParser : public ParserInterface
      *
      * @param kwVpdVector - move it to object's m_keywordVpdVector
      */
-    KeywordVpdParser(const types::BinaryVector& kwVpdVector) :
+    KeywordVpdParser(const types::BinaryVector& kwVpdVector,
+                     const std::string& vpdFilePath) :
         m_keywordVpdVector(kwVpdVector),
-        m_vpdIterator(m_keywordVpdVector.begin())
+        m_vpdIterator(m_keywordVpdVector.begin()), m_vpdFilePath(vpdFilePath)
     {}
 
     /**
@@ -40,6 +41,18 @@ class KeywordVpdParser : public ParserInterface
      * @return map of keyword:value
      */
     types::VPDMapVariant parse();
+
+    /**
+     * @brief API to write keyword's value on hardware.
+     *
+     * @param[in] i_paramsToWriteData - Data required to perform write.
+     *
+     * @throw sdbusplus::xyz::openbmc_project::Common::Error::InvalidArgument.
+     *
+     * @return On success returns number of bytes written on hardware, On
+     * failure throws exception.
+     */
+    int writeKeywordOnHardware(const types::WriteVpdParams i_paramsToWriteData);
 
   private:
     /**
@@ -88,10 +101,26 @@ class KeywordVpdParser : public ParserInterface
      */
     void checkNextBytesValidity(uint8_t numberOfBytes);
 
+    /**
+     * @brief API to iterate through the VPD vector to find the given keyword.
+     *
+     * This API iterates through VPD vector using m_vpdIterator and finds the
+     * given keyword. m_vpdIterator points to the keyword name if find is
+     * successful.
+     *
+     * @param[in] i_keyword - Keyword name.
+     *
+     * @return 0 On successful find, -1 on failure.
+     */
+    int findKeyword(const std::string& i_keyword);
+
     /*Vector of keyword VPD data*/
     const types::BinaryVector& m_keywordVpdVector;
 
     /*Iterator to VPD data*/
     types::BinaryVector::const_iterator m_vpdIterator;
+
+    // Holds the VPD file path
+    const std::string& m_vpdFilePath;
 };
 } // namespace vpd
