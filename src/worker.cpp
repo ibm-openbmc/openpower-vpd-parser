@@ -807,6 +807,13 @@ bool Worker::primeInventory(const std::string& i_vpdFilePath)
                                           "xyz.openbmc_project.Inventory.Item",
                                           move(l_propertyValueMap));
 
+        types::PropertyMap l_propertyMap;
+        l_propertyMap.emplace("Functional", true);
+        vpdSpecificUtility::insertOrMerge(
+            l_interfaces,
+            "xyz.openbmc_project.State.Decorator.OperationalStatus",
+            move(l_propertyMap));
+
         if (l_Fru.value("inherit", true) &&
             m_parsedJson.contains("commonInterfaces"))
         {
@@ -1020,6 +1027,13 @@ void Worker::populateDbus(const types::VPDMapVariant& parsedVpdMap,
             {
                 processEmbeddedAndSynthesizedFrus(aFru, interfaces);
             }
+
+            types::PropertyMap l_propertyMap;
+            l_propertyMap.emplace("Functional", true);
+            vpdSpecificUtility::insertOrMerge(
+                interfaces,
+                "xyz.openbmc_project.State.Decorator.OperationalStatus",
+                move(l_propertyMap));
 
             objectInterfaceMap.emplace(std::move(fruObjectPath),
                                        std::move(interfaces));
