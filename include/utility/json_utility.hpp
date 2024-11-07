@@ -206,15 +206,6 @@ inline bool executePostFailAction(const nlohmann::json& i_parsedConfigJson,
         return false;
     }
 
-    if (!(i_parsedConfigJson["frus"][i_vpdFilePath].at(0).contains(
-            "PostFailAction")))
-    {
-        logging::logMessage(
-            "PostFailAction flag missing in config JSON. Abort processing");
-
-        return false;
-    }
-
     if (!(i_parsedConfigJson["frus"][i_vpdFilePath].at(0))["PostFailAction"]
              .contains(i_flagToProcess))
     {
@@ -454,13 +445,6 @@ inline bool procesSetGpioTag(const nlohmann::json& i_parsedConfigJson,
         l_errMsg += " Reason: ";
         l_errMsg += ex.what();
         l_errMsg += " File: " + i_vpdFilePath + " Pel Logged";
-
-        // Take failure postAction
-        if (!executePostFailAction(i_parsedConfigJson, i_vpdFilePath,
-                                   i_flagToProcess))
-        {
-            logging::logMessage("executePostFailAction failed from exception.");
-        }
 
         // ToDo -- Update Internal RC code
         EventLogger::createAsyncPelWithInventoryCallout(

@@ -1159,50 +1159,27 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
             "Empty VPD file path passed to Worker::parseVpdFile. Abort processing");
     }
 
-    bool l_isPostFailActionRequired = false;
-
-    // check if the FRU qualifies for pre action.
-    if (jsonUtility::isActionRequired(m_parsedJson, i_vpdFilePath, "preAction",
-                                      "collection"))
+    try
     {
-        // post fail action is required for a FRU if pre action is successful
-        // and some post fail action is defined for the FRU in the System Config
-        // JSON.
-        if (processPreAction(i_vpdFilePath, "collection") &&
-            jsonUtility::isActionRequired(m_parsedJson, i_vpdFilePath,
-                                          "PostFailAction", "collection"))
+        if (jsonUtility::isActionRequired(m_parsedJson, i_vpdFilePath,
+                                          "preAction", "collection"))
         {
-            l_isPostFailActionRequired = true;
-        }
-        else
-        {
-            throw std::runtime_error("Pre-Action failed for path " +
-                                     i_vpdFilePath +
-                                     " Aborting collection for this FRU");
-        }
-    }
-
-    if (!std::filesystem::exists(i_vpdFilePath))
-    {
-        if (l_isPostFailActionRequired)
-        {
-            if (!jsonUtility::executePostFailAction(m_parsedJson, i_vpdFilePath,
-                                                    "collection"))
+            if (!processPreAction(i_vpdFilePath, "collection"))
             {
-                throw std::runtime_error("Post fail action failed for path " +
-                                         i_vpdFilePath +
-                                         " Aborting collection for this FRU");
+                throw std::runtime_error("Pre-Action failed");
             }
         }
 
-        throw std::runtime_error("Could not find file path " + i_vpdFilePath +
-                                 "Skipping parser trigger for the EEPROM");
-    }
+        if (!std::filesystem::exists(i_vpdFilePath))
+        {
+            throw std::runtime_error("Could not find file path " +
+                                     i_vpdFilePath +
+                                     "Skipping parser trigger for the EEPROM");
+        }
 
-    std::shared_ptr<Parser> vpdParser = std::make_shared<Parser>(i_vpdFilePath,
-                                                                 m_parsedJson);
-    try
-    {
+        std::shared_ptr<Parser> vpdParser =
+            std::make_shared<Parser>(i_vpdFilePath, m_parsedJson);
+
         types::VPDMapVariant l_parsedVpd = vpdParser->parse();
 
         // Before returning, as collection is over, check if FRU qualifies for
@@ -1224,8 +1201,9 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
     }
     catch (std::exception& l_ex)
     {
-        // If VPD parsing fails, and post fail action is required, execute it.
-        if (l_isPostFailActionRequired)
+        // If post fail action is required, execute it.
+        if (jsonUtility::isActionRequired(m_parsedJson, i_vpdFilePath,
+                                          "PostFailAction", "collection"))
         {
             if (!jsonUtility::executePostFailAction(m_parsedJson, i_vpdFilePath,
                                                     "collection"))
