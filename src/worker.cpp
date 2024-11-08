@@ -649,6 +649,12 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                             propValuePair.value().get<std::string>(),
                             parsedVpdMap);
                     propertyMap.emplace(property, value);
+
+                    auto l_locCodeProperty = propertyMap;
+                    vpdSpecificUtility::insertOrMerge(
+                        interfaceMap,
+                        std::string(constants::xyzLocationCodeInf),
+                        move(l_locCodeProperty));
                 }
                 else
                 {

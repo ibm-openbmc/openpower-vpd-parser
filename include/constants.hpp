@@ -97,6 +97,8 @@ constexpr auto kwdAMM = "D0";
 constexpr auto kwdClearNVRAM_CreateLPAR = "D1";
 constexpr auto kwdKeepAndClear = "D1";
 constexpr auto locationCodeInf = "com.ibm.ipzvpd.Location";
+constexpr auto xyzLocationCodeInf =
+    "xyz.openbmc_project.Inventory.Decorator.LocationCode";
 constexpr auto operationalStatusInf =
     "xyz.openbmc_project.State.Decorator.OperationalStatus";
 constexpr auto assetInf = "xyz.openbmc_project.Inventory.Decorator.Asset";
