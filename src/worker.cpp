@@ -820,6 +820,9 @@ bool Worker::primeInventory(const std::string& i_vpdFilePath)
                                std::monostate{});
         }
 
+        processFunctionalPorperty(l_Fru["inventoryPath"], l_interfaces);
+        processEnabledProperty(l_Fru["inventoryPath"], l_interfaces);
+
         l_objectInterfaceMap.emplace(std::move(l_fruObjectPath),
                                      std::move(l_interfaces));
     }
@@ -974,6 +977,68 @@ bool Worker::processFruWithCCIN(const nlohmann::json& singleFru,
     return true;
 }
 
+void Worker::processFunctionalPorperty(const std::string& i_inventoryObjPath,
+                                       types::InterfaceMap& io_interfaces)
+{
+    if (!dbusUtility::isChassisPowerOn())
+    {
+        auto l_retVal = dbusUtility::readDbusProperty(
+            constants::pimServiceName, i_inventoryObjPath,
+            constants::operationalStatusInf, "Functional");
+
+        if (std::get_if<bool>(&l_retVal))
+        {
+            // The value is already on Dbus. No need to update.
+            return;
+        }
+        else
+        {
+            // Implies value is not there in D-Bus. Populate it with default
+            // value "true".
+            types::PropertyMap l_functionalProp;
+            l_functionalProp.emplace("Functional", true);
+            vpdSpecificUtility::insertOrMerge(io_interfaces,
+                                              constants::operationalStatusInf,
+                                              move(l_functionalProp));
+        }
+    }
+
+    // if chassis is power on. Functional property should be there on D-Bus.
+    // Don't process.
+    return;
+}
+
+void Worker::processEnabledProperty(const std::string& i_inventoryObjPath,
+                                    types::InterfaceMap& io_interfaces)
+{
+    if (!dbusUtility::isChassisPowerOn())
+    {
+        auto l_retVal = dbusUtility::readDbusProperty(
+            constants::pimServiceName, i_inventoryObjPath, constants::enableInf,
+            "Enabled");
+
+        if (std::get_if<bool>(&l_retVal))
+        {
+            // The value is already on Dbus. No need to update.
+            return;
+        }
+        else
+        {
+            // Implies value is not there in D-Bus. Populate it with default
+            // value "true".
+            types::PropertyMap l_functionalProp;
+            l_functionalProp.emplace("Enabled", true);
+            vpdSpecificUtility::insertOrMerge(io_interfaces,
+                                              constants::operationalStatusInf,
+                                              move(l_functionalProp));
+        }
+    }
+
+    // if chassis is power on. Enabled property should be there on D-Bus.
+    // Don't process.
+    return;
+}
+
 void Worker::populateDbus(const types::VPDMapVariant& parsedVpdMap,
                           types::ObjectMap& objectInterfaceMap,
                           const std::string& vpdFilePath)
@@ -1026,6 +1091,9 @@ void Worker::populateDbus(const types::VPDMapVariant& parsedVpdMap,
             {
                 processEmbeddedAndSynthesizedFrus(aFru, interfaces);
             }
+
+            processFunctionalPorperty(inventoryPath, interfaces);
+            processEnabledProperty(inventoryPath, interfaces);
 
             objectInterfaceMap.emplace(std::move(fruObjectPath),
                                        std::move(interfaces));

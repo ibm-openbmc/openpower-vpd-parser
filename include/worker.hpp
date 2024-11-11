@@ -415,6 +415,36 @@ class Worker
      */
     void performBackupAndRestore(types::VPDMapVariant& io_srcVpdMap);
 
+    /**
+     * @brief API to update "Functional" property.
+     *
+     * The API sets the default value for "Functional" property once if the
+     * property is not yet populated over DBus. As the property value is not
+     * controlled by the VPD-Collection process, if it is found already
+     * populated, the functions skips re-populating the property so that already
+     * existing value can be retained.
+     *
+     * @param[in] i_inventoryObjPath - Inventory path as read from config JSON.
+     * @param[in] io_interfaces - Map to hold all the interfaces for the FRU.
+     */
+    void processFunctionalPorperty(const std::string& i_inventoryObjPath,
+                                   types::InterfaceMap& io_interfaces);
+
+    /**
+     * @brief API to update "enabled" property.
+     *
+     * The API sets the default value for "enabled" property once if the
+     * property is not yet populated over DBus. As the property value is not
+     * controlled by the VPD-Collection process, if it is found already
+     * populated, the functions skips re-populating the property so that already
+     * existing value can be retained.
+     *
+     * @param[in] i_inventoryObjPath - Inventory path as read from config JSON.
+     * @param[in] io_interfaces - Map to hold all the interfaces for the FRU.
+     */
+    void processEnabledProperty(const std::string& i_inventoryObjPath,
+                                types::InterfaceMap& io_interfaces);
+
     // Parsed JSON file.
     nlohmann::json m_parsedJson{};
 

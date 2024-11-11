@@ -116,6 +116,7 @@ constexpr auto xyzLocationCodeInf =
     "xyz.openbmc_project.Inventory.Decorator.LocationCode";
 constexpr auto operationalStatusInf =
     "xyz.openbmc_project.State.Decorator.OperationalStatus";
+constexpr auto enableInf = "xyz.openbmc_project.Object.Enable";
 constexpr auto assetInf = "xyz.openbmc_project.Inventory.Decorator.Asset";
 constexpr auto inventoryItemInf = "xyz.openbmc_project.Inventory.Item";
 constexpr auto pldmServiceName = "xyz.openbmc_project.PLDM";
