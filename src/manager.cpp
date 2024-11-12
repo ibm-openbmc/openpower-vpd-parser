@@ -15,6 +15,7 @@
 #include "utility/vpd_specific_utility.hpp"
 
 #include <boost/asio/steady_timer.hpp>
+#include <sdbusplus/bus/match.hpp>
 #include <sdbusplus/message.hpp>
 
 namespace vpd
@@ -32,6 +33,9 @@ Manager::Manager(
 
         // Set up minimal things that is needed before bus name is claimed.
         m_worker->performInitialSetup();
+
+        // set callback to detect any asset tag change
+        registerAssetChangeCallback();
 
         // set async timer to detect if system VPD is published on D-Bus.
         SetTimerToDetectSVPDOnDbus();
@@ -116,6 +120,65 @@ Manager::Manager(
 }
 
 #ifdef IBM_SYSTEM
+void Manager::registerAssetTagChangeCallback()
+{
+    static std::shared_ptr<sdbusplus::bus::match_t> l_assetMatch =
+        std::make_shared<sdbusplus::bus::match_t>(
+            *m_asioConnection,
+            sdbusplus::bus::match::rules::propertiesChanged(
+                constants::systemInvPath, constants::assetTagInf),
+            [this](sdbusplus::message_t& l_msg) {
+        processAssetTagChangeCallback(l_msg)
+    });
+}
+
+void Manager::processAssetTagChangeCallback(sdbusplus::message_t& i_msg)
+{
+    try
+    {
+        if (i_msg.is_method_error())
+        {
+            throw std::runtime_error(
+                "Error reading callback msg for asset tag.");
+        }
+
+        std::string l_objectPath;
+        types::PropertyMap l_propMap;
+        i_msg.read(l_objectPath, l_propMap);
+
+        const auto& l_itrToAssetTag = l_propMap.find("AssetTag");
+        if (l_itrToAssetTag != l_propMap.end())
+        {
+            if (auto l_assetTag =
+                    std::get_if<std::string>(&(l_itrToAssetTag->second)))
+            {
+                // Call Notify to persist the AssetTag
+                types::ObjectMap l_objectMap = {
+                    {sdbusplus::message::object_path(constants::systemInvPath),
+                     {{constants::assetTagInf, {{"AssetTag", *l_assetTag}}}}}};
+
+                // Notify PIM
+                if (!dbusUtility::callPIM(move(l_objectMap)))
+                {
+                    throw std::runtime_error(
+                        "Call to PIM failed for asset tag update.");
+                }
+            }
+        }
+        else
+        {
+            throw std::runtime_error(
+                "Could not find asset tag in callback message.");
+        }
+    }
+    catch (const std::exception& l_ex)
+    {
+        // TODO: Log PEL with below description.
+        logging::logMessage("Asset tag callback update failed with error: " +
+                            std::string(l_ex.what()));
+    }
+}
+
 void Manager::SetTimerToDetectSVPDOnDbus()
 {
     static boost::asio::steady_timer timer(*m_ioContext);

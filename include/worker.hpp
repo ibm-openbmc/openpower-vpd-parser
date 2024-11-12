@@ -445,6 +445,15 @@ class Worker
     void processEnabledProperty(const std::string& i_inventoryObjPath,
                                 types::InterfaceMap& io_interfaces);
 
+    /**
+     * @brief API to form asset tag string for the system.
+     *
+     * @param[in] i_parsedVpdMap - Parsed VPD map.
+     * @return - Formed asset tag string. Empty in case of any error.
+     */
+    std::string
+        createAssetTagString(const types::VPDMapVariant& i_parsedVpdMap);
+
     // Parsed JSON file.
     nlohmann::json m_parsedJson{};
 
@@ -461,6 +470,9 @@ class Worker
     // Note: This variable does not give information about successfull or failed
     // collection. It just states, if the VPD collection process is over or not.
     bool m_isAllFruCollected = false;
+
+    // To distinguish the factory reset path.
+    bool m_isFactoryResetDone = false;
 
     // Mutex to guard critical resource m_activeCollectionThreadCount.
     std::mutex m_mutex;

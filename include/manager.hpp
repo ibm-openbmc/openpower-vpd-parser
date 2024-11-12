@@ -219,6 +219,18 @@ class Manager
      * @throw std::runtime_error
      */
     void SetTimerToDetectVpdCollectionStatus();
+
+    /**
+     * @brief API to register callback for "AssetTag" property change.
+     */
+    void registerAssetChangeCallback();
+
+    /**
+     * @brief Callback API to be triggered on "AssetTag" property change.
+     *
+     * @param[in] i_msg - The callback message.
+     */
+    void processAssetTagChangeCallback(sdbusplus::message_t& i_msg);
 #endif
 
     /**

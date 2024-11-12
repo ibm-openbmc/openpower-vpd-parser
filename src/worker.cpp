@@ -417,6 +417,8 @@ void Worker::setDeviceTreeAndJson()
                     ec.message());
             }
         }
+
+        m_isFactoryResetDone = true;
     }
 
     // JSON is madatory for processing of this API.
@@ -1101,6 +1103,53 @@ void Worker::populateDbus(const types::VPDMapVariant& parsedVpdMap,
     }
 }
 
+std::string
+    Worker::createAssetTagString(const types::VPDMapVariant& i_parsedVpdMap)
+{
+    std::string l_assetTag;
+
+    try
+    {
+        // system VPD will be in IPZ format.
+        if (auto l_parsedVpdMap =
+                std::get_if<types::IPZVpdMap>(&i_parsedVpdMap))
+        {
+            auto l_itrToVsys = (*l_parsedVpdMap).find(constants::recVSYS);
+            if (l_itrToVsys != (*l_parsedVpdMap).end())
+            {
+                std::string l_tmKwdValue;
+                vpdSpecificUtility::getKwVal(l_itrToVsys->second,
+                                             constants::kwdTM, l_tmKwdValue);
+
+                std::string l_seKwdValue;
+                vpdSpecificUtility::getKwVal(l_itrToVsys->second,
+                                             constants::kwdSE, l_seKwdValue);
+
+                l_assetTag = std::string{"Server-"} + l_tmKwdValue +
+                             std::string{"-"} + l_seKwdValue;
+            }
+            else
+            {
+                throw std::runtime_error(
+                    "VSYS record not found in parsed VPD map to create Asset tag.");
+            }
+        }
+        else
+        {
+            throw std::runtime_error(
+                "Invalid VPD type recieved to create Asset tag.");
+        }
+    }
+    catch (const std::exception& l_ex)
+    {
+        // TODO:Log PEL with below description.
+        logging::logMessage("Asset tag can't be formed. Error = " +
+                            std::string(l_ex.what()));
+    }
+
+    return l_assetTag;
+}
+
 void Worker::publishSystemVPD(const types::VPDMapVariant& parsedVpdMap)
 {
     types::ObjectMap objectInterfaceMap;
@@ -1108,6 +1157,37 @@ void Worker::publishSystemVPD(const types::VPDMapVariant& parsedVpdMap)
     if (std::get_if<types::IPZVpdMap>(&parsedVpdMap))
     {
         populateDbus(parsedVpdMap, objectInterfaceMap, SYSTEM_VPD_FILE_PATH);
+
+        try
+        {
+            if (m_isFactoryResetDone)
+            {
+                const auto& l_assetTag = createAssetTagString(parsedVpdMap);
+
+                auto l_itrToSystemPath = objectInterfaceMap.find(
+                    sdbusplus::message::object_path(constants::systemInvPath));
+                if (l_itrToSystemPath == objectInterfaceMap.end())
+                {
+                    throw std::runtime_error(
+                        "System Path not found in object map.");
+                }
+
+                types::PropertyMap l_assetTagProperty;
+                l_assetTagProperty.emplace("AssetTag", l_assetTag);
+
+                (l_itrToSystemPath->second)
+                    .emplace(constants::assetTagInf,
+                             std::move(l_assetTagProperty));
+            }
+        }
+        catch (const std::exception& l_ex)
+        {
+            // TODO Log PEL with below description
+            logging::logMessage(
+                "Asset tag update failed with following error: " +
+                std::string(l_ex.what()));
+        }
+
         // Notify PIM
         if (!dbusUtility::callPIM(move(objectInterfaceMap)))
         {
