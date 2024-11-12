@@ -658,7 +658,7 @@ std::tuple<std::string, uint16_t> Manager::getUnexpandedLocationCode(
             constants::EXP_LOCATION_CODE_MIN_LENGTH)
         {
             l_unexpandedLocationCode =
-                i_expandedLocationCode[0] + "fcs" +
+                i_expandedLocationCode[0] + std::string("fcs") +
                 i_expandedLocationCode.substr(l_nodeEndPos + 1 +
                                                   constants::SE_KWD_LENGTH,
                                               std::string::npos);
