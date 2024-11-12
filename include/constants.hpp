@@ -94,6 +94,9 @@ static constexpr auto MASK_BYTE_BITS_012 = 0x07;
 static constexpr auto MASK_BYTE_BITS_567 = 0xE0;
 static constexpr auto MASK_BYTE_BITS_01234 = 0x1F;
 
+static constexpr auto MASK_BYTE_BIT_6 = 0x40;
+static constexpr auto MASK_BYTE_BIT_7 = 0x80;
+
 static constexpr auto SHIFT_BITS_0 = 0;
 static constexpr auto SHIFT_BITS_3 = 3;
 static constexpr auto SHIFT_BITS_5 = 5;

@@ -111,14 +111,22 @@ size_t DdimmVpdParser::getDdr5BasedDdimmSize(
                 std::to_string(i_iterator[constants::SPD_BYTE_235]) + "]");
             break;
         }
+        uint8_t l_channelsPerPhy = (((i_iterator[constants::SPD_BYTE_235] &
+                                      constants::MASK_BYTE_BITS_01)
+                                         ? constants::VALUE_1
+                                         : constants::VALUE_0) +
+                                    ((i_iterator[constants::SPD_BYTE_235] &
+                                      constants::MASK_BYTE_BITS_345)
+                                         ? constants::VALUE_1
+                                         : constants::VALUE_0));
+
         uint8_t l_channelsPerDdimm = (((i_iterator[constants::SPD_BYTE_235] &
-                                        constants::MASK_BYTE_BITS_01)
-                                           ? constants::VALUE_1
-                                           : constants::VALUE_0) +
+                                        constants::MASK_BYTE_BIT_6) >>
+                                       constants::VALUE_6) +
                                       ((i_iterator[constants::SPD_BYTE_235] &
-                                        constants::MASK_BYTE_BITS_345)
-                                           ? constants::VALUE_1
-                                           : constants::VALUE_0));
+                                        constants::MASK_BYTE_BIT_7) >>
+                                       constants::VALUE_7)) *
+                                     l_channelsPerPhy;
 
         if (!checkValidValue(i_iterator[constants::SPD_BYTE_235] &
                                  constants::MASK_BYTE_BITS_012,
@@ -167,12 +175,25 @@ size_t DdimmVpdParser::getDdr5BasedDdimmSize(
             getDdr5DensityPerDie(i_iterator[constants::SPD_BYTE_4] &
                                  constants::MASK_BYTE_BITS_01234);
 
-        uint8_t l_ranksPerChannel = ((i_iterator[constants::SPD_BYTE_234] &
-                                      constants::MASK_BYTE_BITS_345) >>
-                                     constants::VALUE_3) +
-                                    (i_iterator[constants::SPD_BYTE_234] &
-                                     constants::MASK_BYTE_BITS_012) +
-                                    constants::VALUE_2;
+        uint8_t l_ranksPerChannel = 0;
+
+        if (((i_iterator[constants::SPD_BYTE_234] &
+              constants::MASK_BYTE_BIT_7) >>
+             VALUE_7))
+        {
+            l_ranksPerChannel = ((i_iterator[constants::SPD_BYTE_234] &
+                                  constants::MASK_BYTE_BITS_345) >>
+                                 constants::VALUE_3) +
+                                constants::VALUE_1;
+        }
+        else if (((i_iterator[SVPD_JEDEC_BYTE_235] &
+                   constants::MASK_BYTE_BIT_6) >>
+                  constants::VALUE_6))
+        {
+            l_ranksPerChannel = (i_iterator[constants::SPD_BYTE_234] &
+                                 constants::MASK_BYTE_BITS_012) +
+                                constants::VALUE_1;
+        }
 
         if (!checkValidValue(i_iterator[constants::SPD_BYTE_6] &
                                  constants::MASK_BYTE_BITS_567,
@@ -191,6 +212,7 @@ size_t DdimmVpdParser::getDdr5BasedDdimmSize(
                                     constants::MASK_BYTE_BITS_567) >>
                                    constants::VALUE_5));
 
+        // DDIMM size is calculated in GB
         l_dimmSize = (l_channelsPerDdimm * l_busWidthPerChannel *
                       l_diePerPackage * l_densityPerDie * l_ranksPerChannel) /
                      (8 * l_dramWidth);
