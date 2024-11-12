@@ -100,6 +100,7 @@ static constexpr auto SHIFT_BITS_5 = 5;
 
 static constexpr auto ASCII_OF_SPACE = 32;
 
+constexpr auto systemInvPath = "/xyz/openbmc_project/inventory/system";
 constexpr auto pimPath = "/xyz/openbmc_project/inventory";
 constexpr auto pimIntf = "xyz.openbmc_project.Inventory.Manager";
 constexpr auto ipzVpdInf = "com.ibm.ipzvpd.";
@@ -134,6 +135,7 @@ constexpr auto biosConfigMgrInterface =
     "xyz.openbmc_project.BIOSConfig.Manager";
 constexpr auto systemVpdInvPath =
     "/xyz/openbmc_project/inventory/system/chassis/motherboard";
+constexpr auto assetTagInf = "xyz.openbmc_project.Inventory.Decorator.AssetTag";
 static constexpr auto BD_YEAR_END = 4;
 static constexpr auto BD_MONTH_END = 7;
 static constexpr auto BD_DAY_END = 10;

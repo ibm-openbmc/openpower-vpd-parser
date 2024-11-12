@@ -417,6 +417,8 @@ void Worker::setDeviceTreeAndJson()
                     ec.message());
             }
         }
+
+        m_isfactoryResetDone = true;
     }
 
     // JSON is madatory for processing of this API.
@@ -1101,6 +1103,39 @@ void Worker::populateDbus(const types::VPDMapVariant& parsedVpdMap,
     }
 }
 
+std::string Worker::getAssetTag(const types::VPDMapVariant& i_parsedVpdMap)
+{
+    std::string l_assetTag;
+
+    auto l_itrToVsys = parsedVpdMap.find(constants::recVSYS);
+    if (l_itrToVsys != parsedVpdMap.end())
+    {
+        try
+        {
+            std::string l_tmKwdValue;
+            vpdSpecificUtility::getKwVal(l_itrToVsys->second, constants::kwdTM,
+                                         l_tmKwdValue);
+
+            std::string l_seKwdValue;
+            vpdSpecificUtility::getKwVal(l_itrToVsys->second, constants::kwdSE,
+                                         l_seKwdValue);
+
+            l_assetTag = std::string{"Server-"} + l_tmKwdValue +
+                         std::string{"-"} + l_seKwdValue;
+
+            std::cout << "Asset Tag extracted = " << l_assetTag << std::endl;
+        }
+        catch (const std::exception& l_ex)
+        {
+            // TODO:Informational PEL
+            logging::logMessage("Asset tag can't be formed. Error = " +
+                                l_ex.what());
+        }
+    }
+
+    return l_assetTag;
+}
+
 void Worker::publishSystemVPD(const types::VPDMapVariant& parsedVpdMap)
 {
     types::ObjectMap objectInterfaceMap;
@@ -1108,6 +1143,39 @@ void Worker::publishSystemVPD(const types::VPDMapVariant& parsedVpdMap)
     if (std::get_if<types::IPZVpdMap>(&parsedVpdMap))
     {
         populateDbus(parsedVpdMap, objectInterfaceMap, SYSTEM_VPD_FILE_PATH);
+
+        if (m_isFactoryResetDone)
+        {
+            const auto& l_assetTag = getAssetTag(parsedVpdMap);
+
+            if (!l_assetTag.empty())
+            {
+                auto l_itrToSystemPath =
+                    objectInterfaceMap.find(constants::systemInvPath);
+                if (l_itrToInterfaceMap == objectInterfaceMap.end())
+                {
+                    // TODO: Informational PEL.
+                    logging::logMessage(
+                        "System Path not found in object map. Can't update asset tag");
+                }
+                else
+                {
+                    types::PropertyMap l_assetTagProperty;
+                    l_assetTagProperty.emplace("AssetTag", l_assetTag);
+
+                    (l_itrToInterfaceMap->second)
+                        .insert(constants::assetTagInf,
+                                std::move(l_assetTagProperty));
+                }
+            }
+            else
+            {
+                // TODO: Informational PEL.
+                logging::logMessage(
+                    "Asset tag string is empty. Can't update asset tag");
+            }
+        }
+
         // Notify PIM
         if (!dbusUtility::callPIM(move(objectInterfaceMap)))
         {
