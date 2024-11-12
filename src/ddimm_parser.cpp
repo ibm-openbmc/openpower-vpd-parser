@@ -179,14 +179,14 @@ size_t DdimmVpdParser::getDdr5BasedDdimmSize(
 
         if (((i_iterator[constants::SPD_BYTE_234] &
               constants::MASK_BYTE_BIT_7) >>
-             VALUE_7))
+             constants::VALUE_7))
         {
             l_ranksPerChannel = ((i_iterator[constants::SPD_BYTE_234] &
                                   constants::MASK_BYTE_BITS_345) >>
                                  constants::VALUE_3) +
                                 constants::VALUE_1;
         }
-        else if (((i_iterator[SVPD_JEDEC_BYTE_235] &
+        else if (((i_iterator[constants::SPD_BYTE_235] &
                    constants::MASK_BYTE_BIT_6) >>
                   constants::VALUE_6))
         {

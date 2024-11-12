@@ -16,7 +16,7 @@ using namespace vpd;
 TEST(DdimmVpdParserTest, GoodTestCase)
 {
     types::DdimmVpdMap l_ddimmMap{
-        std::pair<std::string, size_t>{"MemorySizeInKB", 0x4000000},
+        std::pair<std::string, size_t>{"MemorySizeInKB", 0x2000000},
         std::pair<std::string, types::BinaryVector>{
             "FN", {0x30, 0x33, 0x48, 0x44, 0x37, 0x30, 0x30}},
         std::pair<std::string, types::BinaryVector>{
