@@ -616,7 +616,8 @@ void Worker::populateKwdVPDpropertyMap(const types::KeywordVpdMap& keyordVPDMap,
 
         if (!propertyValueMap.empty())
         {
-            interfaceMap.emplace(constants::kwdVpdInf, move(propertyValueMap));
+            vpdSpecificUtility::insertOrMerge(
+                interfaceMap, constants::kwdVpdInf, move(propertyValueMap));
         }
     }
 }
