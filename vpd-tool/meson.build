@@ -5,7 +5,8 @@ else
     CLI11_dep = dependency('CLI11')
 endif
 
-dependency_list = [CLI11_dep]
+sdbusplus = dependency('sdbusplus', fallback: [ 'sdbusplus', 'sdbusplus_dep' ])
+dependency_list = [CLI11_dep, sdbusplus]
 
 sources = ['src/vpd_tool_main.cpp',
             'src/vpd_tool.cpp']

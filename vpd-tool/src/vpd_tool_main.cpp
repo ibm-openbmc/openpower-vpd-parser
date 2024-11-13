@@ -1,4 +1,5 @@
 #include "tool_constants.hpp"
+#include "vpd_tool.hpp"
 
 #include <CLI/CLI.hpp>
 
@@ -45,21 +46,25 @@ int main(int argc, char** argv)
     auto l_hardwareFlag = l_app.add_flag("--Hardware, -H",
                                          "CAUTION: Developer only option.");
 
+    // ToDo: Take offset value from user for hardware path.
+
     CLI11_PARSE(l_app, argc, argv);
 
-    if (*l_objectOption && l_vpdPath.empty())
+    if ((l_objectOption->count() > 0) && l_vpdPath.empty())
     {
         std::cout << "Given path is empty." << std::endl;
-        return -1;
+        return l_rc;
     }
 
-    if (*l_recordOption && (l_recordName.size() != vpd::constants::RECORD_SIZE))
+    if ((l_recordOption->count() > 0) &&
+        (l_recordName.size() != vpd::constants::RECORD_SIZE))
     {
         std::cerr << "Record " << l_recordName << " is not supported."
                   << std::endl;
+        return l_rc;
     }
 
-    if (*l_keywordOption &&
+    if ((l_keywordOption->count() > 0) &&
         (l_keywordName.size() != vpd::constants::KEYWORD_SIZE))
     {
         std::cerr << "Keyword " << l_keywordName << " is not supported."
@@ -67,18 +72,24 @@ int main(int argc, char** argv)
         return l_rc;
     }
 
-    if (*l_hardwareFlag && !std::filesystem::exists(l_vpdPath))
-    {
-        std::cerr << "Given EEPROM file path doesn't exist : " + l_vpdPath
-                  << std::endl;
-        return l_rc;
-    }
-
     (void)l_fileOption;
 
-    if (*l_readFlag)
+    if (l_readFlag->count() > 0)
     {
-        // TODO: call read keyword implementation from here.
+        if ((l_hardwareFlag->count() > 0) &&
+            !std::filesystem::exists(l_vpdPath))
+        {
+            std::cerr << "Given EEPROM file path doesn't exist : " + l_vpdPath
+                      << std::endl;
+            return l_rc;
+        }
+
+        bool l_isHardwareOperation = ((l_hardwareFlag->count() > 0) ? true
+                                                                    : false);
+        vpd::VpdTool l_vpdToolObj;
+
+        l_rc = l_vpdToolObj.readKeyword(l_vpdPath, l_recordName, l_keywordName,
+                                        l_isHardwareOperation, l_filePath);
     }
     else
     {
