@@ -25,17 +25,17 @@ class VpdTool
      * If the provided i_onHardware option is true, read keyword's value from
      * the hardware. Otherwise read keyword's value from DBus.
      *
-     * @param[in] i_fruPath - DBus object path or EEPROM path.
+     * @param[in] i_vpdPath - DBus object path or EEPROM path.
      * @param[in] i_recordName - Record name.
      * @param[in] i_keywordName - Keyword name.
-     * @param[in] i_onHardware - True if i_fruPath is EEPROM path, false
+     * @param[in] i_onHardware - True if i_vpdPath is EEPROM path, false
      * otherwise.
      * @param[in] i_fileToSave - File path to save keyword's value, if not given
      * result will redirect to a console.
      *
      * @return On success return 0, otherwise return -1.
      */
-    int readKeyword(const std::string& i_fruPath,
+    int readKeyword(const std::string& i_vpdPath,
                     const std::string& i_recordName,
                     const std::string& i_keywordName, const bool i_onHardware,
                     const std::string& i_fileToSave = {});
