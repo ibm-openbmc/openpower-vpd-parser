@@ -40,5 +40,12 @@ using DbusVariantType = std::variant<
     std::vector<std::tuple<sdbusplus::message::object_path, std::string,
                            std::string, std::string>>
  >;
+
+//IpzType contains tuple of <Record, Keyword>
+using IpzType = std::tuple<std::string, std::string>;
+
+//ReadVpdParams either of IPZ or keyword format
+using ReadVpdParams = std::variant<IpzType, std::string>;
+
 } // namespace types
 } // namespace vpd

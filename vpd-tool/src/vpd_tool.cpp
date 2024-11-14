@@ -20,7 +20,8 @@ int VpdTool::readKeyword(const std::string& i_vpdPath,
         types::DbusVariantType l_keywordValue;
         if (i_onHardware)
         {
-            // TODO: Implement read keyword's value from hardware
+            l_keywordValue = utils::readKeywordFromHardware(
+                i_vpdPath, std::make_tuple(i_recordName, i_keywordName));
         }
         else
         {
