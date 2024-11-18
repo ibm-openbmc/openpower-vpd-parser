@@ -15,6 +15,7 @@ int main(int argc, char** argv)
     std::string l_recordName{};
     std::string l_keywordName{};
     std::string l_filePath{};
+    std::string l_keywordValue{};
 
     l_app.footer(
         "Read:\n"
@@ -26,7 +27,17 @@ int main(int argc, char** argv)
         "        From hardware to console: "
         "vpd-tool -r -H -O <DBus Object Path> -R <Record Name> -K <Keyword Name>\n"
         "        From hardware to file: "
-        "vpd-tool -r -H -O <EEPROM Path> -R <Record Name> -K <Keyword Name> --file <File Path>");
+        "vpd-tool -r -H -O <EEPROM Path> -R <Record Name> -K <Keyword Name> --file <File Path>\n"
+        "Write:\n"
+        "    IPZ Format:\n"
+        "        On dbus: "
+        "vpd-tool -w -O <DBus Object Path> -R <Record Name> -K <Keyword Name> -V <Keyword Value>\n"
+        "        On dbus, Take keyword value from file:\n"
+        "              vpd-tool -w -O <EEPROM Path> -R <Record Name> -K <Keyword Name> --file <File Path>\n"
+        "        On hardware: "
+        "vpd-tool -w -H -O <DBus Object Path> -R <Record Name> -K <Keyword Name> -V <Keyword Value>\n"
+        "        On hardware, Take keyword value from file:\n"
+        "              vpd-tool -w -H -O <EEPROM Path> -R <Record Name> -K <Keyword Name> --file <File Path>");
 
     auto l_objectOption = l_app.add_option("--object, -O", l_vpdPath,
                                            "File path");
@@ -38,13 +49,23 @@ int main(int argc, char** argv)
     auto l_fileOption = l_app.add_option("--file", l_filePath,
                                          "Absolute file path");
 
+    auto l_keywordValueOption =
+        l_app.add_option("--value, -V", l_keywordValue,
+                         "Keyword value in ascii/hex format."
+                         " ascii ex: 01234; hex ex: 0x30313233");
+
+    auto l_hardwareFlag = l_app.add_flag("--Hardware, -H",
+                                         "CAUTION: Developer only option.");
+
     auto l_readFlag = l_app.add_flag("--readKeyword, -r", "Read keyword")
                           ->needs(l_objectOption)
                           ->needs(l_recordOption)
                           ->needs(l_keywordOption);
 
-    auto l_hardwareFlag = l_app.add_flag("--Hardware, -H",
-                                         "CAUTION: Developer only option.");
+    auto l_writeFlag = l_app.add_flag("--writeKeyword, -w", "Write keyword")
+                           ->needs(l_objectOption)
+                           ->needs(l_recordOption)
+                           ->needs(l_keywordOption);
 
     CLI11_PARSE(l_app, argc, argv);
 
@@ -88,6 +109,44 @@ int main(int argc, char** argv)
 
         l_rc = l_vpdToolObj.readKeyword(l_vpdPath, l_recordName, l_keywordName,
                                         l_isHardwareOperation, l_filePath);
+    }
+    else if (l_writeFlag->count() > 0)
+    {
+        if ((l_hardwareFlag->count() > 0) &&
+            !std::filesystem::exists(l_vpdPath))
+        {
+            std::cerr << "Given EEPROM file path doesn't exist : " + l_vpdPath
+                      << std::endl;
+            return l_rc;
+        }
+
+        if ((l_fileOption->count() > 0) && !std::filesystem::exists(l_filePath))
+        {
+            std::cerr
+                << "Please provide a valid absolute file path which has keyword value.\nUse --value/--file to give "
+                   "keyword value. Refer --help."
+                << std::endl;
+            return l_rc;
+        }
+        else if ((l_keywordValueOption->count() > 0) && l_keywordValue.empty())
+        {
+            std::cerr
+                << "Please provide keyword value.\nUse --value/--file to give "
+                   "keyword value. Refer --help."
+                << std::endl;
+            return l_rc;
+        }
+        else if ((l_fileOption->count() == 0) &&
+                 (l_keywordValueOption->count() == 0))
+        {
+            std::cerr
+                << "Please provide keyword value.\nUse --value/--file to give "
+                   "keyword value. Refer --help."
+                << std::endl;
+            return l_rc;
+        }
+
+        // ToDo: implementation of write keyword
     }
     else
     {
