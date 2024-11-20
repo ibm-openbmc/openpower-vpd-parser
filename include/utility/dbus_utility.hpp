@@ -366,5 +366,55 @@ inline bool isChassisPowerOn()
     */
     return false;
 }
+
+/**
+ * @brief API to check if host is in running state.
+ *
+ * This API reads the current host state from D-bus and returns true if the host
+ * is running.
+ *
+ * @return true if host is in running state. false otherwise.
+ */
+inline bool isHostRunning()
+{
+    const auto l_hostState = dbusUtility::readDbusProperty(
+        constants::hostService, constants::hostObjectPath,
+        constants::hostInterface, "CurrentHostState");
+
+    if (const auto l_currHostState = std::get_if<std::string>(&l_hostState))
+    {
+        if (*l_currHostState == constants::hostRunningState)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * @brief API to check if BMC is in ready state.
+ *
+ * This API reads the current state of BMC from D-bus and returns true if BMC is
+ * in ready state.
+ *
+ * @return true if BMC is ready, false otherwise.
+ */
+inline bool isBMCReady()
+{
+    const auto l_bmcState = dbusUtility::readDbusProperty(
+        constants::bmcStateService, constants::bmcZeroStateObject,
+        constants::bmcStateInterface, constants::currentBMCStateProperty);
+
+    if (const auto l_currBMCState = std::get_if<std::string>(&l_bmcState))
+    {
+        if (*l_currBMCState == constants::bmcReadyState)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
 } // namespace dbusUtility
 } // namespace vpd

@@ -930,5 +930,78 @@ inline bool isFruPowerOffOnly(const nlohmann::json& i_sysCfgJsonObj,
             (i_sysCfgJsonObj["frus"][i_vpdFruPath].at(0)["powerOffOnly"]));
 }
 
+/**
+ * @brief API which tells if the FRU is replaceable at runtime
+ *
+ * @param[in] i_sysCfgJsonObj - System config JSON object.
+ * @param[in] i_vpdFruPath - EEPROM path.
+ *
+ * @return true if FRU is replaceable at runtime. false otherwise.
+ */
+inline bool isFruReplaceableAtRuntime(const nlohmann::json& i_sysCfgJsonObj,
+                                      const std::string& i_vpdFruPath)
+{
+    try
+    {
+        if (i_vpdFruPath.empty())
+        {
+            throw std::runtime_error("Given FRU path is empty.");
+        }
+
+        if (i_sysCfgJsonObj.empty() || (!i_sysCfgJsonObj.contains("frus")))
+        {
+            throw std::runtime_error("Invalid system config JSON object.");
+        }
+
+        return ((i_sysCfgJsonObj["frus"][i_vpdFruPath].at(0))
+                    .contains("replaceableAtRuntime") &&
+                (i_sysCfgJsonObj["frus"][i_vpdFruPath].at(
+                    0)["replaceableAtRuntime"]));
+    }
+    catch (const std::exception& l_error)
+    {
+        // TODO: Log PEL
+        logging::logMessage(l_error.what());
+    }
+
+    return false;
+}
+
+/**
+ * @brief API which tells if the FRU is replaceable at standby
+ *
+ * @param[in] i_sysCfgJsonObj - System config JSON object.
+ * @param[in] i_vpdFruPath - EEPROM path.
+ *
+ * @return true if FRU is replaceable at standby. false otherwise.
+ */
+inline bool isFruReplaceableAtStandby(const nlohmann::json& i_sysCfgJsonObj,
+                                      const std::string& i_vpdFruPath)
+{
+    try
+    {
+        if (i_vpdFruPath.empty())
+        {
+            throw std::runtime_error("Given FRU path is empty.");
+        }
+
+        if (i_sysCfgJsonObj.empty() || (!i_sysCfgJsonObj.contains("frus")))
+        {
+            throw std::runtime_error("Invalid system config JSON object.");
+        }
+
+        return ((i_sysCfgJsonObj["frus"][i_vpdFruPath].at(0))
+                    .contains("replaceableAtStandby") &&
+                (i_sysCfgJsonObj["frus"][i_vpdFruPath].at(
+                    0)["replaceableAtStandby"]));
+    }
+    catch (const std::exception& l_error)
+    {
+        // TODO: Log PEL
+        logging::logMessage(l_error.what());
+    }
+
+    return false;
+}
 } // namespace jsonUtility
 } // namespace vpd

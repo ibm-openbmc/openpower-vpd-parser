@@ -150,6 +150,9 @@ constexpr auto systemVpdInvPath =
 constexpr auto assetTagInf = "xyz.openbmc_project.Inventory.Decorator.AssetTag";
 constexpr auto hostObjectPath = "/xyz/openbmc_project/state/host0";
 constexpr auto hostInterface = "xyz.openbmc_project.State.Host";
+constexpr auto hostService = "xyz.openbmc_project.State.Host";
+constexpr auto hostRunningState =
+    "xyz.openbmc_project.State.Host.HostState.Running";
 static constexpr auto BD_YEAR_END = 4;
 static constexpr auto BD_MONTH_END = 7;
 static constexpr auto BD_DAY_END = 10;

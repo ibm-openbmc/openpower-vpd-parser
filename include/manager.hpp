@@ -89,9 +89,9 @@ class Manager
 
     /**
      * @brief Collect single FRU VPD
-     * API can be used to perform VPD collection for the given FRU.
-     * The FRU should have concurrentlyMaintainable flag set to true in VPD JSON
-     * to execute this action.
+     * API can be used to perform VPD collection for the given FRU, only if the
+     * current state of the system matches with the state at which the FRU is
+     * allowed for VPD recollection.
      *
      * @param[in] i_dbusObjPath - D-bus object path
      */
@@ -268,6 +268,9 @@ class Manager
 
     // Shared pointer to GpioMonitor class
     std::shared_ptr<GpioMonitor> m_gpioMonitor;
+
+    // Variable to hold current collection status
+    std::string m_vpdCollectionStatus = "NotStarted";
 };
 
 } // namespace vpd

@@ -945,6 +945,7 @@
             {
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/lcd_op_panel_hill",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
+                "replaceableAtRuntime": true,
                 "pollingRequired": {
                     "hotPlugging": {
                         "gpioPresence": {
@@ -1699,7 +1700,7 @@
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot0/pcie_card0",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "replaceableAtStandby": true,
-                "concurrentlyMaintainable": true,
+                "replaceableAtRuntime": true,
                 "preAction": {
                     "collection": {
                         "setGpio": {
@@ -1785,7 +1786,7 @@
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot3/pcie_card3",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "replaceableAtStandby": true,
-                "concurrentlyMaintainable": true,
+                "replaceableAtRuntime": true,
                 "preAction": {
                     "collection": {
                         "setGpio": {
@@ -1871,7 +1872,7 @@
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot4/pcie_card4",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "replaceableAtStandby": true,
-                "concurrentlyMaintainable": true,
+                "replaceableAtRuntime": true,
                 "preAction": {
                     "collection": {
                         "setGpio": {
@@ -1957,7 +1958,7 @@
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot10/pcie_card10",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "replaceableAtStandby": true,
-                "concurrentlyMaintainable": true,
+                "replaceableAtRuntime": true,
                 "preAction": {
                     "collection": {
                         "setGpio": {
@@ -2111,7 +2112,7 @@
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot2/pcie_card2",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "replaceableAtStandby": true,
-                "concurrentlyMaintainable": true,
+                "replaceableAtRuntime": true,
                 "preAction": {
                     "collection": {
                         "setGpio": {
@@ -2154,7 +2155,7 @@
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot6/pcie_card6",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "replaceableAtStandby": true,
-                "concurrentlyMaintainable": true,
+                "replaceableAtRuntime": true,
                 "preAction": {
                     "collection": {
                         "setGpio": {
@@ -2190,7 +2191,7 @@
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot7/pcie_card7",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "replaceableAtStandby": true,
-                "concurrentlyMaintainable": true,
+                "replaceableAtRuntime": true,
                 "preAction": {
                     "collection": {
                         "setGpio": {
@@ -2233,7 +2234,7 @@
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot9/pcie_card9",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "replaceableAtStandby": true,
-                "concurrentlyMaintainable": true,
+                "replaceableAtRuntime": true,
                 "preAction": {
                     "collection": {
                         "setGpio": {
@@ -2276,7 +2277,7 @@
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot11/pcie_card11",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "replaceableAtStandby": true,
-                "concurrentlyMaintainable": true,
+                "replaceableAtRuntime": true,
                 "preAction": {
                     "collection": {
                         "setGpio": {
@@ -2388,7 +2389,7 @@
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot1/pcie_card1",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "replaceableAtStandby": true,
-                "concurrentlyMaintainable": true,
+                "replaceableAtRuntime": true,
                 "preAction": {
                     "collection": {
                         "setGpio": {
@@ -2431,7 +2432,7 @@
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot8/pcie_card8",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "replaceableAtStandby": true,
-                "concurrentlyMaintainable": true,
+                "replaceableAtRuntime": true,
                 "preAction": {
                     "collection": {
                         "setGpio": {
@@ -2576,7 +2577,7 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "inherit": false,
                 "embedded": false,
-                "concurrentlyMaintainable": true,
+                "replaceableAtRuntime": true,
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2613,7 +2614,7 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "inherit": false,
                 "embedded": false,
-                "concurrentlyMaintainable": true,
+                "replaceableAtRuntime": true,
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2650,7 +2651,7 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "inherit": false,
                 "embedded": false,
-                "concurrentlyMaintainable": true,
+                "replaceableAtRuntime": true,
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2687,7 +2688,7 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "inherit": false,
                 "embedded": false,
-                "concurrentlyMaintainable": true,
+                "replaceableAtRuntime": true,
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2824,7 +2825,7 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "inherit": false,
                 "embedded": false,
-                "concurrentlyMaintainable": true,
+                "replaceableAtRuntime": true,
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2861,7 +2862,7 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "inherit": false,
                 "embedded": false,
-                "concurrentlyMaintainable": true,
+                "replaceableAtRuntime": true,
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2898,7 +2899,7 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "inherit": false,
                 "embedded": false,
-                "concurrentlyMaintainable": true,
+                "replaceableAtRuntime": true,
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2935,7 +2936,7 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "inherit": false,
                 "embedded": false,
-                "concurrentlyMaintainable": true,
+                "replaceableAtRuntime": true,
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
                     "com.ibm.ipzvpd.Location": {

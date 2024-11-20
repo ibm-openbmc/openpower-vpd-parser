@@ -110,9 +110,12 @@ Manager::Manager(
                                [this]() { this->performVPDRecollection(); });
 
         // Indicates FRU VPD collection for the system has not started.
-        iFace->register_property(
-            "CollectionStatus", std::string("NotStarted"),
-            sdbusplus::asio::PropertyPermission::readWrite);
+        iFace->register_property_rw<std::string>(
+            "CollectionStatus", sdbusplus::vtable::property_::emits_change,
+            [this](const std::string l_currStatus, const auto&) {
+            m_vpdCollectionStatus = l_currStatus;
+            return 0;
+        }, [this](const auto&) { return m_vpdCollectionStatus; });
     }
     catch (const std::exception& e)
     {
@@ -210,7 +213,8 @@ void Manager::SetTimerToDetectSVPDOnDbus()
             // cancel the timer
             timer.cancel();
 
-            // Triggering FRU VPD collection. Setting status to "In Progress".
+            // Triggering FRU VPD collection. Setting status to "In
+            // Progress".
             m_interface->set_property("CollectionStatus",
                                       std::string("InProgress"));
             m_worker->collectFrusFromJson();
@@ -379,23 +383,11 @@ void Manager::collectSingleFruVpd(
 {
     try
     {
-        // TODO: Check if CM flag enabled for the given D-bus object path in
-        // system config JSON.
-
-        // Check if BMC reaches Ready state
-        const auto l_dbusValue = dbusUtility::readDbusProperty(
-            constants::bmcStateService, constants::bmcZeroStateObject,
-            constants::bmcStateInterface, constants::currentBMCStateProperty);
-
-        if (const auto l_currentBMCSate =
-                std::get_if<std::string>(&l_dbusValue))
+        if (m_vpdCollectionStatus != "Completed")
         {
-            if (*l_currentBMCSate != constants::bmcReadyState)
-            {
-                throw std::runtime_error(
-                    "BMC not ready. Single FRU VPD collection failed for " +
-                    std::string(i_dbusObjPath));
-            }
+            throw std::runtime_error(
+                "Currently VPD CollectionStatus is not completed. Cannot perform single FRU VPD collection for " +
+                std::string(i_dbusObjPath));
         }
 
         // Get system config JSON object from worker class
@@ -423,6 +415,30 @@ void Manager::collectSingleFruVpd(
             throw std::runtime_error(
                 "D-bus object path not present in JSON. Single FRU VPD collection failed for " +
                 std::string(i_dbusObjPath));
+        }
+
+        // Check if host is up and running
+        if (dbusUtility::isHostRunning())
+        {
+            if (!jsonUtility::isFruReplaceableAtRuntime(l_sysCfgJsonObj,
+                                                        l_fruPath))
+            {
+                throw std::runtime_error(
+                    "Given FRU is not replaceable at host runtime. Single FRU VPD collection failed for " +
+                    std::string(i_dbusObjPath));
+            }
+        }
+        else if (dbusUtility::isBMCReady())
+        {
+            if (!jsonUtility::isFruReplaceableAtStandby(l_sysCfgJsonObj,
+                                                        l_fruPath) &&
+                (!jsonUtility::isFruReplaceableAtRuntime(l_sysCfgJsonObj,
+                                                         l_fruPath)))
+            {
+                throw std::runtime_error(
+                    "Given FRU is neither replaceable at standby nor replaceable at runtime. Single FRU VPD collection failed for " +
+                    std::string(i_dbusObjPath));
+            }
         }
 
         // Parse VPD
@@ -627,8 +643,8 @@ std::tuple<std::string, uint16_t> Manager::getUnexpandedLocationCode(
     if (l_fcKwd.substr(0, 4) == l_firstKwd)
     {
         /**
-         * Period(.) should be there in expanded location code to seggregate FC,
-         * node number and SE values.
+         * Period(.) should be there in expanded location code to seggregate
+         * FC, node number and SE values.
          */
         size_t l_nodeStartPos = i_expandedLocationCode.find('.');
         if (l_nodeStartPos == std::string::npos)
@@ -654,8 +670,8 @@ std::tuple<std::string, uint16_t> Manager::getUnexpandedLocationCode(
             l_nodeStartPos + 3, (l_nodeEndPos - l_nodeStartPos - 3)));
 
         /**
-         * Confirm if there are other details apart FC, node number and SE in
-         * location code
+         * Confirm if there are other details apart FC, node number and SE
+         * in location code
          */
         if (i_expandedLocationCode.length() >
             constants::EXP_LOCATION_CODE_MIN_LENGTH)
