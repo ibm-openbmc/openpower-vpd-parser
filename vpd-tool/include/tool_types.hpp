@@ -40,5 +40,13 @@ using DbusVariantType = std::variant<
     std::vector<std::tuple<sdbusplus::message::object_path, std::string,
                            std::string, std::string>>
  >;
+
+
+using Record = std::string;
+using Keyword = std::string;
+
+using KwData = std::tuple<Keyword, BinaryVector>;
+using IpzData = std::tuple<Record, Keyword, BinaryVector>;
+using WriteVpdParams = std::variant<IpzData, KwData>;
 } // namespace types
 } // namespace vpd

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tool_constants.hpp"
 #include "tool_types.hpp"
 
 #include <nlohmann/json.hpp>
@@ -122,6 +123,108 @@ inline std::string getPrintableValue(const types::BinaryVector& i_keywordValue)
     }
 
     return l_oss.str();
+}
+
+/**
+ * @brief API to write keyword's value.
+ *
+ * This API writes keyword's value by requesting DBus service(vpd-manager) who
+ * hosts the 'WriteKeyword' interface to update keyword's value.
+ *
+ * @param[in] i_serviceName - Name of the Dbus service hosting 'WriteKeyword'
+ * method.
+ * @param[in] i_objectPath - Object path under the service.
+ * @param[in] i_interface - Interface under which 'WriteKeyword' method exist.
+ * @param[in] i_vpdPath - EEPROM or object path, where keyword is present.
+ * @param[in] i_paramsToWriteData - Data require to update keyword's value.
+ *
+ * @return - Number of bytes written on success, -1 on failure.
+ *
+ * @throw - std::runtime_error
+ */
+inline int writeKeyword(const std::string& i_serviceName,
+                        const std::string& i_objectPath,
+                        const std::string& i_interface,
+                        const std::string& i_vpdPath,
+                        const types::WriteVpdParams i_paramsToWriteData)
+{
+    int l_rc = -1;
+
+    // Mandatory fields to make a dbus call.
+    if (i_serviceName.empty() || i_objectPath.empty() || i_interface.empty() ||
+        i_vpdPath.empty())
+    {
+        // ToDo: enebale when verbose is enabled
+        /*std::cout
+            << "One of the parameter to make DBus WriteKeyword call is empty."
+            << std::endl;*/
+        return l_rc;
+    }
+
+    try
+    {
+        auto l_bus = sdbusplus::bus::new_default();
+
+        auto l_method =
+            l_bus.new_method_call(i_serviceName.c_str(), i_objectPath.c_str(),
+                                  i_interface.c_str(), "WriteKeyword");
+
+        l_method.append(i_vpdPath, i_paramsToWriteData);
+        auto l_result = l_bus.call(l_method);
+
+        l_result.read(l_rc);
+    }
+    catch (const sdbusplus::exception::SdBusError& l_error)
+    {
+        throw std::runtime_error(l_error.what());
+    }
+
+    if (l_rc > 0)
+    {
+        std::cout << "Data updated successfully " << std::endl;
+    }
+    return l_rc;
+}
+
+inline types::BinaryVector convertToBinary(const std::string& i_value)
+{
+    std::vector<uint8_t> l_binaryValue{};
+
+    if (i_value.substr(0, 2).compare("0x") == 0)
+    {
+        auto l_value = i_value.substr(2);
+
+        if (l_value.empty())
+        {
+            throw std::runtime_error(
+                "Provide a valid hexadecimal input. (Ex. 0x30313233)");
+        }
+
+        if (l_value.length() % 2 != 0)
+        {
+            throw std::runtime_error(
+                "Write option accepts 2 digit hex numbers. (Ex. 0x1 "
+                "should be given as 0x01).");
+        }
+
+        if (l_value.find_first_not_of("0123456789abcdefABCDEF") !=
+            std::string::npos)
+        {
+            throw std::runtime_error("Provide a valid hexadecimal input.");
+        }
+
+        for (size_t l_pos = 0; l_pos < l_value.length(); l_pos += 2)
+        {
+            uint8_t l_byte = static_cast<uint8_t>(
+                std::stoi(l_value.substr(l_pos, 2), nullptr, 16));
+            l_binaryValue.push_back(l_byte);
+        }
+    }
+    else
+    {
+        l_binaryValue.assign(i_value.begin(), i_value.end());
+    }
+    return l_binaryValue;
 }
 } // namespace utils
 } // namespace vpd

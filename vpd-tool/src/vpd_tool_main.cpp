@@ -146,7 +146,13 @@ int main(int argc, char** argv)
             return l_rc;
         }
 
-        // ToDo: implementation of write keyword
+        bool l_isHardwareOperation = ((l_hardwareFlag->count() > 0) ? true
+                                                                    : false);
+
+        vpd::VpdTool l_vpdToolObj;
+        l_vpdToolObj.writeKeyword(l_vpdPath, l_recordName, l_keywordName,
+                                  l_keywordValue, l_isHardwareOperation,
+                                  l_filePath);
     }
     else
     {
