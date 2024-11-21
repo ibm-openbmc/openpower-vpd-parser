@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 
 namespace vpd
@@ -39,5 +40,36 @@ class VpdTool
                     const std::string& i_recordName,
                     const std::string& i_keywordName, const bool i_onHardware,
                     const std::string& i_fileToSave = {});
+
+    /**
+     * @brief Write keyword's value.
+     *
+     * API to update VPD keyword's value to the given input path.
+     * If i_onHardware value in true, i_vpdPath is considered has hardware path
+     * otherwise it will be considered as DBus object path.
+     *
+     * Regardless of given input path is primary path or secondary path,
+     * internally both paths will get updated, also redundant EEPROM(if any)
+     * path with new keyword's value.
+     *
+     * @param[in] i_vpdPath - DBus object path or EEPROM path.
+     * @param[in] i_recordName - Record name.
+     * @param[in] i_keywordName - Keyword name.
+     * @param[in] i_keywordValue - Keyword value.
+     * @param[in] i_onHardware - True if i_vpdPath is EEPROM path, false
+     * otherwise.
+     * @param[in] i_filePath - File path to take keyword's value.
+     *
+     * Note: Keyword value is taken from i_keywordValue. If i_keywordValue is
+     * empty, will try to get keyword's value from i_filePath. If both these
+     * variables are empty, error will be thrown from this API.
+     *
+     * @return On success returns 0, otherwise returns -1.
+     */
+    int writeKeyword(
+        std::string i_vpdPath, const std::string& i_recordName,
+        const std::string& i_keywordName, const std::string& i_keywordValue,
+        const bool i_onHardware,
+        const std::optional<std::string> i_filePath = std::nullopt) noexcept;
 };
 } // namespace vpd

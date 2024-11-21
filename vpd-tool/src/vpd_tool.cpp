@@ -5,6 +5,7 @@
 #include "tool_utils.hpp"
 
 #include <iostream>
+#include <tuple>
 
 namespace vpd
 {
@@ -82,6 +83,47 @@ int VpdTool::readKeyword(const std::string& i_vpdPath,
                   << ", Record: " << i_recordName
                   << ", Keyword: " << i_keywordName
                   << " is failed, exception: " << l_ex.what() << std::endl;*/
+    }
+    return l_rc;
+}
+
+int VpdTool::writeKeyword(std::string i_vpdPath,
+                          const std::string& i_recordName,
+                          const std::string& i_keywordName,
+                          const std::string& i_keywordValue,
+                          const bool i_onHardware,
+                          const std::optional<std::string> i_filePath) noexcept
+{
+    int l_rc = constants::FAILURE;
+    try
+    {
+        if (i_vpdPath.empty() || i_recordName.empty() ||
+            i_keywordName.empty() || i_keywordValue.empty())
+        {
+            throw std::runtime_error("Received input is empty.");
+        }
+
+        // ToDo: Take keyword value from the file
+        (void)i_filePath;
+
+        if (!i_onHardware)
+        {
+            i_vpdPath = constants::baseInventoryPath + i_vpdPath;
+        }
+
+        auto l_paramsToWrite =
+            std::make_tuple(i_recordName, i_keywordName,
+                            utils::convertToBinary(i_keywordValue));
+
+        l_rc = utils::writeKeyword(i_vpdPath, l_paramsToWrite);
+    }
+    catch (const std::exception& l_ex)
+    {
+        // TODO: Enable log when verbose is enabled.
+        std::cerr << "Write keyword's value for path: " << i_vpdPath
+                  << ", Record: " << i_recordName
+                  << ", Keyword: " << i_keywordName
+                  << " is failed. Exception: " << l_ex.what() << std::endl;
     }
     return l_rc;
 }
