@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tool_constants.hpp"
 #include "tool_types.hpp"
 
 #include <nlohmann/json.hpp>
@@ -169,6 +170,94 @@ inline types::DbusVariantType
     {
         throw;
     }
+}
+
+/**
+ * @brief API to write keyword's value.
+ *
+ * This API writes keyword's value by requesting DBus service(vpd-manager) who
+ * hosts the 'WriteKeyword' interface to update keyword's value.
+ *
+ * @param[in] i_vpdPath - EEPROM or object path, where keyword is present.
+ * @param[in] i_paramsToWriteData - Data required to update keyword's value.
+ *
+ * @return - Number of bytes written on success, -1 on failure.
+ *
+ * @throw - std::runtime_error, sdbusplus::exception::SdBusError
+ */
+inline int writeKeyword(const std::string& i_vpdPath,
+                        const types::WriteVpdParams i_paramsToWriteData)
+{
+    if (i_vpdPath.empty())
+    {
+        throw std::runtime_error("Empty path");
+    }
+
+    try
+    {
+        int l_rc = constants::FAILURE;
+        auto l_bus = sdbusplus::bus::new_default();
+
+        auto l_method = l_bus.new_method_call(
+            constants::vpdManagerService, constants::vpdManagerObjectPath,
+            constants::vpdManagerInfName, "WriteKeyword");
+
+        l_method.append(i_vpdPath, i_paramsToWriteData);
+        auto l_result = l_bus.call(l_method);
+
+        l_result.read(l_rc);
+
+        if (l_rc > 0)
+        {
+            std::cout << "Data updated successfully " << std::endl;
+        }
+        return l_rc;
+    }
+    catch (const sdbusplus::exception::SdBusError& l_error)
+    {
+        throw;
+    }
+}
+
+inline types::BinaryVector convertToBinary(const std::string& i_value)
+{
+    std::vector<uint8_t> l_binaryValue{};
+
+    if (i_value.substr(0, 2).compare("0x") == 0)
+    {
+        auto l_value = i_value.substr(2);
+
+        if (l_value.empty())
+        {
+            throw std::runtime_error(
+                "Provide a valid hexadecimal input. (Ex. 0x30313233)");
+        }
+
+        if (l_value.length() % 2 != 0)
+        {
+            throw std::runtime_error(
+                "Write option accepts 2 digit hex numbers. (Ex. 0x1 "
+                "should be given as 0x01).");
+        }
+
+        if (l_value.find_first_not_of("0123456789abcdefABCDEF") !=
+            std::string::npos)
+        {
+            throw std::runtime_error("Provide a valid hexadecimal input.");
+        }
+
+        for (size_t l_pos = 0; l_pos < l_value.length(); l_pos += 2)
+        {
+            uint8_t l_byte = static_cast<uint8_t>(
+                std::stoi(l_value.substr(l_pos, 2), nullptr, 16));
+            l_binaryValue.push_back(l_byte);
+        }
+    }
+    else
+    {
+        l_binaryValue.assign(i_value.begin(), i_value.end());
+    }
+    return l_binaryValue;
 }
 } // namespace utils
 } // namespace vpd

@@ -71,8 +71,6 @@ int main(int argc, char** argv)
             ->needs(l_recordOption)
             ->needs(l_keywordOption);
 
-    // ToDo: Take offset value from user for hardware path.
-
     CLI11_PARSE(l_app, argc, argv);
 
     if (!l_objectOption->empty() && l_vpdPath.empty())
@@ -176,7 +174,12 @@ int main(int argc, char** argv)
             return l_rc;
         }
 
-        // ToDo: implementation of write keyword
+        bool l_isHardwareOperation = (l_hardwareFlag->empty() ? false : true);
+
+        vpd::VpdTool l_vpdToolObj;
+        l_vpdToolObj.writeKeyword(l_vpdPath, l_recordName, l_keywordName,
+                                  l_keywordValue, l_isHardwareOperation,
+                                  l_filePath);
     }
     else
     {
