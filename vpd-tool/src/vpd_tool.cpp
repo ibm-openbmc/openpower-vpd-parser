@@ -91,10 +91,20 @@ int VpdTool::writeKeyword(const std::string& i_vpdPath,
             throw std::runtime_error("Received input is empty.");
         }
 
+        std::string l_keywordValue{i_keywordValue};
+
         if (!i_filePath.empty())
         {
-            // ToDo: Take keyword value from the file
+            l_keywordValue = utils::readValueFromFile(i_filePath);
         }
+
+        if (l_keywordValue.empty())
+        {
+            throw std::runtime_error("Keyword value is empty.");
+        }
+
+        types::BinaryVector l_keywordValueInBinary =
+            utils::convertToBinary(l_keywordValue);
 
         std::string l_vpdPath{i_vpdPath};
         if (!i_onHardware)
