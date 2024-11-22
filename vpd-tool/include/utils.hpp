@@ -7,6 +7,7 @@
 #include <sdbusplus/bus.hpp>
 #include <sdbusplus/exception.hpp>
 
+#include <fstream>
 #include <iostream>
 
 namespace vpd
@@ -225,6 +226,42 @@ inline types::BinaryVector convertToBinary(const std::string& i_value)
         l_binaryValue.assign(i_value.begin(), i_value.end());
     }
     return l_binaryValue;
+}
+
+/**
+ * @brief API to read keyword's value from file.
+ *
+ * API reads keyword's value from the given file path, value can be
+ * given in ASCII format or in hexa format. API reads the file and returns the
+ * value read.
+ *
+ * @param[in] i_filePath - File path.
+ *
+ * @return - Keyword's value.
+ *
+ * @throw std::runtime_error
+ */
+inline std::string readValueFromFile(const std::string& i_filePath)
+{
+    std::string l_keyValueStr;
+    std::ifstream l_fileStream(i_filePath, std::ifstream::in);
+
+    if (l_fileStream.is_open())
+    {
+        std::string l_line;
+
+        while (std::getline(l_fileStream, l_line))
+        {
+            l_keyValueStr += l_line;
+        }
+
+        l_fileStream.close();
+    }
+    else
+    {
+        throw std::runtime_error("Unable to open the file ");
+    }
+    return l_keyValueStr;
 }
 } // namespace utils
 } // namespace vpd

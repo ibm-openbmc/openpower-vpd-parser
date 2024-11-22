@@ -87,10 +87,20 @@ int VpdTool::writeKeyword(const std::string& i_vpdPath,
             throw std::runtime_error("Received input is empty.");
         }
 
+        std::string l_keywordValue{i_keywordValue};
+        types::BinaryVector l_keywordValueInBinary;
+
         if (!i_filePath.empty())
         {
-            // ToDo: Take keyword value from the file
+            l_keywordValue = utils::readValueFromFile(i_filePath);
         }
+
+        if (l_keywordValue.empty())
+        {
+            throw std::runtime_error("Keyword value is empty.");
+        }
+
+        l_keywordValueInBinary = utils::convertToBinary(l_keywordValue);
 
         std::string l_vpdPath{i_vpdPath};
         if (!i_onHardware)
@@ -98,9 +108,8 @@ int VpdTool::writeKeyword(const std::string& i_vpdPath,
             l_vpdPath = constants::baseInventoryPath + i_vpdPath;
         }
 
-        auto l_paramsToWrite =
-            std::make_tuple(i_recordName, i_keywordName,
-                            utils::convertToBinary(i_keywordValue));
+        auto l_paramsToWrite = std::make_tuple(i_recordName, i_keywordName,
+                                               l_keywordValueInBinary);
         l_rc = utils::writeKeyword(
             constants::vpdManagerService, constants::vpdManagerObjectPath,
             constants::vpdManagerInf, l_vpdPath, l_paramsToWrite);
