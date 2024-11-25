@@ -14,7 +14,8 @@ configure_file(output: 'config.h',
             configuration : conf_data)
 
 sources = ['src/vpd_tool_main.cpp',
-            'src/vpd_tool.cpp']
+            'src/vpd_tool.cpp',
+            'src/tool_ipz_parser.cpp']
 
 vpd_tool_exe = executable('vpd-tool',
                           sources,
