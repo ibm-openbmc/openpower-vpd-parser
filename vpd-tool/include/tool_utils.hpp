@@ -8,6 +8,8 @@
 
 #include <iostream>
 
+extern bool VerboseMode;
+
 namespace vpd
 {
 namespace utils
@@ -44,9 +46,11 @@ inline types::DbusVariantType readDbusProperty(const std::string& i_serviceName,
     if (i_serviceName.empty() || i_objectPath.empty() || i_interface.empty() ||
         i_property.empty())
     {
-        // TODO: Enable logging when verbose is enabled.
-        /*std::cout << "One of the parameter to make Dbus read call is empty."
-                  << std::endl;*/
+        if (VerboseMode)
+        {
+            std::cout << "One of the parameter to make Dbus read call is empty."
+                      << std::endl;
+        }
         return l_propertyValue;
     }
 
@@ -63,8 +67,10 @@ inline types::DbusVariantType readDbusProperty(const std::string& i_serviceName,
     }
     catch (const sdbusplus::exception::SdBusError& l_ex)
     {
-        // TODO: Enable logging when verbose is enabled.
-        // std::cout << std::string(l_ex.what()) << std::endl;
+        if (VerboseMode)
+        {
+            std::cout << std::string(l_ex.what()) << std::endl;
+        }
     }
     return l_propertyValue;
 }

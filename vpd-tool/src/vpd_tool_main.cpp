@@ -6,6 +6,8 @@
 #include <filesystem>
 #include <iostream>
 
+bool VerboseMode = false;
+
 int main(int argc, char** argv)
 {
     int l_rc = -1;
@@ -46,6 +48,8 @@ int main(int argc, char** argv)
     auto l_hardwareFlag = l_app.add_flag("--Hardware, -H",
                                          "CAUTION: Developer only option.");
 
+    auto l_verboseFlag = l_app.add_flag("--verbose, -v", "Enable Verbose Mode");
+
     // ToDo: Take offset value from user for hardware path.
 
     CLI11_PARSE(l_app, argc, argv);
@@ -73,6 +77,8 @@ int main(int argc, char** argv)
     }
 
     (void)l_fileOption;
+
+    VerboseMode = ((l_verboseFlag->count() > 0) ? true : false);
 
     if (l_readFlag->count() > 0)
     {

@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+extern bool VerboseMode;
+
 namespace vpd
 {
 int VpdTool::readKeyword(const std::string& i_vpdPath,
@@ -55,20 +57,21 @@ int VpdTool::readKeyword(const std::string& i_vpdPath,
             }
             l_rc = 0;
         }
-        else
+        else if (VerboseMode)
         {
-            // TODO: Enable logging when verbose is enabled.
-            // std::cout << "Invalid data type or empty data received." <<
-            // std::endl;
+            std::cout << "Invalid data type or empty data received."
+                      << std::endl;
         }
     }
     catch (const std::exception& l_ex)
     {
-        // TODO: Enable logging when verbose is enabled.
-        /*std::cerr << "Read keyword's value for path: " << i_vpdPath
-                  << ", Record: " << i_recordName
-                  << ", Keyword: " << i_keywordName
-                  << " is failed, exception: " << l_ex.what() << std::endl;*/
+        if (VerboseMode)
+        {
+            std::cerr << "Read keyword's value for path: " << i_vpdPath
+                      << ", Record: " << i_recordName
+                      << ", Keyword: " << i_keywordName
+                      << " is failed, exception: " << l_ex.what() << std::endl;
+        }
     }
     return l_rc;
 }
