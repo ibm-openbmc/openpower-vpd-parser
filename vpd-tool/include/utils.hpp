@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tool_constants.hpp"
 #include "tool_types.hpp"
 
 #include <nlohmann/json.hpp>
