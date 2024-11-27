@@ -192,8 +192,21 @@ inline void insertOrMerge(types::InterfaceMap& map,
 {
     if (map.find(interface) != map.end())
     {
-        auto& prop = map.at(interface);
-        prop.insert(propertyMap.begin(), propertyMap.end());
+        try
+        {
+            auto& prop = map.at(interface);
+            std::for_each(propertyMap.begin(), propertyMap.end(),
+                          [&prop](auto l_keyValue) {
+                prop[l_keyValue.first] = l_keyValue.second;
+            });
+        }
+        catch (const std::exception& l_ex)
+        {
+            // ToDo:: Log PEL
+            logging::logMessage(
+                "Inserting properties into interface[" + interface +
+                "] map is failed, reason: " + std::string(l_ex.what()));
+        }
     }
     else
     {
@@ -371,7 +384,6 @@ inline void getVpdDataInVector(const std::string& vpdFilePath,
 }
 
 /**
-<<<<<<< HEAD
  * @brief An API to get D-bus representation of given VPD keyword.
  *
  * @param[in] i_keywordName - VPD keyword name.
