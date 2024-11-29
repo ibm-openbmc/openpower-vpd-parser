@@ -142,6 +142,7 @@ constexpr auto biosConfigMgrInterface =
 constexpr auto systemVpdInvPath =
     "/xyz/openbmc_project/inventory/system/chassis/motherboard";
 constexpr auto assetTagInf = "xyz.openbmc_project.Inventory.Decorator.AssetTag";
+constexpr auto hostObjectPath = "/xyz/openbmc_project/state/host0";
 static constexpr auto BD_YEAR_END = 4;
 static constexpr auto BD_MONTH_END = 7;
 static constexpr auto BD_DAY_END = 10;

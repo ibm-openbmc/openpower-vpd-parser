@@ -926,5 +926,46 @@ inline bool isFruPowerOffOnly(const nlohmann::json& i_sysCfgJsonObj,
             (i_sysCfgJsonObj["frus"][i_vpdFruPath].at(0)["powerOffOnly"]));
 }
 
+/**
+ * @brief API to get list of FRUs replaceable at standby.
+ *
+ * @param[in] i_sysCfgJsonObj - System config JSON object.
+ *
+ * @return - List of FRUs replaceable at standby.
+ */
+inline std::vector<std::string>
+    getListOfFrusReplaceableAtStandby(const nlohmann::json& i_sysCfgJsonObj)
+{
+    if (!i_sysCfgJsonObj.contains("frus"))
+    {
+        logging::logMessage("Missing frus tag in system config JSON.");
+        return false;
+    }
+
+    const nlohmann::json& l_fruList =
+        i_sysCfgJsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
+
+    std::vector<std::string> l_frusReplaceableAtStandby;
+
+    for (const auto& l_fru : l_fruList.items())
+    {
+        // check if given path is redundant FRU path or inventory path
+        if (i_sysCfgJsonObj["frus"][l_fru.key()].at(0).value(
+                "replaceableAtStandby", false))
+        {
+            const std::string& l_inventoryObjectPath =
+                i_sysCfgJsonObj["frus"][l_fru.key()].at(0).value(
+                    "inventoryPath", "");
+
+            if (!l_inventoryObjectPath.empty())
+            {
+                l_frusReplaceableAtStandby.emplace_back(l_inventoryObjectPath);
+            }
+        }
+    }
+
+    return l_frusReplaceableAtStandby;
+}
+
 } // namespace jsonUtility
 } // namespace vpd

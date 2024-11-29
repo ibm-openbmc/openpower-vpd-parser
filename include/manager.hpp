@@ -171,6 +171,18 @@ class Manager
     std::string getHwPath(const sdbusplus::message::object_path& i_dbusObjPath);
 
     /**
+     * @brief API to listen for host state change.
+     */
+    void listenForHostState();
+
+    /**
+     * @brief API to process host state change callback.
+     *
+     * @param[in] i_msg - Callback message.
+     */
+    void hostStateCallBack(sdbusplus::message_t& i_msg);
+
+    /**
      * @brief  Perform VPD recollection
      * This api will trigger parser to perform VPD recollection for FRUs that
      * can be replaced at standby.

@@ -43,6 +43,8 @@ Manager::Manager(
         // set async timer to detect if VPD collection is done.
         SetTimerToDetectVpdCollectionStatus();
 
+        listenForHostState();
+
         // Instantiate GpioMonitor class
         m_gpioMonitor = std::make_shared<GpioMonitor>(
             m_worker->getSysCfgJsonObj(), m_worker, m_ioContext);
@@ -714,5 +716,96 @@ types::ListOfPaths Manager::getFrusByExpandedLocationCode(
                                            std::get<1>(l_locationAndNodePair));
 }
 
-void Manager::performVPDRecollection() {}
+void Manager::listenForHostState()
+{
+    static std::shared_ptr<sdbusplus::bus::match_t> l_hostState =
+        std::make_shared<sdbusplus::bus::match_t>(
+            *m_asioConnection,
+            sdbusplus::bus::match::rules::propertiesChanged(
+                constants::hostObjectPath, constants::hostInterface),
+            [this](sdbusplus::message_t& i_msg) { hostStateCallBack(i_msg); });
+}
+
+void Manager::hostStateCallBack(sdbusplus::message_t& i_msg)
+{
+    try
+    {
+        if (i_msg.is_method_error())
+        {
+            throw std::runtime_error(
+                "Error reading callback message for host state");
+        }
+
+        std::string l_objectPath;
+        types::PropertyMap l_propMap;
+        i_msg.read(l_objectPath, l_propMap);
+
+        const auto l_itr = l_propMap.find("CurrentHostState");
+
+        if (l_itr == l_propMap.end())
+        {
+            throw std::runtime_error(
+                "CurrentHostState field is missing in callback messgae");
+        }
+
+        if (auto l_hostState = std::get_if<std::string>(&(l_itr->second)))
+        {
+            // implies system is moving from standby to power on state
+            if (*l_hostState == "xyz.openbmc_project.State.Host.HostState."
+                                "TransitioningToRunning")
+            {
+                // TODO: check for all the essential FRUs in the system.
+
+                // check and perform recollection for FRUs replaceable at
+                // standby.
+                performVPDRecollection();
+                return;
+            }
+        }
+        else
+        {
+            throw std::runtime_error(
+                "Inavlid type recieved in variant for host state.");
+        }
+    }
+    catch (const std::exception& l_ex)
+    {
+        // TODO: Log PEL.
+        logging::logMessage(l_ex.what());
+    }
+}
+
+void Manager::performVPDRecollection()
+{
+    try
+    {
+        if (m_worker.get() != nullptr)
+        {
+            nlohmann::json l_sysCfgJsonObj{};
+            l_sysCfgJsonObj = m_worker->getSysCfgJsonObj();
+
+            // Check if system config JSON is present
+            if (l_sysCfgJsonObj.empty())
+            {
+                throw std::runtime_error(
+                    "System config json object is empty, can't process recollection.");
+            }
+
+            auto l_frusReplaceableAtStandby =
+                jsonUtility::getListOfFrusReplaceableAtStandby(l_sysCfgJsonObj);
+
+            for (const auto& l_fruInventoryPath : l_frusReplaceableAtStandby)
+            {
+                collectSingleFruVpd(l_fruInventoryPath);
+            }
+        }
+
+        throw std::runtime_error(
+            "Worker object not found can't process recolelction");
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+
 } // namespace vpd
