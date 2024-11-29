@@ -2898,14 +2898,6 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "handlePresence": false,
                 "concurrentlyMaintainable": true,
-                "preAction": {
-                    "collection": {
-                        "gpioPresence": {
-                            "pin": "presence-fan3",
-                            "value": 0
-                        }
-                    }
-                },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Fan": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2920,14 +2912,6 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "handlePresence": false,
                 "concurrentlyMaintainable": true,
-                "preAction": {
-                    "collection": {
-                        "gpioPresence": {
-                            "pin": "presence-fan2",
-                            "value": 0
-                        }
-                    }
-                },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Fan": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2942,14 +2926,6 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "handlePresence": false,
                 "concurrentlyMaintainable": true,
-                "preAction": {
-                    "collection": {
-                        "gpioPresence": {
-                            "pin": "presence-fan1",
-                            "value": 0
-                        }
-                    }
-                },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Fan": null,
                     "com.ibm.ipzvpd.Location": {
@@ -2964,14 +2940,6 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "concurrentlyMaintainable": true,
                 "handlePresence": false,
-                "preAction": {
-                    "collection": {
-                        "gpioPresence": {
-                            "pin": "presence-fan0",
-                            "value": 0
-                        }
-                    }
-                },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Fan": null,
                     "com.ibm.ipzvpd.Location": {
