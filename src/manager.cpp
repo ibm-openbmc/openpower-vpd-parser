@@ -107,7 +107,7 @@ Manager::Manager(
                 -> std::string { return this->getHwPath(i_dbusObjPath); });
 
         iFace->register_method("PerformVPDRecollection",
-                               [this]() { this->performVPDRecollection(); });
+                               [this]() { this->performVpdRecollection(); });
 
         // Indicates FRU VPD collection for the system has not started.
         iFace->register_property_rw<std::string>(
@@ -776,7 +776,7 @@ void Manager::hostStateChangeCallBack(sdbusplus::message_t& i_msg)
                 // TODO: check for all the essential FRUs in the system.
 
                 // Perform recollection.
-                performVPDRecollection();
+                performVpdRecollection();
                 return;
             }
         }
@@ -793,5 +793,42 @@ void Manager::hostStateChangeCallBack(sdbusplus::message_t& i_msg)
     }
 }
 
-void Manager::performVPDRecollection() {}
+void Manager::performVpdRecollection()
+{
+    try
+    {
+        if (m_worker.get() != nullptr)
+        {
+            nlohmann::json l_sysCfgJsonObj = m_worker->getSysCfgJsonObj();
+
+            // Check if system config JSON is present
+            if (l_sysCfgJsonObj.empty())
+            {
+                throw std::runtime_error(
+                    "System config json object is empty, can't process recollection.");
+            }
+
+            const auto& l_frusReplaceableAtStandby =
+                jsonUtility::getListOfFrusReplaceableAtStandby(l_sysCfgJsonObj);
+
+            for (const auto& l_fruInventoryPath : l_frusReplaceableAtStandby)
+            {
+                // ToDo: Add some logic/trace to know the flow to
+                // collectSingleFruVpd has been directed via
+                // performVpdRecollection.
+                collectSingleFruVpd(l_fruInventoryPath);
+            }
+            return;
+        }
+
+        throw std::runtime_error(
+            "Worker object not found can't process recollection");
+    }
+    catch (const std::exception& l_ex)
+    {
+        // TODO Log PEL
+        logging::logMessage("VPD recollection failed with error: " +
+                            std::string(l_ex.what()));
+    }
+}
 } // namespace vpd

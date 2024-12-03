@@ -1003,5 +1003,51 @@ inline bool isFruReplaceableAtStandby(const nlohmann::json& i_sysCfgJsonObj,
 
     return false;
 }
+
+/**
+ * @brief API to get list of FRUs replaceable at standby from JSON.
+ *
+ * The API will return a vector of FRUs inventory path which are replaceable at
+ * standby.
+ * The API can throw exception in case of error scenarios. Caller's
+ * responsibility to handle those exceptions.
+ *
+ * @param[in] i_sysCfgJsonObj - System config JSON object.
+ *
+ * @return - List of FRUs replaceable at standby.
+ */
+inline std::vector<std::string>
+    getListOfFrusReplaceableAtStandby(const nlohmann::json& i_sysCfgJsonObj)
+{
+    std::vector<std::string> l_frusReplaceableAtStandby;
+
+    if (!i_sysCfgJsonObj.contains("frus"))
+    {
+        logging::logMessage("Missing frus tag in system config JSON.");
+        return l_frusReplaceableAtStandby;
+    }
+
+    const nlohmann::json& l_fruList =
+        i_sysCfgJsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
+
+    for (const auto& l_fru : l_fruList.items())
+    {
+        if (i_sysCfgJsonObj["frus"][l_fru.key()].at(0).value(
+                "replaceableAtStandby", false))
+        {
+            const std::string& l_inventoryObjectPath =
+                i_sysCfgJsonObj["frus"][l_fru.key()].at(0).value(
+                    "inventoryPath", "");
+
+            if (!l_inventoryObjectPath.empty())
+            {
+                l_frusReplaceableAtStandby.emplace_back(l_inventoryObjectPath);
+            }
+        }
+    }
+
+    return l_frusReplaceableAtStandby;
+}
+
 } // namespace jsonUtility
 } // namespace vpd

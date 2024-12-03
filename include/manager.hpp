@@ -175,7 +175,7 @@ class Manager
      * This api will trigger parser to perform VPD recollection for FRUs that
      * can be replaced at standby.
      */
-    void performVPDRecollection();
+    void performVpdRecollection();
 
     /**
      * @brief Get unexpanded location code.
