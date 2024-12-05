@@ -99,6 +99,7 @@ class IpzVpdParser : public ParserInterface
      * @throw sdbusplus::xyz::openbmc_project::Common::Error::NotAllowed.
      * @throw DataException
      * @throw EccException
+     * @throw std::runtime_error
      *
      *
      * @return On success returns number of bytes written on hardware, On

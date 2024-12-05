@@ -6,6 +6,7 @@
 
 #include "constants.hpp"
 #include "exceptions.hpp"
+#include "utility/dbus_utility.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -813,6 +814,9 @@ int IpzVpdParser::writeKeywordOnHardware(
         // update on filestream.
         types::BinaryVector l_vpdVector = m_vpdVector;
 
+        // enable Reboot Guard before writing to hardware
+        dbusUtility::EnableRebootGuard();
+
         // write keyword's value on hardware
         l_sizeWritten =
             setKeywordValueInRecord(l_recordName, l_keywordName, l_keywordData,
@@ -828,6 +832,9 @@ int IpzVpdParser::writeKeywordOnHardware(
         updateRecordECC(l_inputRecordOffset, std::get<1>(l_inputRecordDetails),
                         std::get<2>(l_inputRecordDetails),
                         std::get<3>(l_inputRecordDetails), l_vpdVector);
+
+        // disable Reboot Guard after writing to hardware
+        dbusUtility::DisableRebootGuard();
 
         logging::logMessage(std::to_string(l_sizeWritten) +
                             " bytes updated successfully on hardware for " +
