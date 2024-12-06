@@ -8,6 +8,12 @@ endif
 sdbusplus = dependency('sdbusplus', fallback: [ 'sdbusplus', 'sdbusplus_dep' ])
 dependency_list = [CLI11_dep, sdbusplus]
 
+conf_data = configuration_data()
+conf_data.set_quoted('INVENTORY_JSON_SYM_LINK', get_option('INVENTORY_JSON_SYM_LINK'))
+conf_data.set_quoted('SYSTEM_VPD_FILE_PATH', get_option('SYSTEM_VPD_FILE_PATH'))
+configure_file(output: 'config.h',
+            configuration : conf_data)
+
 sources = ['src/vpd_tool_main.cpp',
             'src/vpd_tool.cpp']
 

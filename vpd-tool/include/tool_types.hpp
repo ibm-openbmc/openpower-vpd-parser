@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <tuple>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -40,5 +41,20 @@ using DbusVariantType = std::variant<
     std::vector<std::tuple<sdbusplus::message::object_path, std::string,
                            std::string, std::string>>
  >;
+
+
+using Record = std::string;
+using Keyword = std::string;
+
+using KwData = std::tuple<Keyword, BinaryVector>;
+using IpzData = std::tuple<Record, Keyword, BinaryVector>;
+using WriteVpdParams = std::variant<IpzData, KwData>;
+
+using IpzType = std::tuple<Record, Keyword>;
+using ReadVpdParams = std::variant<IpzType, Keyword>;
+
+using KeywordDefaultValue = BinaryVector;
+using MfgCleanKeywordMap = std::unordered_map<Keyword,KeywordDefaultValue>;
+using MfgCleanRecordMap = std::unordered_map<Record,MfgCleanKeywordMap>;
 } // namespace types
 } // namespace vpd
