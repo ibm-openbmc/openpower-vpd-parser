@@ -920,6 +920,14 @@
             {
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/tpm_wilson",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
+                "preAction": {
+                    "collection": {
+                        "gpioPresence": {
+                            "pin": "CPU_TPM_CARD_PRESENT_N",
+                            "value": 0
+                        }
+                    }
+                },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Tpm": null,
                     "com.ibm.ipzvpd.Location": {
@@ -936,6 +944,14 @@
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/base_op_panel_blyth",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "essentialFru": true,
+                "preAction": {
+                    "collection": {
+                        "gpioPresence": {
+                            "pin": "BLYTH_OPPANEL_PRESENCE_N",
+                            "value": 0
+                        }
+                    }
+                },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Panel": null,
                     "com.ibm.ipzvpd.Location": {
@@ -952,24 +968,36 @@
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/lcd_op_panel_hill",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "replaceableAtRuntime": true,
-                "devAddress": "7-0051",
-                "driverType": "at24",
-                "busType": "i2c",
-                "presence": {
-                    "pollingRequired": true,
-                    "pin": "RUSSEL_OPPANEL_PRESENCE_N",
-                    "value": 0,
-                    "gpioI2CAddress": "0-0020"
+                "pollingRequired": {
+                    "hotPlugging": {
+                        "gpioPresence": {
+                            "pin": "RUSSEL_OPPANEL_PRESENCE_N",
+                            "value": 0
+                        }
+                    }
                 },
                 "preAction": {
-                    "pin": "RUSSEL_FW_I2C_ENABLE_N",
-                    "value": 0,
-                    "gpioI2CAddress": "0-0020"
+                    "collection": {
+                        "gpioPresence": {
+                            "pin": "RUSSEL_OPPANEL_PRESENCE_N",
+                            "value": 0
+                        },
+                        "setGpio": {
+                            "pin": "RUSSEL_FW_I2C_ENABLE_N",
+                            "value": 0
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 7-0051 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "RUSSEL_FW_I2C_ENABLE_N",
-                    "value": 1,
-                    "gpioI2CAddress": "0-0020"
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "RUSSEL_FW_I2C_ENABLE_N",
+                            "value": 1
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.Panel": null,
@@ -1693,26 +1721,38 @@
             {
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot0/pcie_card0",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
-                "devAddress": "20-0050",
-                "pcaChipAddress": "20-0060",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "replaceableAtRuntime": true,
-                "presence": {
-                    "pin": "SLOT0_EXPANDER_PRSNT_N",
-                    "value": 0,
-                    "gpioI2CAddress": "3-0061"
-                },
                 "preAction": {
-                    "pin": "SLOT0_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "3-0061"
+                    "collection": {
+                        "gpioPresence": {
+                            "pin": "SLOT0_EXPANDER_PRSNT_N",
+                            "value": 0
+                        },
+                        "setGpio": {
+                            "pin": "SLOT0_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 20-0050 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT0_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "3-0061"
+                "postAction": {
+                    "collection": {
+                        "ccin": ["2CE2", "58FF", "6B92", "6B99"],
+                        "systemCmd": {
+                            "cmd": "echo 20-0060 > /sys/bus/i2c/drivers/leds-pca955x/bind"
+                        }
+                    }
+                },
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT0_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -1771,26 +1811,38 @@
             {
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot3/pcie_card3",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
-                "devAddress": "23-0050",
-                "pcaChipAddress": "23-0060",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "replaceableAtRuntime": true,
-                "presence": {
-                    "pin": "SLOT3_EXPANDER_PRSNT_N",
-                    "value": 0,
-                    "gpioI2CAddress": "3-0061"
-                },
                 "preAction": {
-                    "pin": "SLOT3_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "3-0061"
+                    "collection": {
+                        "gpioPresence": {
+                            "pin": "SLOT3_EXPANDER_PRSNT_N",
+                            "value": 0
+                        },
+                        "setGpio": {
+                            "pin": "SLOT3_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 23-0050 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT3_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "3-0061"
+                "postAction": {
+                    "collection": {
+                        "ccin": ["2CE2", "58FF", "6B92", "6B99"],
+                        "systemCmd": {
+                            "cmd": "echo 23-0060 > /sys/bus/i2c/drivers/leds-pca955x/bind"
+                        }
+                    }
+                },
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT3_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -1849,26 +1901,38 @@
             {
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot4/pcie_card4",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
-                "devAddress": "24-0051",
-                "pcaChipAddress": "24-0061",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "replaceableAtRuntime": true,
-                "presence": {
-                    "pin": "SLOT4_EXPANDER_PRSNT_N",
-                    "value": 0,
-                    "gpioI2CAddress": "3-0061"
-                },
                 "preAction": {
-                    "pin": "SLOT4_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "3-0061"
+                    "collection": {
+                        "gpioPresence": {
+                            "pin": "SLOT4_EXPANDER_PRSNT_N",
+                            "value": 0
+                        },
+                        "setGpio": {
+                            "pin": "SLOT4_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 24-0051 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT4_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "3-0061"
+                "postAction": {
+                    "collection": {
+                        "ccin": ["2CE2", "58FF", "6B92", "6B99"],
+                        "systemCmd": {
+                            "cmd": "echo 24-0061 > /sys/bus/i2c/drivers/leds-pca955x/bind"
+                        }
+                    }
+                },
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT4_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -1927,26 +1991,38 @@
             {
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot10/pcie_card10",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
-                "devAddress": "29-0050",
-                "pcaChipAddress": "29-0060",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "replaceableAtRuntime": true,
-                "presence": {
-                    "pin": "SLOT10_EXPANDER_PRSNT_N",
-                    "value": 0,
-                    "gpioI2CAddress": "8-0061"
-                },
                 "preAction": {
-                    "pin": "SLOT10_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "8-0061"
+                    "collection": {
+                        "gpioPresence": {
+                            "pin": "SLOT10_EXPANDER_PRSNT_N",
+                            "value": 0
+                        },
+                        "setGpio": {
+                            "pin": "SLOT10_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 29-0050 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT10_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "8-0061"
+                "postAction": {
+                    "collection": {
+                        "ccin": ["2CE2", "58FF", "6B92", "6B99"],
+                        "systemCmd": {
+                            "cmd": "echo 29-0060 > /sys/bus/i2c/drivers/leds-pca955x/bind"
+                        }
+                    }
+                },
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT10_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -2073,26 +2149,30 @@
             {
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot2/pcie_card2",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
-                "devAddress": "22-0052",
-                "pcaChipAddress": "22-0062",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "replaceableAtRuntime": true,
-                "presence": {
-                    "pin": "SLOT2_EXPANDER_PRSNT_N",
-                    "value": 0,
-                    "gpioI2CAddress": "3-0061"
-                },
                 "preAction": {
-                    "pin": "SLOT2_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "3-0061"
+                    "collection": {
+                        "gpioPresence": {
+                            "pin": "SLOT2_EXPANDER_PRSNT_N",
+                            "value": 0
+                        },
+                        "setGpio": {
+                            "pin": "SLOT2_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 22-0052 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT2_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "3-0061"
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT2_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -2116,25 +2196,30 @@
             {
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot6/pcie_card6",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
-                "devAddress": "25-0053",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "replaceableAtRuntime": true,
-                "presence": {
-                    "pin": "SLOT6_EXPANDER_PRSNT_N",
-                    "value": 0,
-                    "gpioI2CAddress": "8-0061"
-                },
                 "preAction": {
-                    "pin": "SLOT6_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "8-0061"
+                    "collection": {
+                        "gpioPresence": {
+                            "pin": "SLOT6_EXPANDER_PRSNT_N",
+                            "value": 0
+                        },
+                        "setGpio": {
+                            "pin": "SLOT6_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 25-0053 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT6_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "8-0061"
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT6_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -2151,26 +2236,30 @@
             {
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot7/pcie_card7",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
-                "devAddress": "26-0052",
-                "pcaChipAddress": "26-0062",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "replaceableAtRuntime": true,
-                "presence": {
-                    "pin": "SLOT7_EXPANDER_PRSNT_N",
-                    "value": 0,
-                    "gpioI2CAddress": "8-0061"
-                },
                 "preAction": {
-                    "pin": "SLOT7_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "8-0061"
+                    "collection": {
+                        "gpioPresence": {
+                            "pin": "SLOT7_EXPANDER_PRSNT_N",
+                            "value": 0
+                        },
+                        "setGpio": {
+                            "pin": "SLOT7_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 26-0052 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT7_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "8-0061"
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT7_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -2194,26 +2283,30 @@
             {
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot9/pcie_card9",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
-                "devAddress": "27-0050",
-                "pcaChipAddress": "27-0060",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "replaceableAtRuntime": true,
-                "presence": {
-                    "pin": "SLOT9_EXPANDER_PRSNT_N",
-                    "value": 0,
-                    "gpioI2CAddress": "8-0061"
-                },
                 "preAction": {
-                    "pin": "SLOT9_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "8-0061"
+                    "collection": {
+                        "gpioPresence": {
+                            "pin": "SLOT9_EXPANDER_PRSNT_N",
+                            "value": 0
+                        },
+                        "setGpio": {
+                            "pin": "SLOT9_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 27-0050 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT9_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "8-0061"
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT9_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -2237,26 +2330,30 @@
             {
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot11/pcie_card11",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
-                "devAddress": "30-0051",
-                "pcaChipAddress": "30-0061",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "replaceableAtRuntime": true,
-                "presence": {
-                    "pin": "SLOT11_EXPANDER_PRSNT_N",
-                    "value": 0,
-                    "gpioI2CAddress": "8-0061"
-                },
                 "preAction": {
-                    "pin": "SLOT11_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "8-0061"
+                    "collection": {
+                        "gpioPresence": {
+                            "pin": "SLOT11_EXPANDER_PRSNT_N",
+                            "value": 0
+                        },
+                        "setGpio": {
+                            "pin": "SLOT11_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 30-0051 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT11_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "8-0061"
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT11_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -2349,26 +2446,30 @@
             {
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot1/pcie_card1",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
-                "devAddress": "21-0051",
-                "pcaChipAddress": "21-0061",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "replaceableAtRuntime": true,
-                "presence": {
-                    "pin": "SLOT1_EXPANDER_PRSNT_N",
-                    "value": 0,
-                    "gpioI2CAddress": "3-0061"
-                },
                 "preAction": {
-                    "pin": "SLOT1_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "3-0061"
+                    "collection": {
+                        "gpioPresence": {
+                            "pin": "SLOT1_EXPANDER_PRSNT_N",
+                            "value": 0
+                        },
+                        "setGpio": {
+                            "pin": "SLOT1_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 21-0051 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT1_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "3-0061"
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT1_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -2392,26 +2493,30 @@
             {
                 "inventoryPath": "/xyz/openbmc_project/inventory/system/chassis/motherboard/pcieslot8/pcie_card8",
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
-                "devAddress": "28-0051",
-                "pcaChipAddress": "28-0061",
                 "replaceableAtStandby": true,
-                "busType": "i2c",
-                "driverType": "at24",
                 "replaceableAtRuntime": true,
-                "presence": {
-                    "pin": "SLOT8_EXPANDER_PRSNT_N",
-                    "value": 0,
-                    "gpioI2CAddress": "8-0061"
-                },
                 "preAction": {
-                    "pin": "SLOT8_PRSNT_EN_RSVD",
-                    "value": 1,
-                    "gpioI2CAddress": "8-0061"
+                    "collection": {
+                        "gpioPresence": {
+                            "pin": "SLOT8_EXPANDER_PRSNT_N",
+                            "value": 0
+                        },
+                        "setGpio": {
+                            "pin": "SLOT8_PRSNT_EN_RSVD",
+                            "value": 1
+                        },
+                        "systemCmd": {
+                            "cmd": "echo 28-0051 > /sys/bus/i2c/drivers/at24/bind"
+                        }
+                    }
                 },
-                "postActionFail": {
-                    "pin": "SLOT8_PRSNT_EN_RSVD",
-                    "value": 0,
-                    "gpioI2CAddress": "8-0061"
+                "PostFailAction": {
+                    "collection": {
+                        "setGpio": {
+                            "pin": "SLOT8_PRSNT_EN_RSVD",
+                            "value": 0
+                        }
+                    }
                 },
                 "extraInterfaces": {
                     "xyz.openbmc_project.Inventory.Item.PCIeDevice": null,
@@ -3002,6 +3107,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM0_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-111/new_device"
                         }
@@ -3067,6 +3176,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM0_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-110/new_device"
                         }
@@ -3132,6 +3245,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM0_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-214/new_device"
                         }
@@ -3197,6 +3314,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM0_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-210/new_device"
                         }
@@ -3262,6 +3383,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM0_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-202/new_device"
                         }
@@ -3327,6 +3452,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM1_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-311/new_device"
                         }
@@ -3392,6 +3521,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM1_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-310/new_device"
                         }
@@ -3457,6 +3590,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM1_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-312/new_device"
                         }
@@ -3522,6 +3659,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM1_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-402/new_device"
                         }
@@ -3587,6 +3728,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM1_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-410/new_device"
                         }
@@ -3652,6 +3797,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM0_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-112/new_device"
                         }
@@ -3717,6 +3866,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM0_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-115/new_device"
                         }
@@ -3782,6 +3935,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM0_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-100/new_device"
                         }
@@ -3847,6 +4004,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM0_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-101/new_device"
                         }
@@ -3912,6 +4073,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM0_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-114/new_device"
                         }
@@ -3977,6 +4142,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM0_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-113/new_device"
                         }
@@ -4042,6 +4211,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM0_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-216/new_device"
                         }
@@ -4107,6 +4280,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM0_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-203/new_device"
                         }
@@ -4172,6 +4349,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM0_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-217/new_device"
                         }
@@ -4237,6 +4418,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM0_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-211/new_device"
                         }
@@ -4302,6 +4487,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM0_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-215/new_device"
                         }
@@ -4367,6 +4556,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM1_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-315/new_device"
                         }
@@ -4432,6 +4625,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM1_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-300/new_device"
                         }
@@ -4497,6 +4694,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM1_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-313/new_device"
                         }
@@ -4562,6 +4763,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM1_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-314/new_device"
                         }
@@ -4627,6 +4832,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM1_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-301/new_device"
                         }
@@ -4692,6 +4901,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM1_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-417/new_device"
                         }
@@ -4757,6 +4970,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM1_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-403/new_device"
                         }
@@ -4822,6 +5039,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM1_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-416/new_device"
                         }
@@ -4887,6 +5108,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM1_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-411/new_device"
                         }
@@ -4952,6 +5177,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM1_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-415/new_device"
                         }
@@ -5017,6 +5246,10 @@
                 "serviceName": "xyz.openbmc_project.Inventory.Manager",
                 "preAction": {
                     "collection": {
+                        "gpioPresence": {
+                            "pin": "P10_DCM1_PRES",
+                            "value": 0
+                        },
                         "systemCmd": {
                             "cmd": "echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-414/new_device"
                         }
