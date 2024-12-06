@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tool_constants.hpp"
 #include "tool_types.hpp"
 
 #include <nlohmann/json.hpp>
@@ -75,6 +76,8 @@ inline types::DbusVariantType readDbusProperty(const std::string& i_serviceName,
  * @brief An API to print json data on stdout.
  *
  * @param[in] i_jsonData - JSON object.
+ *
+ * @throw std::runtime_error
  */
 inline void printJson(const nlohmann::json& i_jsonData)
 {
