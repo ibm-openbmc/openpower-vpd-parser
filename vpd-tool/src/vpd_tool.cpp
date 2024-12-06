@@ -73,4 +73,16 @@ int VpdTool::readKeyword(const std::string& i_vpdPath,
     }
     return l_rc;
 }
+
+int VpdTool::dumpObject(const std::string& i_fruPath,
+                        const nlohmann::json& i_sysConfigJson,
+                        nlohmann::json& io_resultJson) const noexcept
+{
+    // TODO : Implement Dump Object
+    (void)i_fruPath;
+    (void)i_sysConfigJson;
+    (void)io_resultJson;
+    int l_rc{constants::SUCCESS};
+    return l_rc;
+}
 } // namespace vpd

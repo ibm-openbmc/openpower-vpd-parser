@@ -1,5 +1,7 @@
 #pragma once
 
+#include <nlohmann/json.hpp>
+
 #include <string>
 
 namespace vpd
@@ -39,5 +41,23 @@ class VpdTool
                     const std::string& i_recordName,
                     const std::string& i_keywordName, const bool i_onHardware,
                     const std::string& i_fileToSave = {});
+
+    /**
+     * @brief Dump the given inventory object in JSON format to console.
+     *
+     * For a given Object Path of a FRU, this API dumps the following properties
+     * of the FRU in JSON format to console:
+     * - Present property, Pretty Name, Location Code, Sub Model
+     * - SN, PN, CC, FN, DR keywords under VINI record.
+     *
+     * @param[in] i_fruPath - DBus object path.
+     * @param[in] i_sysConfigJson - Parsed System Config JSON.
+     * @param[in,out] io_resultJson - JSON object which holds the result.
+     *
+     * @return On success returns 0, otherwise returns -1.
+     */
+    int dumpObject(const std::string& i_fruPath,
+                   const nlohmann::json& i_sysConfigJson,
+                   nlohmann::json& io_resultJson) const noexcept;
 };
 } // namespace vpd
