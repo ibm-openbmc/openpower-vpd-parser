@@ -4,6 +4,7 @@
 #include "exceptions.hpp"
 #include "logger.hpp"
 
+#include <fstream>
 #include <iostream>
 #include <numeric>
 #include <string>
@@ -133,4 +134,80 @@ void KeywordVpdParser::checkNextBytesValidity(uint8_t i_numberOfBytes)
     }
 }
 
+int KeywordVpdParser::findKeyword(const std::string& i_keyword)
+{
+    (void)i_keyword;
+    return 0;
+}
+
+int KeywordVpdParser::writeKeywordOnHardware(
+    const types::WriteVpdParams i_paramsToWriteData)
+{
+    types::Keyword l_keywordName;
+    types::BinaryVector l_keywordData;
+
+    // Extract keyword and value from i_paramsToWriteData
+    if (const types::KwData* l_kwData =
+            std::get_if<types::KwData>(&i_paramsToWriteData))
+    {
+        l_keywordName = std::get<0>(*l_kwData);
+        l_keywordData = std::get<1>(*l_kwData);
+    }
+    else
+    {
+        logging::logMessage("Given VPD type is not supported");
+        throw types::DbusInvalidArgument();
+    }
+
+    if (l_keywordData.size() == 0)
+    {
+        logging::logMessage("Given keyword's data is of length 0");
+        throw types::DbusInvalidArgument();
+    }
+
+    // Iterate through VPD vector to find the keyword
+    if (findKeyword(l_keywordName) != 0)
+    {
+        logging::logMessage("Keyword " + l_keywordName + " not found.");
+        throw types::DbusInvalidArgument();
+    }
+
+    // Skip bytes representing the keyword name
+    std::advance(m_vpdIterator, constants::TWO_BYTES);
+
+    // Get size of the keyword
+    const auto l_keywordActualSize = *m_vpdIterator;
+
+    // If given keyword value is of greater length that it's actual length
+    if (l_keywordData.size() > l_keywordActualSize)
+    {
+        // Resize the given array to the right size
+        l_keywordData.resize(l_keywordActualSize);
+        l_keywordData.shrink_to_fit();
+    }
+
+    // Skip bytes representing the size of the keyword
+    std::advance(m_vpdIterator, constants::ONE_BYTE);
+
+    // Open filestream to write the value
+    std::fstream l_vpdFileStream;
+    l_vpdFileStream.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+    l_vpdFileStream.open(m_vpdFilePath,
+                         std::ios::in | std::ios::out | std::ios::binary);
+
+    // Get keyword value's offset
+    const auto l_keywordOffset = std::distance(m_keywordVpdVector.begin(),
+                                               m_vpdIterator);
+    // Goto keyword value's offset in filestream
+    l_vpdFileStream.seekp(constants::KW_VPD_DATA_START + l_keywordOffset,
+                          std::ios::beg);
+
+    // Write given value in filestream
+    std::copy(l_keywordData.begin(), l_keywordData.end(),
+              std::ostreambuf_iterator<char>(l_vpdFileStream));
+
+    l_vpdFileStream.close();
+
+    return l_keywordData.size();
+}
 } // namespace vpd
