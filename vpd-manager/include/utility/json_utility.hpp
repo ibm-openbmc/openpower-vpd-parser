@@ -1049,5 +1049,48 @@ inline std::vector<std::string>
     return l_frusReplaceableAtStandby;
 }
 
+/**
+ * @brief API to get D-bus object paths of all essential FRUs.
+ *
+ * This API is to get the D-bus object paths of FRUs marked as "essentialFru" in
+ * system config JSON along with the service name in which the object paths are
+ * hosted.
+ *
+ * @param[in] i_sysCfgJsonObj - System config JSON object.
+ * @param[out] o_essentialFrus - Map to store essential FRUs object paths and
+ * the service.
+ */
+inline void
+    getEssentialFruObjects(const nlohmann::json& i_sysCfgJsonObj,
+                           types::MapOfObjectsToService& o_essentialFrus)
+{
+    if (i_sysCfgJsonObj.empty() || !i_sysCfgJsonObj.contains("frus"))
+    {
+        logging::logMessage(
+            "System config JSON object is empty/Missing frus section.");
+        return;
+    }
+
+    const nlohmann::json& l_fruList =
+        i_sysCfgJsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
+
+    for (const auto& l_fru : l_fruList.items())
+    {
+        if (i_sysCfgJsonObj["frus"][l_fru.key()].at(0).contains(
+                "essentialFru") &&
+            i_sysCfgJsonObj["frus"][l_fru.key()].at(0)["essentialFru"])
+        {
+            if (i_sysCfgJsonObj["frus"][l_fru.key()].at(0).contains(
+                    "inventoryPath") &&
+                i_sysCfgJsonObj["frus"][l_fru.key()].at(0).contains(
+                    "serviceName"))
+            {
+                o_essentialFrus.emplace(
+                    i_sysCfgJsonObj["frus"][l_fru.key()].at(0)["inventoryPath"],
+                    i_sysCfgJsonObj["frus"][l_fru.key()].at(0)["serviceName"]);
+            }
+        }
+    }
+}
 } // namespace jsonUtility
 } // namespace vpd
