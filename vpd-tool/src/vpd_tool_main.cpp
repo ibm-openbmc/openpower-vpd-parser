@@ -1,4 +1,6 @@
 #include "tool_constants.hpp"
+#include "tool_json_utility.hpp"
+#include "tool_utils.hpp"
 #include "vpd_tool.hpp"
 
 #include <CLI/CLI.hpp>
@@ -8,7 +10,7 @@
 
 int main(int argc, char** argv)
 {
-    int l_rc = -1;
+    int l_rc = vpd::constants::FAILURE;
     CLI::App l_app{"VPD Command Line Tool"};
 
     std::string l_vpdPath{};
@@ -26,7 +28,10 @@ int main(int argc, char** argv)
         "        From hardware to console: "
         "vpd-tool -r -H -O <DBus Object Path> -R <Record Name> -K <Keyword Name>\n"
         "        From hardware to file: "
-        "vpd-tool -r -H -O <EEPROM Path> -R <Record Name> -K <Keyword Name> --file <File Path>");
+        "vpd-tool -r -H -O <EEPROM Path> -R <Record Name> -K <Keyword Name> --file <File Path>\n"
+        "Dump Object:\n"
+        "    From dbus to console: "
+        "vpd-tool -o -O <DBus Object Path>");
 
     auto l_objectOption = l_app.add_option("--object, -O", l_vpdPath,
                                            "File path");
@@ -45,6 +50,9 @@ int main(int argc, char** argv)
 
     auto l_hardwareFlag = l_app.add_flag("--Hardware, -H",
                                          "CAUTION: Developer only option.");
+
+    auto l_dumpObjFlag = l_app.add_flag("--dumpObject, -o", "Dump Object")
+                             ->needs(l_objectOption);
 
     // ToDo: Take offset value from user for hardware path.
 
@@ -99,6 +107,11 @@ int main(int argc, char** argv)
 
         l_rc = l_vpdToolObj.readKeyword(l_vpdPath, l_recordName, l_keywordName,
                                         l_isHardwareOperation, l_filePath);
+    }
+    else if (!l_dumpObjFlag->empty())
+    {
+        vpd::VpdTool l_vpdToolObj;
+        l_rc = l_vpdToolObj.dumpObject(l_vpdPath);
     }
     else
     {
