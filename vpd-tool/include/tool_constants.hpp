@@ -12,6 +12,9 @@ static constexpr auto INDENTATION = 4;
 static constexpr auto SUCCESS = 0;
 static constexpr auto FAILURE = -1;
 
+// To be explicitly used for string comparison.
+static constexpr auto STR_CMP_SUCCESS = 0;
+
 constexpr auto inventoryManagerService =
     "xyz.openbmc_project.Inventory.Manager";
 constexpr auto baseInventoryPath = "/xyz/openbmc_project/inventory";

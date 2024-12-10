@@ -43,19 +43,30 @@ int VpdTool::readKeyword(const std::string& i_vpdPath,
 
             if (i_fileToSave.empty())
             {
-                nlohmann::json l_resultInJson = nlohmann::json::object({});
-                nlohmann::json l_keywordValInJson = nlohmann::json::object({});
-
-                l_keywordValInJson.emplace(i_keywordName, l_keywordStrValue);
-                l_resultInJson.emplace(i_vpdPath, l_keywordValInJson);
-
-                utils::printJson(l_resultInJson);
+                utils::displayOnConsole(i_vpdPath, i_keywordName,
+                                        l_keywordStrValue);
+                l_rc = constants::SUCCESS;
             }
             else
             {
-                // TODO: Write result to a given file path.
+                if (utils::saveToFile(i_fileToSave, l_keywordStrValue))
+                {
+                    std::cout
+                        << "Value read is saved on the file: " << i_fileToSave
+                        << std::endl;
+                    l_rc = constants::SUCCESS;
+                }
+                else
+                {
+                    std::cerr
+                        << "Error while saving the read value on the file: "
+                        << i_fileToSave
+                        << "\nDisplaying the read value on console"
+                        << std::endl;
+                    utils::displayOnConsole(i_vpdPath, i_keywordName,
+                                            l_keywordStrValue);
+                }
             }
-            l_rc = constants::SUCCESS;
         }
         else
         {

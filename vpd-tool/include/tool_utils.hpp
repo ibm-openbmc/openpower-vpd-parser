@@ -6,6 +6,7 @@
 #include <sdbusplus/bus.hpp>
 #include <sdbusplus/exception.hpp>
 
+#include <fstream>
 #include <iostream>
 
 namespace vpd
@@ -169,6 +170,89 @@ inline types::DbusVariantType
     {
         throw;
     }
+}
+
+/**
+ * @brief API to save keyword's value on file.
+ *
+ * API writes keyword's value on the given file path. If the data is in hex
+ * format, API strips '0x' and saves the value on the given file.
+ *
+ * @param[in] i_filePath - File path.
+ * @param[in] i_keywordValue - Keyword's value.
+ *
+ * @return - true on successfully writing to file, false otherwise.
+ */
+inline bool saveToFile(const std::string& i_filePath,
+                       const std::string& i_keywordValue)
+{
+    bool l_returnStatus = false;
+
+    if (i_keywordValue.empty())
+    {
+        // ToDo: log only when verbose is enabled
+        std::cerr << "Save to file[ " << i_filePath
+                  << "] failed, reason: Empty keyword's value received"
+                  << std::endl;
+        return l_returnStatus;
+    }
+
+    std::string l_keywordValue{i_keywordValue};
+    if (i_keywordValue.substr(0, 2).compare("0x") == constants::STR_CMP_SUCCESS)
+    {
+        l_keywordValue = i_keywordValue.substr(2);
+    }
+
+    std::ofstream l_outPutFileStream;
+    l_outPutFileStream.exceptions(std::ifstream::badbit |
+                                  std::ifstream::failbit);
+    try
+    {
+        l_outPutFileStream.open(i_filePath);
+
+        if (l_outPutFileStream.is_open())
+        {
+            l_outPutFileStream.write(l_keywordValue.c_str(),
+                                     l_keywordValue.size());
+            l_returnStatus = true;
+        }
+        else
+        {
+            // ToDo: log only when verbose is enabled
+            std::cerr << "Error opening output file " << i_filePath
+                      << std::endl;
+        }
+    }
+    catch (const std::ios_base::failure& l_ex)
+    {
+        // ToDo: log only when verbose is enabled
+        std::cerr
+            << "Failed to write to file: " << i_filePath
+            << ", either base folder path doesn't exist or internal error occured, error: "
+            << l_ex.what() << '\n';
+    }
+
+    return l_returnStatus;
+}
+
+/**
+ * @brief API to print data in JSON format on console
+ *
+ * @param[in] i_fruPath - FRU path.
+ * @param[in] i_keywordName - Keyword name.
+ * @param[in] i_keywordStrValue - Keyword's value.
+ */
+inline void displayOnConsole(const std::string& i_fruPath,
+                             const std::string& i_keywordName,
+                             const std::string& i_keywordStrValue)
+{
+    nlohmann::json l_resultInJson = nlohmann::json::object({});
+    nlohmann::json l_keywordValInJson = nlohmann::json::object({});
+
+    l_keywordValInJson.emplace(i_keywordName, i_keywordStrValue);
+    l_resultInJson.emplace(i_fruPath, l_keywordValInJson);
+
+    printJson(l_resultInJson);
 }
 } // namespace utils
 } // namespace vpd
