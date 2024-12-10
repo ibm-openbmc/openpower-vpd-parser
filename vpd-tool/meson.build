@@ -13,7 +13,7 @@ sources = ['src/vpd_tool_main.cpp',
 
 vpd_tool_exe = executable('vpd-tool',
                           sources,
-                          include_directories : ['include/'],
+                          include_directories : ['include/','../'],
                           dependencies: dependency_list,
                           install: true
                         )

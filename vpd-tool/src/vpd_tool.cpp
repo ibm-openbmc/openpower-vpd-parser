@@ -1,6 +1,9 @@
+#include "config.h"
+
 #include "vpd_tool.hpp"
 
 #include "tool_constants.hpp"
+#include "tool_json_utility.hpp"
 #include "tool_types.hpp"
 #include "tool_utils.hpp"
 
@@ -74,4 +77,36 @@ int VpdTool::readKeyword(const std::string& i_vpdPath,
     }
     return l_rc;
 }
+
+int VpdTool::dumpObject(const std::string& i_fruPath) const noexcept
+{
+    int l_rc{constants::FAILURE};
+    try
+    {
+        const nlohmann::json l_resultJson = getFruPropertiesJson(i_fruPath);
+        if (!l_resultJson.empty())
+        {
+            utils::printJson(l_resultJson);
+            l_rc = constants::SUCCESS;
+        }
+    }
+    catch (std::exception& l_ex)
+    {
+        std::cerr << "Dump Object failed for FRU: " << i_fruPath
+                  << " Error: " << l_ex.what() << std::endl;
+    }
+    return l_rc;
+}
+
+nlohmann::json VpdTool::getFruPropertiesJson(const std::string& i_fruPath) const
+{
+    nlohmann::json l_resultInJson = nlohmann::json::array({});
+    const nlohmann::json& l_sysCfgJsonObj =
+        vpd::jsonUtility::getParsedJson(INVENTORY_JSON_SYM_LINK);
+    // TODO: Implement getFruPropertiesJson
+    (void)i_fruPath;
+    (void)l_sysCfgJsonObj;
+    return l_resultInJson;
+}
+
 } // namespace vpd
