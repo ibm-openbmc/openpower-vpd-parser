@@ -466,5 +466,72 @@ inline bool isBMCReady()
 
     return false;
 }
+
+/**
+ * @brief An API to enable BMC reboot guard
+ *
+ * This API does a D-Bus method call to enable BMC reboot guard.
+ * The caller of this API needs to handle exception thrown by this method to
+ * identify failure in enabling Reboot Guard.
+ *
+ * @throw std::runtime_error
+ */
+inline void EnableRebootGuard()
+{
+    try
+    {
+        auto l_bus = sdbusplus::bus::new_default();
+        auto l_method = l_bus.new_method_call(
+            "org.freedesktop.systemd1", "/org/freedesktop/systemd1",
+            "org.freedesktop.systemd1.Manager", "StartUnit");
+        l_method.append("reboot-guard-enable.service", "replace");
+        l_bus.call_noreply(l_method);
+    }
+    catch (const sdbusplus::exception::SdBusError& l_ex)
+    {
+        std::string l_errMsg =
+            "Bus call to enable BMC reboot failed for reason: ";
+        l_errMsg += l_ex.what();
+
+        logging::logMessage(l_errMsg);
+        // TODO: Log PEL?
+
+        throw std::runtime_error(l_errMsg);
+    }
+}
+
+/**
+ * @brief An API to disable BMC reboot guard
+ *
+ * This API does a D-Bus method call to disable BMC reboot guard.
+ * The caller of this API needs to handle exception thrown by this method to
+ * identify failure in disabling Reboot Guard.
+ *
+ * @throw std::runtime_error
+ */
+inline void DisableRebootGuard()
+{
+    try
+    {
+        auto l_bus = sdbusplus::bus::new_default();
+        auto l_method = l_bus.new_method_call(
+            "org.freedesktop.systemd1", "/org/freedesktop/systemd1",
+            "org.freedesktop.systemd1.Manager", "StartUnit");
+        l_method.append("reboot-guard-disable.service", "replace");
+        l_bus.call_noreply(l_method);
+    }
+    catch (const sdbusplus::exception::SdBusError& l_ex)
+    {
+        std::string l_errMsg =
+            "Bus call to disable BMC reboot failed for reason: ";
+        l_errMsg += l_ex.what();
+
+        logging::logMessage(l_errMsg);
+        // TODO: Log PEL?
+
+        throw std::runtime_error(l_errMsg);
+    }
+}
+
 } // namespace dbusUtility
 } // namespace vpd
