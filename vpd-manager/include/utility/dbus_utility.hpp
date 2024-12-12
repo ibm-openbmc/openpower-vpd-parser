@@ -454,5 +454,70 @@ inline bool isBMCReady()
 
     return false;
 }
+
+/**
+ * @brief An API to enable BMC reboot guard
+ *
+ * This API does a D-Bus method call to enable BMC reboot guard.
+ *
+ * @return On success, returns 0, otherwise returns -1.
+ */
+inline int EnableRebootGuard() noexcept
+{
+    int l_rc{-1};
+    try
+    {
+        auto l_bus = sdbusplus::bus::new_default();
+        auto l_method = l_bus.new_method_call(
+            "org.freedesktop.systemd1", "/org/freedesktop/systemd1",
+            "org.freedesktop.systemd1.Manager", "StartUnit");
+        l_method.append("reboot-guard-enable.service", "replace");
+        l_bus.call_noreply(l_method);
+        l_rc = 0;
+    }
+    catch (const sdbusplus::exception::SdBusError& l_ex)
+    {
+        std::string l_errMsg =
+            "D-Bus call to enable BMC reboot guard failed for reason: ";
+        l_errMsg += l_ex.what();
+
+        logging::logMessage(l_errMsg);
+        // TODO: Log PEL
+    }
+    return l_rc;
+}
+
+/**
+ * @brief An API to disable BMC reboot guard
+ *
+ * This API does a D-Bus method call to disable BMC reboot guard.
+ *
+ * @return On success, returns 0, otherwise returns -1.
+ */
+inline int DisableRebootGuard() noexcept
+{
+    int l_rc{-1};
+    try
+    {
+        auto l_bus = sdbusplus::bus::new_default();
+        auto l_method = l_bus.new_method_call(
+            "org.freedesktop.systemd1", "/org/freedesktop/systemd1",
+            "org.freedesktop.systemd1.Manager", "StartUnit");
+        l_method.append("reboot-guard-disable.service", "replace");
+        l_bus.call_noreply(l_method);
+        l_rc = 0;
+    }
+    catch (const sdbusplus::exception::SdBusError& l_ex)
+    {
+        std::string l_errMsg =
+            "D-Bus call to disable BMC reboot guard failed for reason: ";
+        l_errMsg += l_ex.what();
+
+        logging::logMessage(l_errMsg);
+        // TODO: Log PEL
+    }
+    return l_rc;
+}
+
 } // namespace dbusUtility
 } // namespace vpd

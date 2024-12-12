@@ -58,6 +58,13 @@ int Parser::updateVpdKeyword(const types::WriteVpdParams& i_paramsToWriteData)
 {
     // Update keyword's value on hardware
     int l_bytesUpdatedOnHardware = -1;
+
+    // Enable Reboot Guard
+    if (-1 == dbusUtility::EnableRebootGuard())
+    {
+        return -1;
+    }
+
     try
     {
         std::shared_ptr<ParserInterface> l_vpdParserInstance =
@@ -71,6 +78,10 @@ int Parser::updateVpdKeyword(const types::WriteVpdParams& i_paramsToWriteData)
             "Error while updating keyword's value on hardware path " +
             m_vpdFilePath + ", error: " + std::string(l_exception.what()));
         // TODO : Log PEL
+
+        // Disable Reboot Guard.
+        dbusUtility::DisableRebootGuard();
+
         return -1;
     }
 
@@ -113,6 +124,10 @@ int Parser::updateVpdKeyword(const types::WriteVpdParams& i_paramsToWriteData)
                     m_vpdFilePath +
                     ", error: " + std::string(l_exception.what()));
                 // TODO: Log PEL
+
+                // Disable Reboot Guard.
+                dbusUtility::DisableRebootGuard();
+
                 return -1;
             }
         }
@@ -122,6 +137,10 @@ int Parser::updateVpdKeyword(const types::WriteVpdParams& i_paramsToWriteData)
             logging::logMessage(
                 "Input parameter type isn't compatible to update keyword's value on DBus for object path: " +
                 l_inventoryObjPath);
+
+            // Disable Reboot Guard.
+            dbusUtility::DisableRebootGuard();
+
             return -1;
         }
 
@@ -142,6 +161,10 @@ int Parser::updateVpdKeyword(const types::WriteVpdParams& i_paramsToWriteData)
             // Call to PIM's Notify method failed.
             logging::logMessage("Notify PIM is failed for object path: " +
                                 l_inventoryObjPath);
+
+            // Disable Reboot Guard.
+            dbusUtility::DisableRebootGuard();
+
             return -1;
         }
     }
@@ -155,12 +178,19 @@ int Parser::updateVpdKeyword(const types::WriteVpdParams& i_paramsToWriteData)
             logging::logMessage(
                 "Error while updating keyword's value on redundant path " +
                 l_redundantFruPath);
+
+            // Disable Reboot Guard.
+            dbusUtility::DisableRebootGuard();
+
             return -1;
         }
     }
 
     // TODO: Check if revert is required when any of the writes fails.
     // TODO: Handle error logging
+
+    // Disable Reboot Guard.
+    dbusUtility::DisableRebootGuard();
 
     // All updates are successful.
     return l_bytesUpdatedOnHardware;
