@@ -146,23 +146,31 @@ void Worker::performInitialSetup()
         // some reason at system power on.
         return;
     }
-    catch (const std::exception& ex)
+    catch (const std::exception& l_ex)
     {
-        if (typeid(ex) == std::type_index(typeid(DataException)))
+        types::ErrorType l_errorType;
+
+        if (typeid(l_ex) == std::type_index(typeid(DataException)))
         {
-            // TODO:Catch logic to be implemented once PEL code goes in.
+            l_errorType = types::ErrorType::InvalidVpdMessage;
         }
-        else if (typeid(ex) == std::type_index(typeid(EccException)))
+        else if (typeid(l_ex) == std::type_index(typeid(EccException)))
         {
-            // TODO:Catch logic to be implemented once PEL code goes in.
+            l_errorType = types::ErrorType::EccCheckFailed;
         }
-        else if (typeid(ex) == std::type_index(typeid(JsonException)))
+        else if (typeid(l_ex) == std::type_index(typeid(JsonException)))
         {
-            // TODO:Catch logic to be implemented once PEL code goes in.
+            l_errorType = types::ErrorType::JsonFailure;
+        }
+        else
+        {
+            l_errorType = types::ErrorType::InvalidVpdMessage;
         }
 
-        logging::logMessage(ex.what());
-        throw;
+        EventLogger::createSyncPel(l_errorType,
+                                   types::SeverityType::Informational, __FILE__,
+                                   __FUNCTION__, 0, l_ex.what(), std::nullopt,
+                                   std::nullopt, std::nullopt, std::nullopt);
     }
 }
 #endif
@@ -513,10 +521,12 @@ void Worker::setDeviceTreeAndJson()
 
         if (devTreeFromJson.empty())
         {
-            // TODO:: Log a predictive PEL
-            logging::logMessage(
+            EventLogger::createSyncPel(
+                types::ErrorType::JsonFailure,
+                types::SeverityType::Informational, __FILE__, __FUNCTION__, 0,
                 "Mandatory value for device tree missing from JSON[" +
-                std::string(INVENTORY_JSON_SYM_LINK) + "]");
+                    std::string(INVENTORY_JSON_SYM_LINK) + "]",
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
         }
     }
 
@@ -1438,29 +1448,34 @@ std::tuple<bool, std::string>
                 "Call to PIM failed while publishing VPD.");
         }
     }
-    catch (const std::exception& ex)
+    catch (const std::exception& l_ex)
     {
         // handle all the exceptions internally. Return only true/false
         // based on status of execution.
-        if (typeid(ex) == std::type_index(typeid(DataException)))
+        types::ErrorType l_errorType;
+
+        if (typeid(l_ex) == std::type_index(typeid(DataException)))
         {
-            // TODO: Add custom handling
-            logging::logMessage(ex.what());
+            l_errorType = types::ErrorType::InvalidVpdMessage;
         }
-        else if (typeid(ex) == std::type_index(typeid(EccException)))
+        else if (typeid(l_ex) == std::type_index(typeid(EccException)))
         {
-            // TODO: Add custom handling
-            logging::logMessage(ex.what());
+            l_errorType = types::ErrorType::EccCheckFailed;
         }
-        else if (typeid(ex) == std::type_index(typeid(JsonException)))
+        else if (typeid(l_ex) == std::type_index(typeid(JsonException)))
         {
-            // TODO: Add custom handling
-            logging::logMessage(ex.what());
+            l_errorType = types::ErrorType::JsonFailure;
         }
         else
         {
-            logging::logMessage(ex.what());
+            l_errorType = types::ErrorType::InvalidVpdMessage;
         }
+
+        EventLogger::createSyncPel(
+            l_errorType, types::SeverityType::Informational, __FILE__,
+            __FUNCTION__, 0,
+            std::string("Parse and publish VPD failed. Error: ") + l_ex.what(),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
 
         // TODO: Figure out a way to clear data in case of any failure at
         // runtime.
@@ -1549,8 +1564,6 @@ void Worker::performBackupAndRestore(types::VPDMapVariant& io_srcVpdMap)
             BackupAndRestore l_backupAndRestoreObj(m_parsedJson);
             auto [l_srcVpdVariant,
                   l_dstVpdVariant] = l_backupAndRestoreObj.backupAndRestore();
-
-            throw std::runtime_error("Test error");
 
             // ToDo: Revisit is this check is required or not.
             if (auto l_srcVpdMap =
@@ -1672,8 +1685,12 @@ void Worker::deleteFruVpd(const std::string& i_dbusObjPath)
             }
         }
 
-        logging::logMessage("Failed to delete VPD for FRU : " + i_dbusObjPath +
-                            " error: " + std::string(l_ex.what()));
+        EventLogger::createSyncPel(
+            types::ErrorType::InvalidVpdMessage,
+            types::SeverityType::Informational, __FILE__, __FUNCTION__, 0,
+            std::string("Failed to delete VPD for FRU : ") + i_dbusObjPath +
+                ", error: " + l_ex.what(),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     }
 }
 } // namespace vpd
