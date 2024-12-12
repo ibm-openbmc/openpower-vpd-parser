@@ -1,5 +1,7 @@
 #include "parser.hpp"
 
+#include "constants.hpp"
+
 #include <utility/dbus_utility.hpp>
 #include <utility/json_utility.hpp>
 #include <utility/vpd_specific_utility.hpp>
@@ -56,111 +58,144 @@ types::VPDMapVariant Parser::parse()
 
 int Parser::updateVpdKeyword(const types::WriteVpdParams& i_paramsToWriteData)
 {
-    // Update keyword's value on hardware
     int l_bytesUpdatedOnHardware = -1;
     try
     {
-        std::shared_ptr<ParserInterface> l_vpdParserInstance =
-            getVpdParserInstance();
-        l_bytesUpdatedOnHardware =
-            l_vpdParserInstance->writeKeywordOnHardware(i_paramsToWriteData);
+        // Update keyword's value on hardware
+        try
+        {
+            std::shared_ptr<ParserInterface> l_vpdParserInstance =
+                getVpdParserInstance();
+            l_bytesUpdatedOnHardware =
+                l_vpdParserInstance->writeKeywordOnHardware(
+                    i_paramsToWriteData);
+        }
+        catch (const std::exception& l_exception)
+        {
+            std::string l_errMsg(
+                "Error while updating keyword's value on hardware path " +
+                m_vpdFilePath + ", error: " + std::string(l_exception.what()));
+
+            // TODO : Log PEL
+
+            throw std::runtime_error(l_errMsg);
+        }
+
+        auto [l_fruPath, l_inventoryObjPath, l_redundantFruPath] =
+            jsonUtility::getAllPathsToUpdateKeyword(m_parsedJson,
+                                                    m_vpdFilePath);
+
+        // If inventory D-bus object path is present, update keyword's value on
+        // DBus
+        if (!l_inventoryObjPath.empty())
+        {
+            types::Record l_recordName;
+            std::string l_interfaceName;
+            std::string l_propertyName;
+            types::DbusVariantType l_keywordValue;
+
+            if (const types::IpzData* l_ipzData =
+                    std::get_if<types::IpzData>(&i_paramsToWriteData))
+            {
+                l_recordName = std::get<0>(*l_ipzData);
+                l_interfaceName = constants::ipzVpdInf + l_recordName;
+                l_propertyName = std::get<1>(*l_ipzData);
+
+                try
+                {
+                    // Read keyword's value from hardware to write the same on
+                    // D-bus.
+                    std::shared_ptr<ParserInterface> l_vpdParserInstance =
+                        getVpdParserInstance();
+
+                    logging::logMessage("Performing VPD read on " +
+                                        m_vpdFilePath);
+
+                    l_keywordValue =
+                        l_vpdParserInstance->readKeywordFromHardware(
+                            types::ReadVpdParams(
+                                std::make_tuple(l_recordName, l_propertyName)));
+                }
+                catch (const std::exception& l_exception)
+                {
+                    // Unable to read keyword's value from hardware.
+                    std::string l_errMsg(
+                        "Error while reading keyword's value from hadware path " +
+                        m_vpdFilePath +
+                        ", error: " + std::string(l_exception.what()));
+
+                    // TODO: Log PEL
+
+                    throw std::runtime_error(l_errMsg);
+                }
+            }
+            else
+            {
+                // Input parameter type provided isn't compatible to perform
+                // update.
+                std::string l_errMsg(
+                    "Input parameter type isn't compatible to update keyword's value on DBus for object path: " +
+                    l_inventoryObjPath);
+                throw std::runtime_error(l_errMsg);
+            }
+
+            // Get D-bus name for the given keyword
+            l_propertyName =
+                vpdSpecificUtility::getDbusPropNameForGivenKw(l_propertyName);
+
+            // Create D-bus object map
+            types::ObjectMap l_dbusObjMap = {std::make_pair(
+                l_inventoryObjPath,
+                types::InterfaceMap{std::make_pair(
+                    l_interfaceName, types::PropertyMap{std::make_pair(
+                                         l_propertyName, l_keywordValue)})})};
+
+            // Call PIM's Notify method to perform update
+            if (!dbusUtility::callPIM(std::move(l_dbusObjMap)))
+            {
+                // Call to PIM's Notify method failed.
+                std::string l_errMsg("Notify PIM is failed for object path: " +
+                                     l_inventoryObjPath);
+                throw std::runtime_error(l_errMsg);
+            }
+        }
+
+        // Update keyword's value on redundant hardware if present
+        if (!l_redundantFruPath.empty())
+        {
+            if (updateVpdKeywordOnRedundantPath(l_redundantFruPath,
+                                                i_paramsToWriteData) < 0)
+            {
+                std::string l_errMsg(
+                    "Error while updating keyword's value on redundant path " +
+                    l_redundantFruPath);
+                throw std::runtime_error(l_errMsg);
+            }
+        }
+
+        // TODO: Check if revert is required when any of the writes fails.
+        // TODO: Handle error logging
     }
-    catch (const std::exception& l_exception)
+    catch (const std::exception& l_ex)
     {
-        logging::logMessage(
-            "Error while updating keyword's value on hardware path " +
-            m_vpdFilePath + ", error: " + std::string(l_exception.what()));
-        // TODO : Log PEL
-        return -1;
-    }
-
-    auto [l_fruPath, l_inventoryObjPath, l_redundantFruPath] =
-        jsonUtility::getAllPathsToUpdateKeyword(m_parsedJson, m_vpdFilePath);
-
-    // If inventory D-bus object path is present, update keyword's value on DBus
-    if (!l_inventoryObjPath.empty())
-    {
-        types::Record l_recordName;
-        std::string l_interfaceName;
-        std::string l_propertyName;
-        types::DbusVariantType l_keywordValue;
-
+        std::string l_keywordIdentifier{};
         if (const types::IpzData* l_ipzData =
                 std::get_if<types::IpzData>(&i_paramsToWriteData))
         {
-            l_recordName = std::get<0>(*l_ipzData);
-            l_interfaceName = constants::ipzVpdInf + l_recordName;
-            l_propertyName = std::get<1>(*l_ipzData);
-
-            try
-            {
-                // Read keyword's value from hardware to write the same on
-                // D-bus.
-                std::shared_ptr<ParserInterface> l_vpdParserInstance =
-                    getVpdParserInstance();
-
-                logging::logMessage("Performing VPD read on " + m_vpdFilePath);
-
-                l_keywordValue = l_vpdParserInstance->readKeywordFromHardware(
-                    types::ReadVpdParams(
-                        std::make_tuple(l_recordName, l_propertyName)));
-            }
-            catch (const std::exception& l_exception)
-            {
-                // Unable to read keyword's value from hardware.
-                logging::logMessage(
-                    "Error while reading keyword's value from hadware path " +
-                    m_vpdFilePath +
-                    ", error: " + std::string(l_exception.what()));
-                // TODO: Log PEL
-                return -1;
-            }
+            l_keywordIdentifier = std::get<0>(*l_ipzData) + ":" +
+                                  std::get<1>(*l_ipzData);
         }
-        else
+        else if (const types::KwData* l_kwData =
+                     std::get_if<types::KwData>(&i_paramsToWriteData))
         {
-            // Input parameter type provided isn't compatible to perform update.
-            logging::logMessage(
-                "Input parameter type isn't compatible to update keyword's value on DBus for object path: " +
-                l_inventoryObjPath);
-            return -1;
+            l_keywordIdentifier = std::get<0>(*l_kwData);
         }
+        logging::logMessage(
+            "Update VPD Keyword failed for : " + l_keywordIdentifier +
+            " failed due to error: " + l_ex.what());
 
-        // Get D-bus name for the given keyword
-        l_propertyName =
-            vpdSpecificUtility::getDbusPropNameForGivenKw(l_propertyName);
-
-        // Create D-bus object map
-        types::ObjectMap l_dbusObjMap = {std::make_pair(
-            l_inventoryObjPath,
-            types::InterfaceMap{std::make_pair(
-                l_interfaceName, types::PropertyMap{std::make_pair(
-                                     l_propertyName, l_keywordValue)})})};
-
-        // Call PIM's Notify method to perform update
-        if (!dbusUtility::callPIM(std::move(l_dbusObjMap)))
-        {
-            // Call to PIM's Notify method failed.
-            logging::logMessage("Notify PIM is failed for object path: " +
-                                l_inventoryObjPath);
-            return -1;
-        }
+        return constants::FAILURE;
     }
-
-    // Update keyword's value on redundant hardware if present
-    if (!l_redundantFruPath.empty())
-    {
-        if (updateVpdKeywordOnRedundantPath(l_redundantFruPath,
-                                            i_paramsToWriteData) < 0)
-        {
-            logging::logMessage(
-                "Error while updating keyword's value on redundant path " +
-                l_redundantFruPath);
-            return -1;
-        }
-    }
-
-    // TODO: Check if revert is required when any of the writes fails.
-    // TODO: Handle error logging
 
     // All updates are successful.
     return l_bytesUpdatedOnHardware;

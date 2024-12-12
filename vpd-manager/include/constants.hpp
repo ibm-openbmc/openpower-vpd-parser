@@ -174,6 +174,9 @@ static constexpr auto STR_CMP_SUCCESS = 0;
 // Just a random value. Can be adjusted as required.
 static constexpr uint8_t MAX_THREADS = 10;
 
+static constexpr auto FAILURE = -1;
+static constexpr auto SUCCESS = 0;
+
 constexpr auto bmcStateService = "xyz.openbmc_project.State.BMC";
 constexpr auto bmcZeroStateObject = "/xyz/openbmc_project/state/bmc0";
 constexpr auto bmcStateInterface = "xyz.openbmc_project.State.BMC";
