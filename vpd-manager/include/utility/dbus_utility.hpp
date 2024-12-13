@@ -454,5 +454,31 @@ inline bool isBMCReady()
 
     return false;
 }
+
+/**
+ * @brief API to set status of FRU VPD collection on D-bus.
+ *
+ * This API is to set value of CollectionStatus property hosted under
+ * com.ibm.VPD.Collection interface for the given FRU's inventory object.
+ *
+ * @param[in] i_invObjPath - D-bus inventory object path.
+ * @param[in] i_fruVpdCollectionStatus - FRU VPD collection status.
+ *
+ * @return true if given status is set successfully, false otherwise.
+ */
+inline bool
+    setFruVpdCollectionStatus(const std::string& i_invObjPath,
+                              const std::string& i_fruVpdCollectionStatus)
+{
+    types::ObjectMap l_objectMap;
+    types::InterfaceMap l_interfaceMap;
+    types::PropertyMap l_propertyMap;
+
+    l_propertyMap.emplace("CollectionStatus", i_fruVpdCollectionStatus);
+    l_interfaceMap.emplace(constants::vpdCollectionInterface, l_propertyMap);
+    l_objectMap.emplace(i_invObjPath, l_interfaceMap);
+
+    return callPIM(std::move(l_objectMap));
+}
 } // namespace dbusUtility
 } // namespace vpd

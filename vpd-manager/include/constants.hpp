@@ -187,5 +187,17 @@ static constexpr auto eventLoggingServiceName = "xyz.openbmc_project.Logging";
 static constexpr auto eventLoggingObjectPath = "/xyz/openbmc_project/logging";
 static constexpr auto eventLoggingInterface =
     "xyz.openbmc_project.Logging.Create";
+static constexpr auto vpdCollectionInterface = "com.ibm.VPD.Collection";
+
+// enumerated values of CollectionStatus D-bus property defined under
+// com.ibm.VPD.Collection interface.
+static constexpr auto vpdCollectionSuccess =
+    "com.ibm.VPD.Collection.Status.Success";
+static constexpr auto vpdCollectionFailure =
+    "com.ibm.VPD.Collection.Status.Failure";
+static constexpr auto vpdCollectionInProgress =
+    "com.ibm.VPD.Collection.Status.InProgress";
+static constexpr auto vpdCollectionNotStarted =
+    "com.ibm.VPD.Collection.Status.NotStarted";
 } // namespace constants
 } // namespace vpd
