@@ -116,6 +116,34 @@ int Parser::updateVpdKeyword(const types::WriteVpdParams& i_paramsToWriteData)
                 return -1;
             }
         }
+        else if (const types::KwData* l_kwData =
+                     std::get_if<types::KwData>(&i_paramsToWriteData))
+        {
+            l_interfaceName = constants::kwdVpdInf;
+            l_propertyName = std::get<0>(*l_kwData);
+
+            try
+            {
+                // Read keyword's value from hardware to write the same on
+                // D-bus.
+                std::shared_ptr<ParserInterface> l_vpdParserInstance =
+                    getVpdParserInstance();
+                logging::logMessage("Performing VPD read on " + m_vpdFilePath);
+                l_keywordValue = l_vpdParserInstance->readKeywordFromHardware(
+                    types::ReadVpdParams(l_propertyName));
+            }
+            catch (const std::exception& l_exception)
+            {
+                // Unable to read keyword's value from hardware.
+                logging::logMessage(
+                    "Error while reading keyword's value from hadware path " +
+                    m_vpdFilePath +
+                    ", error: " + std::string(l_exception.what()));
+
+                // TODO: Log PEL
+                return -1;
+            }
+        }
         else
         {
             // Input parameter type provided isn't compatible to perform update.
