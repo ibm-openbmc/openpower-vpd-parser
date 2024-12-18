@@ -4,6 +4,7 @@
 
 #include "backup_restore.hpp"
 #include "constants.hpp"
+#include "event_logger.hpp"
 #include "exceptions.hpp"
 #include "logger.hpp"
 #include "parser.hpp"
@@ -26,121 +27,109 @@ Manager::Manager(
     const std::shared_ptr<sdbusplus::asio::connection>& asioConnection) :
     m_ioContext(ioCon), m_interface(iFace), m_asioConnection(asioConnection)
 {
-    try
-    {
 #ifdef IBM_SYSTEM
-        m_worker = std::make_shared<Worker>(INVENTORY_JSON_DEFAULT);
+    m_worker = std::make_shared<Worker>(INVENTORY_JSON_DEFAULT);
 
-        // Set up minimal things that is needed before bus name is claimed.
-        m_worker->performInitialSetup();
+    // Set up minimal things that is needed before bus name is claimed.
+    m_worker->performInitialSetup();
 
-        // set callback to detect any asset tag change
-        registerAssetTagChangeCallback();
+    // set callback to detect any asset tag change
+    registerAssetTagChangeCallback();
 
-        // set async timer to detect if system VPD is published on D-Bus.
-        SetTimerToDetectSVPDOnDbus();
+    // set async timer to detect if system VPD is published on D-Bus.
+    SetTimerToDetectSVPDOnDbus();
 
-        // set async timer to detect if VPD collection is done.
-        SetTimerToDetectVpdCollectionStatus();
+    // set async timer to detect if VPD collection is done.
+    SetTimerToDetectVpdCollectionStatus();
 
-        // Instantiate GpioMonitor class
-        m_gpioMonitor = std::make_shared<GpioMonitor>(
-            m_worker->getSysCfgJsonObj(), m_worker, m_ioContext);
+    // Instantiate GpioMonitor class
+    m_gpioMonitor = std::make_shared<GpioMonitor>(m_worker->getSysCfgJsonObj(),
+                                                  m_worker, m_ioContext);
 
 #endif
-        // set callback to detect host state change.
-        registerHostStateChangeCallback();
+    // set callback to detect host state change.
+    registerHostStateChangeCallback();
 
-        // For backward compatibility. Should be depricated.
-        iFace->register_method(
-            "WriteKeyword",
-            [this](const sdbusplus::message::object_path i_path,
-                   const std::string i_recordName, const std::string i_keyword,
-                   const types::BinaryVector i_value) -> int {
-            return this->updateKeyword(
-                i_path, std::make_tuple(i_recordName, i_keyword, i_value));
-        });
+    // For backward compatibility. Should be depricated.
+    iFace->register_method("WriteKeyword",
+                           [this](const sdbusplus::message::object_path i_path,
+                                  const std::string i_recordName,
+                                  const std::string i_keyword,
+                                  const types::BinaryVector i_value) -> int {
+        return this->updateKeyword(
+            i_path, std::make_tuple(i_recordName, i_keyword, i_value));
+    });
 
-        // Register methods under com.ibm.VPD.Manager interface
-        iFace->register_method(
-            "UpdateKeyword",
-            [this](const types::Path i_vpdPath,
-                   const types::WriteVpdParams i_paramsToWriteData) -> int {
-            return this->updateKeyword(i_vpdPath, i_paramsToWriteData);
-        });
+    // Register methods under com.ibm.VPD.Manager interface
+    iFace->register_method(
+        "UpdateKeyword",
+        [this](const types::Path i_vpdPath,
+               const types::WriteVpdParams i_paramsToWriteData) -> int {
+        return this->updateKeyword(i_vpdPath, i_paramsToWriteData);
+    });
 
-        iFace->register_method(
-            "WriteKeywordOnHardware",
-            [this](const types::Path i_fruPath,
-                   const types::WriteVpdParams i_paramsToWriteData) -> int {
-            return this->updateKeywordOnHardware(i_fruPath,
-                                                 i_paramsToWriteData);
-        });
+    iFace->register_method(
+        "WriteKeywordOnHardware",
+        [this](const types::Path i_fruPath,
+               const types::WriteVpdParams i_paramsToWriteData) -> int {
+        return this->updateKeywordOnHardware(i_fruPath, i_paramsToWriteData);
+    });
 
-        iFace->register_method(
-            "ReadKeyword",
-            [this](const types::Path i_fruPath,
-                   const types::ReadVpdParams i_paramsToReadData)
-                -> types::DbusVariantType {
-            return this->readKeyword(i_fruPath, i_paramsToReadData);
-        });
+    iFace->register_method("ReadKeyword",
+                           [this](const types::Path i_fruPath,
+                                  const types::ReadVpdParams i_paramsToReadData)
+                               -> types::DbusVariantType {
+        return this->readKeyword(i_fruPath, i_paramsToReadData);
+    });
 
-        iFace->register_method(
-            "CollectFRUVPD",
-            [this](const sdbusplus::message::object_path& i_dbusObjPath) {
-            this->collectSingleFruVpd(i_dbusObjPath);
-        });
+    iFace->register_method(
+        "CollectFRUVPD",
+        [this](const sdbusplus::message::object_path& i_dbusObjPath) {
+        this->collectSingleFruVpd(i_dbusObjPath);
+    });
 
-        iFace->register_method(
-            "deleteFRUVPD",
-            [this](const sdbusplus::message::object_path& i_dbusObjPath) {
-            this->deleteSingleFruVpd(i_dbusObjPath);
-        });
+    iFace->register_method(
+        "deleteFRUVPD",
+        [this](const sdbusplus::message::object_path& i_dbusObjPath) {
+        this->deleteSingleFruVpd(i_dbusObjPath);
+    });
 
-        iFace->register_method(
-            "GetExpandedLocationCode",
-            [this](const std::string& i_unexpandedLocationCode,
-                   uint16_t& i_nodeNumber) -> std::string {
-            return this->getExpandedLocationCode(i_unexpandedLocationCode,
-                                                 i_nodeNumber);
-        });
+    iFace->register_method("GetExpandedLocationCode",
+                           [this](const std::string& i_unexpandedLocationCode,
+                                  uint16_t& i_nodeNumber) -> std::string {
+        return this->getExpandedLocationCode(i_unexpandedLocationCode,
+                                             i_nodeNumber);
+    });
 
-        iFace->register_method("GetFRUsByExpandedLocationCode",
-                               [this](const std::string& i_expandedLocationCode)
-                                   -> types::ListOfPaths {
-            return this->getFrusByExpandedLocationCode(i_expandedLocationCode);
-        });
+    iFace->register_method("GetFRUsByExpandedLocationCode",
+                           [this](const std::string& i_expandedLocationCode)
+                               -> types::ListOfPaths {
+        return this->getFrusByExpandedLocationCode(i_expandedLocationCode);
+    });
 
-        iFace->register_method(
-            "GetFRUsByUnexpandedLocationCode",
-            [this](const std::string& i_unexpandedLocationCode,
-                   uint16_t& i_nodeNumber) -> types::ListOfPaths {
-            return this->getFrusByUnexpandedLocationCode(
-                i_unexpandedLocationCode, i_nodeNumber);
-        });
+    iFace->register_method(
+        "GetFRUsByUnexpandedLocationCode",
+        [this](const std::string& i_unexpandedLocationCode,
+               uint16_t& i_nodeNumber) -> types::ListOfPaths {
+        return this->getFrusByUnexpandedLocationCode(i_unexpandedLocationCode,
+                                                     i_nodeNumber);
+    });
 
-        iFace->register_method(
-            "GetHardwarePath",
-            [this](const sdbusplus::message::object_path& i_dbusObjPath)
-                -> std::string { return this->getHwPath(i_dbusObjPath); });
+    iFace->register_method(
+        "GetHardwarePath",
+        [this](const sdbusplus::message::object_path& i_dbusObjPath)
+            -> std::string { return this->getHwPath(i_dbusObjPath); });
 
-        iFace->register_method("PerformVPDRecollection",
-                               [this]() { this->performVpdRecollection(); });
+    iFace->register_method("PerformVPDRecollection",
+                           [this]() { this->performVpdRecollection(); });
 
-        // Indicates FRU VPD collection for the system has not started.
-        iFace->register_property_rw<std::string>(
-            "CollectionStatus", sdbusplus::vtable::property_::emits_change,
-            [this](const std::string l_currStatus, const auto&) {
-            m_vpdCollectionStatus = l_currStatus;
-            return 0;
-        }, [this](const auto&) { return m_vpdCollectionStatus; });
-    }
-    catch (const std::exception& e)
-    {
-        logging::logMessage("VPD-Manager service failed. " +
-                            std::string(e.what()));
-        throw;
-    }
+    // Indicates FRU VPD collection for the system has not started.
+    iFace->register_property_rw<std::string>(
+        "CollectionStatus", sdbusplus::vtable::property_::emits_change,
+        [this](const std::string l_currStatus, const auto&) {
+        m_vpdCollectionStatus = l_currStatus;
+        return 0;
+    }, [this](const auto&) { return m_vpdCollectionStatus; });
 }
 
 #ifdef IBM_SYSTEM
@@ -197,9 +186,12 @@ void Manager::processAssetTagChangeCallback(sdbusplus::message_t& i_msg)
     }
     catch (const std::exception& l_ex)
     {
-        // TODO: Log PEL with below description.
-        logging::logMessage("Asset tag callback update failed with error: " +
-                            std::string(l_ex.what()));
+        EventLogger::createSyncPel(
+            types::ErrorType::InvalidVpdMessage,
+            types::SeverityType::Informational, __FILE__, __FUNCTION__, 0,
+            "Asset tag callback update failed with error: " +
+                std::string(l_ex.what()),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     }
 }
 
@@ -353,9 +345,12 @@ int Manager::updateKeyword(const types::Path i_vpdPath,
     }
     catch (const std::exception& l_exception)
     {
-        // TODO:: error log needed
-        logging::logMessage("Update keyword failed for file[" + i_vpdPath +
-                            "], reason: " + std::string(l_exception.what()));
+        EventLogger::createSyncPel(
+            types::ErrorType::InvalidVpdMessage,
+            types::SeverityType::Informational, __FILE__, __FUNCTION__, 0,
+            "Update keyword failed for file[" + i_vpdPath +
+                "], reason: " + std::string(l_exception.what()),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
         return -1;
     }
 }
@@ -531,8 +526,11 @@ void Manager::collectSingleFruVpd(
     }
     catch (const std::exception& l_error)
     {
-        // TODO: Log PEL
-        logging::logMessage(std::string(l_error.what()));
+        EventLogger::createSyncPel(types::ErrorType::InvalidVpdMessage,
+                                   types::SeverityType::Informational, __FILE__,
+                                   __FUNCTION__, 0, std::string(l_error.what()),
+                                   std::nullopt, std::nullopt, std::nullopt,
+                                   std::nullopt);
     }
 }
 
@@ -558,8 +556,10 @@ void Manager::deleteSingleFruVpd(
     }
     catch (const std::exception& l_ex)
     {
-        // TODO: Log PEL
-        logging::logMessage(l_ex.what());
+        EventLogger::createSyncPel(types::ErrorType::InvalidVpdMessage,
+                                   types::SeverityType::Informational, __FILE__,
+                                   __FUNCTION__, 0, l_ex.what(), std::nullopt,
+                                   std::nullopt, std::nullopt, std::nullopt);
     }
 }
 
@@ -867,8 +867,12 @@ void Manager::hostStateChangeCallBack(sdbusplus::message_t& i_msg)
     }
     catch (const std::exception& l_ex)
     {
-        // TODO: Log PEL.
-        logging::logMessage(l_ex.what());
+        EventLogger::createSyncPel(
+            types::ErrorType::InvalidVpdMessage,
+            types::SeverityType::Informational, __FILE__, __FUNCTION__, 0,
+            "Failed to get Host state change call back. Error: " +
+                std::string(l_ex.what()),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     }
 }
 
@@ -905,9 +909,11 @@ void Manager::performVpdRecollection()
     }
     catch (const std::exception& l_ex)
     {
-        // TODO Log PEL
-        logging::logMessage("VPD recollection failed with error: " +
-                            std::string(l_ex.what()));
+        EventLogger::createSyncPel(
+            types::ErrorType::InvalidVpdMessage,
+            types::SeverityType::Informational, __FILE__, __FUNCTION__, 0,
+            "VPD recollection failed with error: " + std::string(l_ex.what()),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     }
 }
 } // namespace vpd
