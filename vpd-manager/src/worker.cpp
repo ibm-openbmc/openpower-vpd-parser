@@ -5,6 +5,7 @@
 #include "backup_restore.hpp"
 #include "configuration.hpp"
 #include "constants.hpp"
+#include "event_logger.hpp"
 #include "exceptions.hpp"
 #include "logger.hpp"
 #include "parser.hpp"
@@ -1149,43 +1150,33 @@ std::string
 {
     std::string l_assetTag;
 
-    try
+    // system VPD will be in IPZ format.
+    if (auto l_parsedVpdMap = std::get_if<types::IPZVpdMap>(&i_parsedVpdMap))
     {
-        // system VPD will be in IPZ format.
-        if (auto l_parsedVpdMap =
-                std::get_if<types::IPZVpdMap>(&i_parsedVpdMap))
+        auto l_itrToVsys = (*l_parsedVpdMap).find(constants::recVSYS);
+        if (l_itrToVsys != (*l_parsedVpdMap).end())
         {
-            auto l_itrToVsys = (*l_parsedVpdMap).find(constants::recVSYS);
-            if (l_itrToVsys != (*l_parsedVpdMap).end())
-            {
-                std::string l_tmKwdValue;
-                vpdSpecificUtility::getKwVal(l_itrToVsys->second,
-                                             constants::kwdTM, l_tmKwdValue);
+            std::string l_tmKwdValue;
+            vpdSpecificUtility::getKwVal(l_itrToVsys->second, constants::kwdTM,
+                                         l_tmKwdValue);
 
-                std::string l_seKwdValue;
-                vpdSpecificUtility::getKwVal(l_itrToVsys->second,
-                                             constants::kwdSE, l_seKwdValue);
+            std::string l_seKwdValue;
+            vpdSpecificUtility::getKwVal(l_itrToVsys->second, constants::kwdSE,
+                                         l_seKwdValue);
 
-                l_assetTag = std::string{"Server-"} + l_tmKwdValue +
-                             std::string{"-"} + l_seKwdValue;
-            }
-            else
-            {
-                throw std::runtime_error(
-                    "VSYS record not found in parsed VPD map to create Asset tag.");
-            }
+            l_assetTag = std::string{"Server-"} + l_tmKwdValue +
+                         std::string{"-"} + l_seKwdValue;
         }
         else
         {
             throw std::runtime_error(
-                "Invalid VPD type recieved to create Asset tag.");
+                "VSYS record not found in parsed VPD map to create Asset tag.");
         }
     }
-    catch (const std::exception& l_ex)
+    else
     {
-        // TODO:Log PEL with below description.
-        logging::logMessage("Asset tag can't be formed. Error = " +
-                            std::string(l_ex.what()));
+        throw std::runtime_error(
+            "Invalid VPD type recieved to create Asset tag.");
     }
 
     return l_assetTag;
@@ -1223,10 +1214,12 @@ void Worker::publishSystemVPD(const types::VPDMapVariant& parsedVpdMap)
         }
         catch (const std::exception& l_ex)
         {
-            // TODO Log PEL with below description
-            logging::logMessage(
+            EventLogger::createAsyncPel(
+                types::ErrorType::InvalidVpdMessage,
+                types::SeverityType::Informational, __FILE__, __FUNCTION__, 0,
                 "Asset tag update failed with following error: " +
-                std::string(l_ex.what()));
+                    std::string(l_ex.what()),
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
         }
 
         // Notify PIM
@@ -1565,18 +1558,15 @@ void Worker::performBackupAndRestore(types::VPDMapVariant& io_srcVpdMap)
             }
         }
     }
-    catch (const std::exception& ex)
+    catch (const std::exception& l_ex)
     {
-        logging::logMessage(ex.what());
-        // ToDo: Uncomment when PEL implementation goes in.
-        /*std::string l_errorMsg(
-            "Exception caught while backup and restore VPD keyword's. Error: " +
-            std::string(ex.what()));
-        inventory::PelAdditionalData l_additionalData{};
-        l_additionalData.emplace("DESCRIPTION", l_errorMsg);
-        createPEL(l_additionalData,
-        PelSeverity::ERROR, errBackupAndRestore, nullptr);
-        */
+        EventLogger::createAsyncPel(
+            types::ErrorType::InvalidVpdMessage,
+            types::SeverityType::Informational, __FILE__, __FUNCTION__, 0,
+            std::string(
+                "Exception caught while backup and restore VPD keyword's.") +
+                l_ex.what(),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     }
 }
 

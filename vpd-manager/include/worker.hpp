@@ -473,7 +473,10 @@ class Worker
      * @brief API to form asset tag string for the system.
      *
      * @param[in] i_parsedVpdMap - Parsed VPD map.
-     * @return - Formed asset tag string. Empty in case of any error.
+     *
+     * @throw std::runtime_error
+     *
+     * @return - Formed asset tag string.
      */
     std::string
         createAssetTagString(const types::VPDMapVariant& i_parsedVpdMap);
