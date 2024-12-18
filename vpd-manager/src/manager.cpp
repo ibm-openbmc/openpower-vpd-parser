@@ -51,13 +51,23 @@ Manager::Manager(
         // set callback to detect host state change.
         registerHostStateChangeCallback();
 
-        // Register methods under com.ibm.VPD.Manager interface
+        // For backward compatibility. Should be depricated.
         iFace->register_method(
             "WriteKeyword",
+            [this](const sdbusplus::message::object_path i_path,
+                   const std::string i_recordName, const std::string i_keyword,
+                   const types::BinaryVector i_value) -> int {
+                return this->updateKeyword(
+                    i_path, std::make_tuple(i_recordName, i_keyword, i_value));
+            });
+
+        // Register methods under com.ibm.VPD.Manager interface
+        iFace->register_method(
+            "UpdateKeyword",
             [this](const types::Path i_vpdPath,
                    const types::WriteVpdParams i_paramsToWriteData) -> int {
-            return this->updateKeyword(i_vpdPath, i_paramsToWriteData);
-        });
+                return this->updateKeyword(i_vpdPath, i_paramsToWriteData);
+            });
 
         iFace->register_method(
             "ReadKeyword",
