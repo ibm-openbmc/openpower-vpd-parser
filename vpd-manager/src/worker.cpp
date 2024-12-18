@@ -5,6 +5,7 @@
 #include "backup_restore.hpp"
 #include "configuration.hpp"
 #include "constants.hpp"
+#include "event_logger.hpp"
 #include "exceptions.hpp"
 #include "logger.hpp"
 #include "parser.hpp"
@@ -144,23 +145,38 @@ void Worker::performInitialSetup()
         // some reason at system power on.
         return;
     }
-    catch (const std::exception& ex)
+    catch (const std::exception& l_ex)
     {
-        if (typeid(ex) == std::type_index(typeid(DataException)))
+        if (typeid(l_ex) == std::type_index(typeid(DataException)))
         {
-            // TODO:Catch logic to be implemented once PEL code goes in.
+            EventLogger::createAsyncPel(types::ErrorType::InvalidVpdMessage,
+                                        types::SeverityType::Informational,
+                                        __FILE__, __FUNCTION__, 0, l_ex.what(),
+                                        std::nullopt, std::nullopt,
+                                        std::nullopt, std::nullopt);
         }
-        else if (typeid(ex) == std::type_index(typeid(EccException)))
+        else if (typeid(l_ex) == std::type_index(typeid(EccException)))
         {
-            // TODO:Catch logic to be implemented once PEL code goes in.
+            EventLogger::createAsyncPel(types::ErrorType::EccCheckFailed,
+                                        types::SeverityType::Informational,
+                                        __FILE__, __FUNCTION__, 0, l_ex.what(),
+                                        std::nullopt, std::nullopt,
+                                        std::nullopt, std::nullopt);
         }
-        else if (typeid(ex) == std::type_index(typeid(JsonException)))
+        else if (typeid(l_ex) == std::type_index(typeid(JsonException)))
         {
-            // TODO:Catch logic to be implemented once PEL code goes in.
+            EventLogger::createAsyncPel(types::ErrorType::JsonFailure,
+                                        types::SeverityType::Informational,
+                                        __FILE__, __FUNCTION__, 0, l_ex.what(),
+                                        std::nullopt, std::nullopt,
+                                        std::nullopt, std::nullopt);
         }
 
-        logging::logMessage(ex.what());
-        throw;
+        EventLogger::createAsyncPel(types::ErrorType::InvalidVpdMessage,
+                                    types::SeverityType::Informational,
+                                    __FILE__, __FUNCTION__, 0, l_ex.what(),
+                                    std::nullopt, std::nullopt, std::nullopt,
+                                    std::nullopt);
     }
 }
 #endif
@@ -511,10 +527,12 @@ void Worker::setDeviceTreeAndJson()
 
         if (devTreeFromJson.empty())
         {
-            // TODO:: Log a predictive PEL
-            logging::logMessage(
+            EventLogger::createAsyncPel(
+                types::ErrorType::JsonFailure,
+                types::SeverityType::Informational, __FILE__, __FUNCTION__, 0,
                 "Mandatory value for device tree missing from JSON[" +
-                std::string(INVENTORY_JSON_SYM_LINK) + "]");
+                    std::string(INVENTORY_JSON_SYM_LINK) + "]",
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
         }
     }
 
@@ -1444,28 +1462,45 @@ std::tuple<bool, std::string>
                 "Call to PIM failed while publishing VPD.");
         }
     }
-    catch (const std::exception& ex)
+    catch (const std::exception& l_ex)
     {
         // handle all the exceptions internally. Return only true/false
         // based on status of execution.
-        if (typeid(ex) == std::type_index(typeid(DataException)))
+        if (typeid(l_ex) == std::type_index(typeid(DataException)))
         {
-            // TODO: Add custom handling
-            logging::logMessage(ex.what());
+            EventLogger::createAsyncPel(
+                types::ErrorType::InvalidVpdMessage,
+                types::SeverityType::Informational, __FILE__, __FUNCTION__, 0,
+                std::string("Parse and publish VPD failed. Error: ") +
+                    l_ex.what(),
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
         }
-        else if (typeid(ex) == std::type_index(typeid(EccException)))
+        else if (typeid(l_ex) == std::type_index(typeid(EccException)))
         {
-            // TODO: Add custom handling
-            logging::logMessage(ex.what());
+            EventLogger::createAsyncPel(
+                types::ErrorType::EccCheckFailed,
+                types::SeverityType::Informational, __FILE__, __FUNCTION__, 0,
+                std::string("Parse and publish VPD failed. Error: ") +
+                    l_ex.what(),
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
         }
-        else if (typeid(ex) == std::type_index(typeid(JsonException)))
+        else if (typeid(l_ex) == std::type_index(typeid(JsonException)))
         {
-            // TODO: Add custom handling
-            logging::logMessage(ex.what());
+            EventLogger::createAsyncPel(
+                types::ErrorType::JsonFailure,
+                types::SeverityType::Informational, __FILE__, __FUNCTION__, 0,
+                std::string("Parse and publish VPD failed. Error: ") +
+                    l_ex.what(),
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
         }
         else
         {
-            logging::logMessage(ex.what());
+            EventLogger::createAsyncPel(
+                types::ErrorType::InvalidVpdMessage,
+                types::SeverityType::Informational, __FILE__, __FUNCTION__, 0,
+                std::string("Parse and publish VPD failed. Error: ") +
+                    l_ex.what(),
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
         }
 
         // TODO: Figure out a way to clear data in case of any failure at
@@ -1679,8 +1714,12 @@ void Worker::deleteFruVpd(const std::string& i_dbusObjPath)
             }
         }
 
-        logging::logMessage("Failed to delete VPD for FRU : " + i_dbusObjPath +
-                            " error: " + std::string(l_ex.what()));
+        EventLogger::createAsyncPel(
+            types::ErrorType::InvalidVpdMessage,
+            types::SeverityType::Informational, __FILE__, __FUNCTION__, 0,
+            std::string("Failed to delete VPD for FRU : ") + i_dbusObjPath +
+                " error: " + l_ex.what(),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     }
 }
 } // namespace vpd
