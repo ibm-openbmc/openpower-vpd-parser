@@ -1,9 +1,11 @@
 #include "backup_restore.hpp"
 
 #include "constants.hpp"
+#include "event_logger.hpp"
 #include "exceptions.hpp"
 #include "logger.hpp"
 #include "parser.hpp"
+#include "types.hpp"
 
 #include <utility/json_utility.hpp>
 #include <utility/vpd_specific_utility.hpp>
@@ -349,17 +351,16 @@ void BackupAndRestore::backupAndRestoreIpzVpd(types::IPZVpdMap& io_srcVpdMap,
                         l_dstStrValue;
                 }
 
-                // Uncomment when PEL implementation goes in.
-                /*inventory::PelAdditionalData l_additionalData{};
-                std::string l_errorMsg = "Mismatch found between source and
-                destination VPD for record: " + l_srcRecordName + " and
-                keyword: " + l_srcKeywordName;
-                l_additionalData.emplace("DESCRIPTION", l_errorMsg);
-                l_additionalData.emplace("Value read from destination: ",
-                l_dstStrValue); l_additionalData.emplace("Value read from
-                source: ", l_srcStrValue); createPEL(l_additionalData,
-                PelSeverity::WARNING, errIntfForVPDMismatch, nullptr);
-                */
+                std::string l_errorMsg(
+                    "Mismatch found between source and destination VPD for record : " +
+                    l_srcRecordName + " and keyword : " + l_srcKeywordName +
+                    " . Value read from source : " + l_srcStrValue +
+                    " . Value read from destination : " + l_dstStrValue);
+
+                EventLogger::createAsyncPel(
+                    types::ErrorType::VpdMismatch, types::SeverityType::Warning,
+                    __FILE__, __FUNCTION__, 0, l_errorMsg, std::nullopt,
+                    std::nullopt, std::nullopt, std::nullopt);
             }
         }
         else if (l_srcBinaryValue == l_defaultBinaryValue &&
@@ -369,13 +370,10 @@ void BackupAndRestore::backupAndRestoreIpzVpd(types::IPZVpdMap& io_srcVpdMap,
                 "Default value found on both source and destination VPD, for record: " +
                 l_srcRecordName + " and keyword: " + l_srcKeywordName);
 
-            // Uncomment when PEL implementation goes in.
-            /*inventory::PelAdditionalData l_additionalData{};
-            l_additionalData.emplace("DESCRIPTION", l_errorMsg);
-            createPEL(l_additionalData,
-            PelSeverity::ERROR, errIntfForVPDDefault, nullptr);
-            */
-            logging::logMessage(l_errorMsg);
+            EventLogger::createAsyncPel(
+                types::ErrorType::DefaultValue, types::SeverityType::Error,
+                __FILE__, __FUNCTION__, 0, l_errorMsg, std::nullopt,
+                std::nullopt, std::nullopt, std::nullopt);
         }
     }
 }
