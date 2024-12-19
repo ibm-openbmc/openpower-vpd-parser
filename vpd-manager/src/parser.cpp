@@ -1,6 +1,7 @@
 #include "parser.hpp"
 
 #include "constants.hpp"
+#include "event_logger.hpp"
 
 #include <utility/dbus_utility.hpp>
 #include <utility/json_utility.hpp>
@@ -59,8 +60,41 @@ types::VPDMapVariant Parser::parse()
 int Parser::updateVpdKeyword(const types::WriteVpdParams& i_paramsToWriteData)
 {
     int l_bytesUpdatedOnHardware = constants::FAILURE;
+
+    // A lambda to extract Record : Keyword string from i_paramsToWriteData
+    auto l_keyWordIdentifier =
+        [](const types::WriteVpdParams& i_paramsToWriteData) -> std::string {
+        std::string l_keywordString{};
+        if (const types::IpzData* l_ipzData =
+                std::get_if<types::IpzData>(&i_paramsToWriteData))
+        {
+            l_keywordString = std::get<0>(*l_ipzData) + ":" +
+                              std::get<1>(*l_ipzData);
+        }
+        else if (const types::KwData* l_kwData =
+                     std::get_if<types::KwData>(&i_paramsToWriteData))
+        {
+            l_keywordString = std::get<0>(*l_kwData);
+        }
+        return l_keywordString;
+    };
+
     try
     {
+        // Enable Reboot Guard
+        if (constants::FAILURE == dbusUtility::EnableRebootGuard())
+        {
+            EventLogger::createAsyncPel(
+                types::ErrorType::DbusFailure,
+                types::SeverityType::Informational, __FILE__, __FUNCTION__, 0,
+                std::string(
+                    "Failed to enable BMC Reboot Guard while updating " +
+                    l_keyWordIdentifier(i_paramsToWriteData)),
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
+
+            return constants::FAILURE;
+        }
+
         // Update keyword's value on hardware
         try
         {
@@ -178,24 +212,23 @@ int Parser::updateVpdKeyword(const types::WriteVpdParams& i_paramsToWriteData)
     }
     catch (const std::exception& l_ex)
     {
-        std::string l_keywordIdentifier{};
-        if (const types::IpzData* l_ipzData =
-                std::get_if<types::IpzData>(&i_paramsToWriteData))
-        {
-            l_keywordIdentifier = std::get<0>(*l_ipzData) + ":" +
-                                  std::get<1>(*l_ipzData);
-        }
-        else if (const types::KwData* l_kwData =
-                     std::get_if<types::KwData>(&i_paramsToWriteData))
-        {
-            l_keywordIdentifier = std::get<0>(*l_kwData);
-        }
-        logging::logMessage(
-            "Update VPD Keyword failed for : " + l_keywordIdentifier +
-            " failed due to error: " + l_ex.what());
+        logging::logMessage("Update VPD Keyword failed for : " +
+                            l_keyWordIdentifier(i_paramsToWriteData) +
+                            " failed due to error: " + l_ex.what());
 
         // update failed, set return value to failure
         l_bytesUpdatedOnHardware = constants::FAILURE;
+    }
+
+    // Disable Reboot Guard
+    if (constants::FAILURE == dbusUtility::DisableRebootGuard())
+    {
+        EventLogger::createAsyncPel(
+            types::ErrorType::DbusFailure, types::SeverityType::Critical,
+            __FILE__, __FUNCTION__, 0,
+            std::string("Failed to disable BMC Reboot Guard while updating " +
+                        l_keyWordIdentifier(i_paramsToWriteData)),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     }
 
     return l_bytesUpdatedOnHardware;
