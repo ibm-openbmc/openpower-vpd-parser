@@ -397,6 +397,7 @@ types::DbusVariantType
 void Manager::collectSingleFruVpd(
     const sdbusplus::message::object_path& i_dbusObjPath)
 {
+    std::string l_fruPath{};
     try
     {
         if (m_vpdCollectionStatus != "Completed")
@@ -423,8 +424,8 @@ void Manager::collectSingleFruVpd(
         }
 
         // Get FRU path for the given D-bus object path from JSON
-        const std::string& l_fruPath =
-            jsonUtility::getFruPathFromJson(l_sysCfgJsonObj, i_dbusObjPath);
+        l_fruPath = jsonUtility::getFruPathFromJson(l_sysCfgJsonObj,
+                                                    i_dbusObjPath);
 
         if (l_fruPath.empty())
         {
@@ -455,6 +456,16 @@ void Manager::collectSingleFruVpd(
                     "Given FRU is neither replaceable at standby nor replaceable at runtime. Single FRU VPD collection failed for " +
                     std::string(i_dbusObjPath));
             }
+        }
+
+        // Set CollectionStatus as InProgress before performing single FRU VPD
+        // collection
+        if (!dbusUtility::setFruVpdCollectionStatus(
+                i_dbusObjPath, constants::vpdCollectionInProgress))
+        {
+            logging::logMessage(
+                "Unable to set CollectionStatus as InProgress for " +
+                std::string(i_dbusObjPath) + ". Continue collecting VPD.");
         }
 
         // Parse VPD
@@ -490,6 +501,21 @@ void Manager::collectSingleFruVpd(
     {
         // TODO: Log PEL
         logging::logMessage(std::string(l_error.what()));
+
+        std::string l_collectionStatus = constants::vpdCollectionFailure;
+
+        if (!std::filesystem::exists(l_fruPath))
+        {
+            l_collectionStatus = constants::vpdCollectionNotStarted;
+        }
+
+        if (!dbusUtility::setFruVpdCollectionStatus(i_dbusObjPath,
+                                                    l_collectionStatus))
+        {
+            logging::logMessage("Unable to set CollectionStatus as " +
+                                l_collectionStatus + " for " +
+                                std::string(i_dbusObjPath));
+        }
     }
 }
 

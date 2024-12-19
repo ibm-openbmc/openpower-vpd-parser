@@ -470,6 +470,19 @@ class Worker
                                 types::InterfaceMap& io_interfaces);
 
     /**
+     * @brief API to process FRU VPD Collection status.
+     *
+     * This API sets the given FRU VPD collection status to the given interface
+     * map.
+     *
+     * @param[in,out] io_interfaces - Map which holds FRU's interfaces and its
+     * properties.
+     * @param[in] i_fruCollectionStatus - FRU VPD collection status.
+     */
+    void processFRUCollectionStatus(types::InterfaceMap& io_interfaces,
+                                    const std::string& i_fruCollectionStatus);
+
+    /**
      * @brief API to form asset tag string for the system.
      *
      * @param[in] i_parsedVpdMap - Parsed VPD map.

@@ -834,9 +834,20 @@ bool Worker::primeInventory(const std::string& i_vpdFilePath)
 
         types::PropertyMap l_propertyValueMap;
         l_propertyValueMap.emplace("Present", false);
+
         if (std::filesystem::exists(i_vpdFilePath))
         {
             l_propertyValueMap["Present"] = true;
+
+            // FRU exist and if we hit prime inventory path
+            processFRUCollectionStatus(l_interfaces,
+                                       constants::vpdCollectionFailure);
+        }
+        else
+        {
+            // FRU doesn't exist and if we hit prime inventory path
+            processFRUCollectionStatus(l_interfaces,
+                                       constants::vpdCollectionNotStarted);
         }
 
         vpdSpecificUtility::insertOrMerge(l_interfaces,
@@ -1138,6 +1149,10 @@ void Worker::populateDbus(const types::VPDMapVariant& parsedVpdMap,
 
             processFunctionalProperty(inventoryPath, interfaces);
             processEnabledProperty(inventoryPath, interfaces);
+
+            // FRU VPD collection is successful
+            processFRUCollectionStatus(interfaces,
+                                       constants::vpdCollectionSuccess);
 
             objectInterfaceMap.emplace(std::move(fruObjectPath),
                                        std::move(interfaces));
@@ -1471,13 +1486,13 @@ std::tuple<bool, std::string>
 
         // TODO: Figure out a way to clear data in case of any failure at
         // runtime.
-        //  Prime the inventry for FRUs which
+        //  Prime the inventory for FRUs which
         //  are not present/processing had some error.
-        /* if (!primeInventory(i_vpdFilePath))
-         {
-             logging::logMessage("Priming of inventory failed for FRU " +
-                                 i_vpdFilePath);
-         }*/
+        if (!primeInventory(i_vpdFilePath))
+        {
+            logging::logMessage("Priming of inventory failed for FRU " +
+                                i_vpdFilePath);
+        }
         m_semaphore.release();
         return std::make_tuple(false, i_vpdFilePath);
     }
@@ -1683,5 +1698,16 @@ void Worker::deleteFruVpd(const std::string& i_dbusObjPath)
         logging::logMessage("Failed to delete VPD for FRU : " + i_dbusObjPath +
                             " error: " + std::string(l_ex.what()));
     }
+}
+
+void Worker::processFRUCollectionStatus(
+    types::InterfaceMap& io_interfaces,
+    const std::string& i_fruCollectionStatus)
+{
+    types::PropertyMap l_fruCollectionProperty = {
+        {"CollectionStatus", i_fruCollectionStatus}};
+    vpdSpecificUtility::insertOrMerge(io_interfaces,
+                                      constants::vpdCollectionInterface,
+                                      std::move(l_fruCollectionProperty));
 }
 } // namespace vpd
