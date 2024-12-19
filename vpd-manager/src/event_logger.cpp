@@ -236,4 +236,62 @@ void EventLogger::createAsyncPel(const types::ErrorType& i_errorType,
                             std::string(l_ex.what()));
     }
 }
+
+void EventLogger::createSyncPel(const types::ErrorType& i_errorType,
+                                const types::SeverityType& i_severity,
+                                const std::string& i_fileName,
+                                const std::string& i_funcName,
+                                const uint8_t i_internalRc,
+                                const std::string& i_description,
+                                const std::optional<std::string> i_userData1,
+                                const std::optional<std::string> i_userData2,
+                                const std::optional<std::string> i_symFru,
+                                const std::optional<std::string> i_procedure)
+{
+    (void)i_symFru;
+    (void)i_procedure;
+    try
+    {
+        if (m_errorMsgMap.find(i_errorType) == m_errorMsgMap.end())
+        {
+            throw std::runtime_error("Unsupported error type received");
+            // TODO: Need to handle, instead of throwing an exception.
+        }
+
+        const std::string& l_message = m_errorMsgMap.at(i_errorType);
+
+        const std::string& l_severity =
+            (m_severityMap.find(i_severity) != m_severityMap.end()
+                 ? m_severityMap.at(i_severity)
+                 : m_severityMap.at(types::SeverityType::Informational));
+
+        const std::string l_description =
+            ((!i_description.empty() ? i_description : "VPD generic error"));
+
+        const std::string l_userData1 = ((i_userData1) ? (*i_userData1) : "");
+
+        const std::string l_userData2 = ((i_userData2) ? (*i_userData2) : "");
+
+        std::map<std::string, std::string> l_additionalData{
+            {"FileName", i_fileName},
+            {"FunctionName", i_funcName},
+            {"DESCRIPTION", l_description},
+            {"InteranlRc", std::to_string(i_internalRc)},
+            {"UserData1", l_userData1.c_str()},
+            {"UserData2", l_userData2.c_str()}};
+
+        auto l_bus = sdbusplus::bus::new_default();
+        auto l_method =
+            l_bus.new_method_call(constants::eventLoggingServiceName,
+                                  constants::eventLoggingObjectPath,
+                                  constants::eventLoggingInterface, "Create");
+        l_method.append(l_message, l_severity, l_additionalData);
+        l_bus.call(l_method);
+    }
+    catch (const sdbusplus::exception::SdBusError& l_ex)
+    {
+        logging::logMessage("Async PEL creation failed with an error: " +
+                            std::string(l_ex.what()));
+    }
+}
 } // namespace vpd
