@@ -47,5 +47,13 @@ using IpzType = std::tuple<std::string, std::string>;
 //ReadVpdParams either of IPZ or keyword format
 using ReadVpdParams = std::variant<IpzType, std::string>;
 
+//KwData contains tuple of <keywordName, KeywordValue>
+using KwData = std::tuple<std::string, BinaryVector>;
+
+//IpzData contains tuple of <RecordName, KeywordName, KeywordValue>
+using IpzData = std::tuple<std::string, std::string, BinaryVector>;
+
+//WriteVpdParams either of IPZ or keyword format
+using WriteVpdParams = std::variant<IpzData, KwData>;
 } // namespace types
 } // namespace vpd
