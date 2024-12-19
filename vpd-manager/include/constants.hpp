@@ -187,5 +187,10 @@ static constexpr auto eventLoggingServiceName = "xyz.openbmc_project.Logging";
 static constexpr auto eventLoggingObjectPath = "/xyz/openbmc_project/logging";
 static constexpr auto eventLoggingInterface =
     "xyz.openbmc_project.Logging.Create";
+
+static constexpr auto systemdService = "org.freedesktop.systemd1";
+static constexpr auto systemdObjectPath = "/org/freedesktop/systemd1";
+static constexpr auto systemdManagerInterface =
+    "org.freedesktop.systemd1.Manager";
 } // namespace constants
 } // namespace vpd

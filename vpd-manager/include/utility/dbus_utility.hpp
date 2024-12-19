@@ -4,6 +4,8 @@
 #include "logger.hpp"
 #include "types.hpp"
 
+#include <chrono>
+
 namespace vpd
 {
 /**
@@ -454,5 +456,114 @@ inline bool isBMCReady()
 
     return false;
 }
+
+/**
+ * @brief An API to enable BMC reboot guard
+ *
+ * This API does a D-Bus method call to enable BMC reboot guard.
+ *
+ * @return On success, returns 0, otherwise returns -1.
+ */
+inline int EnableRebootGuard() noexcept
+{
+    int l_rc{constants::FAILURE};
+    try
+    {
+        auto l_bus = sdbusplus::bus::new_default();
+        auto l_method = l_bus.new_method_call(
+            constants::systemdService, constants::systemdObjectPath,
+            constants::systemdManagerInterface, "StartUnit");
+        l_method.append("reboot-guard-enable.service", "replace");
+        l_bus.call_noreply(l_method);
+        l_rc = constants::SUCCESS;
+    }
+    catch (const sdbusplus::exception::SdBusError& l_ex)
+    {
+        std::string l_errMsg =
+            "D-Bus call to enable BMC reboot guard failed for reason: ";
+        l_errMsg += l_ex.what();
+
+        logging::logMessage(l_errMsg);
+    }
+    return l_rc;
+}
+
+/**
+ * @brief An API to disable BMC reboot guard
+ *
+ * This API disables BMC reboot guard. This API has an inbuilt re-try mechanism.
+ * If Disable Reboot Guard fails, this API attempts to Disable Reboot Guard for
+ * 3 more times at an interval of 333ms.
+ *
+ * @return On success, returns 0, otherwise returns -1.
+ */
+inline int DisableRebootGuard() noexcept
+{
+    int l_rc{constants::FAILURE};
+
+    // A lambda which executes the DBus call to disable BMC reboot guard.
+    auto l_executeDisableRebootGuard = []() -> int {
+        int l_dBusCallRc{constants::FAILURE};
+        try
+        {
+            auto l_bus = sdbusplus::bus::new_default();
+            auto l_method = l_bus.new_method_call(
+                constants::systemdService, constants::systemdObjectPath,
+                constants::systemdManagerInterface, "StartUnit");
+            l_method.append("reboot-guard-disable.service", "replace");
+            l_bus.call_noreply(l_method);
+            l_dBusCallRc = constants::SUCCESS;
+        }
+        catch (const sdbusplus::exception::SdBusError& l_ex)
+        {}
+        return l_dBusCallRc;
+    };
+
+    if (constants::FAILURE == l_executeDisableRebootGuard())
+    {
+        std::function<void()> l_retryDisableRebootGuard;
+
+        // A lambda which tries to disable BMC reboot guard for 3 times at an
+        // interval of 333 ms.
+        l_retryDisableRebootGuard = [&]() {
+            constexpr int MAX_RETRIES{3};
+            static int l_numRetries{0};
+
+            if (l_numRetries < MAX_RETRIES)
+            {
+                l_numRetries++;
+                if (constants::FAILURE == l_executeDisableRebootGuard())
+                {
+                    // sleep for 333ms before next retry. This is just a random
+                    // value so that 3 re-tries * 333ms takes ~1 second in the
+                    // worst case.
+                    const std::chrono::milliseconds l_sleepTime{333};
+                    std::this_thread::sleep_for(l_sleepTime);
+                    l_retryDisableRebootGuard();
+                }
+                else
+                {
+                    l_numRetries = 0;
+                    l_rc = constants::SUCCESS;
+                }
+            }
+            else
+            {
+                // Failed to Disable Reboot Guard even after 3 retries.
+                logging::logMessage("Failed to Disable Reboot Guard after " +
+                                    std::to_string(MAX_RETRIES) + " re-tries");
+                l_numRetries = 0;
+            }
+        };
+
+        l_retryDisableRebootGuard();
+    }
+    else
+    {
+        l_rc = constants::SUCCESS;
+    }
+    return l_rc;
+}
+
 } // namespace dbusUtility
 } // namespace vpd
