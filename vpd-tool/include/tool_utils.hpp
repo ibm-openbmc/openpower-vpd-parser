@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tool_constants.hpp"
 #include "tool_types.hpp"
 
 #include <nlohmann/json.hpp>
@@ -254,5 +255,53 @@ inline void displayOnConsole(const std::string& i_fruPath,
 
     printJson(l_resultInJson);
 }
+
+/** @brief API to get list of interfaces under a given object path
+ *
+ * Given a DBus object path, this API returns a list of interfaces exposed by
+ * PIM under that object path. This API calls DBus method GetObject hosted by
+ * ObjectMapper DBus service.
+ *
+ * @param[in] i_objectPath - DBus object path.
+ *
+ * @param[in] i_constrainingInterfaces - An array of result set constraining
+ * interfaces.
+ *
+ * @return On success, returns a map of service -> implemented interface(s),
+ * else returns an empty map. The caller of this
+ * API should check for empty map.
+ */
+inline types::MapperGetObject GetInterfaces(
+    const std::string& i_objectPath,
+    const std::vector<std::string>& i_constrainingInterfaces =
+        std::vector<std::string>{constants::inventoryItemInf}) noexcept
+{
+    types::MapperGetObject l_serviceInfMap;
+    if (i_objectPath.empty())
+    {
+        // TODO: log only when verbose is enabled
+        std::cerr << "Object path is empty." << std::endl;
+        return l_serviceInfMap;
+    }
+    try
+    {
+        auto l_bus = sdbusplus::bus::new_default();
+        auto l_method = l_bus.new_method_call(
+            constants::objectMapperService, constants::objectMapperObjectPath,
+            constants::objectMapperInfName, "GetObject");
+
+        l_method.append(i_objectPath, i_constrainingInterfaces);
+
+        auto l_result = l_bus.call(l_method);
+        l_result.read(l_serviceInfMap);
+    }
+    catch (const sdbusplus::exception::SdBusError& l_ex)
+    {
+        // TODO: log only when verbose is enabled
+        // std::cerr << std::string(l_ex.what()) << std::endl;
+    }
+    return l_serviceInfMap;
+}
+
 } // namespace utils
 } // namespace vpd

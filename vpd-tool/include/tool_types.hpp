@@ -47,5 +47,8 @@ using IpzType = std::tuple<std::string, std::string>;
 //ReadVpdParams either of IPZ or keyword format
 using ReadVpdParams = std::variant<IpzType, std::string>;
 
+// Return type of ObjectMapper GetObject API
+using MapperGetObject = std::map<std::string,std::vector<std::string>>;
+
 } // namespace types
 } // namespace vpd
