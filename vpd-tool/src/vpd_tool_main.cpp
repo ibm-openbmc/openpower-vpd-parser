@@ -37,7 +37,10 @@ int main(int argc, char** argv)
         "        On hardware: "
         "vpd-tool -w -H -O <EEPROM Path> -R <Record Name> -K <Keyword Name> -V <Keyword Value>\n"
         "        On hardware, take keyword value from file:\n"
-        "              vpd-tool -w -H -O <EEPROM Path> -R <Record Name> -K <Keyword Name> --file <File Path>");
+        "              vpd-tool -w -H -O <EEPROM Path> -R <Record Name> -K <Keyword Name> --file <File Path>\n"
+        "Dump Object:\n"
+        "    From DBus to console: "
+        "vpd-tool -o -O <DBus Object Path>");
 
     auto l_objectOption = l_app.add_option("--object, -O", l_vpdPath,
                                            "File path");
@@ -70,6 +73,12 @@ int main(int argc, char** argv)
             ->needs(l_objectOption)
             ->needs(l_recordOption)
             ->needs(l_keywordOption);
+
+    auto l_dumpObjFlag =
+        l_app
+            .add_flag("--dumpObject, -o",
+                      "Dump specific properties of an inventory object")
+            ->needs(l_objectOption);
 
     // ToDo: Take offset value from user for hardware path.
 
@@ -177,6 +186,11 @@ int main(int argc, char** argv)
         }
 
         // ToDo: implementation of write keyword
+    }
+    else if (!l_dumpObjFlag->empty())
+    {
+        vpd::VpdTool l_vpdToolObj;
+        l_rc = l_vpdToolObj.dumpObject(l_vpdPath);
     }
     else
     {

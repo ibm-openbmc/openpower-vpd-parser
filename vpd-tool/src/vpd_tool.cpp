@@ -85,4 +85,33 @@ int VpdTool::readKeyword(const std::string& i_vpdPath,
     }
     return l_rc;
 }
+
+int VpdTool::dumpObject(const std::string& i_fruPath) const noexcept
+{
+    int l_rc{constants::FAILURE};
+    try
+    {
+        const nlohmann::json l_resultJson = getFruProperties(i_fruPath);
+
+        utils::printJson(l_resultJson);
+        l_rc = constants::SUCCESS;
+    }
+    catch (std::exception& l_ex)
+    {
+        // TODO: Enable logging when verbose is enabled.
+        // std::cerr << "Dump Object failed for FRU: " << i_fruPath
+        //           << " Error: " << l_ex.what() << std::endl;
+    }
+    return l_rc;
+}
+
+nlohmann::json VpdTool::getFruProperties(const std::string& i_fruPath) const
+{
+    nlohmann::json l_resultInJson = nlohmann::json::array({});
+
+    // TODO: Implement getFruProperties
+    (void)i_fruPath;
+    return l_resultInJson;
+}
+
 } // namespace vpd

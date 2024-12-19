@@ -1,5 +1,7 @@
 #pragma once
 
+#include <nlohmann/json.hpp>
+
 #include <string>
 
 namespace vpd
@@ -17,6 +19,25 @@ namespace vpd
  */
 class VpdTool
 {
+  private:
+    /**
+     * @brief Get specific properties of a FRU in JSON format.
+     *
+     * For a given object path of a FRU, this API returns the following
+     * properties of the FRU in JSON format:
+     * - Present property, Pretty Name, Location Code, Sub Model
+     * - SN, PN, CC, FN, DR keywords under VINI record.
+     *
+     * @param[in] i_fruPath - DBus object path
+     *
+     * @return On success, returns the properties of the FRU in JSON format,
+     * otherwise throws a std::runtime_error exception.
+     * Note: The caller of this API should handle this exception.
+     *
+     * @throw std::runtime_error
+     */
+    nlohmann::json getFruProperties(const std::string& i_fruPath) const;
+
   public:
     /**
      * @brief Read keyword value.
@@ -39,5 +60,19 @@ class VpdTool
                     const std::string& i_recordName,
                     const std::string& i_keywordName, const bool i_onHardware,
                     const std::string& i_fileToSave = {});
+
+    /**
+     * @brief Dump the given inventory object in JSON format to console.
+     *
+     * For a given object path of a FRU, this API dumps the following properties
+     * of the FRU in JSON format to console:
+     * - Present property, Pretty Name, Location Code, Sub Model
+     * - SN, PN, CC, FN, DR keywords under VINI record.
+     *
+     * @param[in] i_fruPath - DBus object path.
+     *
+     * @return On success returns 0, otherwise returns -1.
+     */
+    int dumpObject(const std::string& i_fruPath) const noexcept;
 };
 } // namespace vpd
