@@ -1,6 +1,7 @@
 #pragma once
 
 #include "constants.hpp"
+#include "event_logger.hpp"
 #include "logger.hpp"
 #include "types.hpp"
 
@@ -100,7 +101,11 @@ inline types::PropertyMap getPropertyMap(const std::string& i_service,
     }
     catch (const sdbusplus::exception::SdBusError& l_ex)
     {
-        logging::logMessage(l_ex.what());
+        EventLogger::createSyncPel(
+            types::ErrorType::DbusFailure, types::SeverityType::Informational,
+            __FILE__, __FUNCTION__, 0,
+            "Failed to get property map, error: " + std::string(l_ex.what()),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     }
 
     return l_propertyValueMap;
@@ -150,7 +155,11 @@ inline types::MapperGetSubTree
     }
     catch (const sdbusplus::exception::SdBusError& l_ex)
     {
-        logging::logMessage(l_ex.what());
+        EventLogger::createSyncPel(
+            types::ErrorType::DbusFailure, types::SeverityType::Informational,
+            __FILE__, __FUNCTION__, 0,
+            "Failed to get object subTree, error: " + std::string(l_ex.what()),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     }
 
     return l_subTreeMap;
@@ -323,9 +332,12 @@ inline bool isServiceRunning(const std::string& i_serviceName)
     }
     catch (const sdbusplus::exception::SdBusError& l_ex)
     {
-        logging::logMessage(
+        EventLogger::createSyncPel(
+            types::ErrorType::DbusFailure, types::SeverityType::Informational,
+            __FILE__, __FUNCTION__, 0,
             "Call to check service status failed with exception: " +
-            std::string(l_ex.what()));
+                std::string(l_ex.what()),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     }
 
     return l_retVal;
@@ -362,11 +374,12 @@ inline types::BiosAttributeCurrentValue
     }
     catch (const sdbusplus::exception::SdBusError& l_ex)
     {
-        logging::logMessage(
+        EventLogger::createSyncPel(
+            types::ErrorType::DbusFailure, types::SeverityType::Informational,
+            __FILE__, __FUNCTION__, 0,
             "Failed to read BIOS Attribute: " + i_attributeName +
-            " due to error " + std::string(l_ex.what()));
-
-        // TODO: Log an informational PEL here.
+                " due to error " + std::string(l_ex.what()),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     }
 
     return std::get<1>(l_attributeVal);
@@ -396,13 +409,11 @@ inline bool isChassisPowerOn()
         return false;
     }
 
-    /*
-        TODO: Add PEL.
-        Callout: Firmware callout
-        Type: Informational
-        Description: Chassis state can't be determined, defaulting to chassis
-        off. : e.what()
-    */
+    EventLogger::createSyncPel(
+        types::ErrorType::DbusFailure, types::SeverityType::Informational,
+        __FILE__, __FUNCTION__, 0,
+        "Chassis state can't be determined, defaulting to chassis off.",
+        std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     return false;
 }
 
