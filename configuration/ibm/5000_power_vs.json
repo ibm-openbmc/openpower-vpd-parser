@@ -1,0 +1,27 @@
+{
+    "/sys/bus/spi/drivers/at25/spi12.0/eeprom": {
+        "VINI": {
+            "PN": [49, 50, 51, 52, 53, 54]
+        }
+    },
+    "/sys/bus/spi/drivers/at25/spi22.0/eeprom": {
+        "VINI" : {
+            "PN": [49, 50, 51, 52, 53, 54, 55]
+        }
+    },
+    "/sys/bus/spi/drivers/at25/spi32.0/eeprom": {
+        "VINI": {
+            "PN": [49, 50, 51, 52, 53, 54, 55, 56]
+        }
+    },
+    "/sys/bus/spi/drivers/at25/spi42.0/eeprom": {
+        "VINI": {
+            "PN": [49, 50, 51, 52, 53, 54, 55, 56, 57]
+        }
+    },
+    "/sys/bus/i2c/drivers/at24/8-0051/eeprom": {
+        "VINI": {
+            "PN": [49, 50, 51, 52, 53]
+        }
+    }
+}

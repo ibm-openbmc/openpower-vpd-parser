@@ -18,6 +18,8 @@
 #include <sdbusplus/bus/match.hpp>
 #include <sdbusplus/message.hpp>
 
+#include <typeindex>
+
 namespace vpd
 {
 Manager::Manager(
@@ -272,11 +274,18 @@ void Manager::SetTimerToDetectVpdCollectionStatus()
         {
             // cancel the timer
             l_timer.cancel();
-            m_interface->set_property("CollectionStatus",
-                                      std::string("Completed"));
 
             const nlohmann::json& l_sysCfgJsonObj =
                 m_worker->getSysCfgJsonObj();
+
+            if (vpdSpecificUtility::isPowerVsConfiguration(l_sysCfgJsonObj))
+            {
+                updatePowerVsVpd();
+            }
+
+            m_interface->set_property("CollectionStatus",
+                                      std::string("Completed"));
+
             if (jsonUtility::isBackupAndRestoreRequired(l_sysCfgJsonObj))
             {
                 BackupAndRestore l_backupAndRestoreObj(l_sysCfgJsonObj);
@@ -908,6 +917,63 @@ void Manager::performVpdRecollection()
         // TODO Log PEL
         logging::logMessage("VPD recollection failed with error: " +
                             std::string(l_ex.what()));
+    }
+}
+
+void Manager::updatePowerVsVpd()
+{
+    try
+    {
+        nlohmann::json l_parsedPwrVsJson =
+            jsonUtility::getParsedJson(POWER_VS_JSON_5000);
+
+        for (const auto& [l_path, l_recJson] : l_parsedPwrVsJson.items())
+        {
+            std::cout << "Path = " << l_path << std::endl;
+
+            for (const auto& [l_recordName, l_kwdJson] : l_recJson.items())
+            {
+                std::cout << "record name = " << l_recordName << std::endl;
+
+                for (const auto& [l_kwdName, l_kwdValue] : l_kwdJson.items())
+                {
+                    std::cout << "kwd name = " << l_kwdName << std::endl;
+
+                    std::cout << "kwd value size = " << l_kwdValue.size()
+                              << std::endl;
+                    if (l_kwdValue.is_array())
+                    {
+                        std::cout << "Is array";
+                        types::BinaryVector l_binaryKwdValue =
+                            l_kwdValue.get<types::BinaryVector>();
+
+                        for (auto item : l_binaryKwdValue)
+                        {
+                            std::cout << (int)item << " ";
+                        }
+                        std::cout << std::endl;
+                    }
+
+                    /* if (updateKeyword(l_path,
+                                       std::make_tuple(l_recordName, l_kwdName,
+                                                       l_kwdValue)) ==
+                         constants::FAILURE)
+                     {
+                         // TODO should we stop all updates or log this failure
+                         // and continue with rest of the updates.
+                     }*/
+                }
+            }
+        }
+    }
+    catch (const std::exception& l_ex)
+    {
+        /* types::ErrorType l_errTYype = types::ErrorType::InvalidSystem;
+
+         if (typeid(l_ex) == std::type_index(typeid(JsonException)))
+         {
+             l_errTYype = types::ErrorType::JsonFailure;
+         }*/
     }
 }
 } // namespace vpd
