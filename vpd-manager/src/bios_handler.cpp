@@ -3,6 +3,7 @@
 #include "bios_handler.hpp"
 
 #include "constants.hpp"
+#include "event_logger.hpp"
 #include "logger.hpp"
 
 #include <sdbusplus/bus/match.hpp>
@@ -145,8 +146,11 @@ void IbmBiosHandler::biosAttributesCallback(sdbusplus::message_t& i_msg)
         }
         else
         {
-            // TODO: log a predicitive PEL.
-            logging::logMessage("Invalid typre received from BIOS table.");
+            EventLogger::createSyncPel(
+                types::ErrorType::DbusFailure, types::SeverityType::Warning,
+                __FILE__, __FUNCTION__, 0,
+                "Invalid type received from BIOS table.", std::nullopt,
+                std::nullopt, std::nullopt, std::nullopt);
             break;
         }
     }
@@ -299,10 +303,12 @@ void IbmBiosHandler::saveFcoToBios(const types::BinaryVector& i_fcoVal)
     }
     catch (const std::exception& l_ex)
     {
-        // TODO: Should we log informational PEL here as well?
-        logging::logMessage(
+        EventLogger::createSyncPel(
+            types::ErrorType::DbusFailure, types::SeverityType::Informational,
+            __FILE__, __FUNCTION__, 0,
             "DBus call to update FCO value in pending attribute failed. " +
-            std::string(l_ex.what()));
+                std::string(l_ex.what()),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     }
 }
 
@@ -346,9 +352,11 @@ void IbmBiosHandler::saveAmmToVpd(const std::string& i_memoryMirrorMode)
     }
     else
     {
-        // TODO: Add PEL
-        logging::logMessage(
-            "Invalid type read for memory mirror mode value from DBus. Skip writing to VPD");
+        EventLogger::createSyncPel(
+            types::ErrorType::DbusFailure, types::SeverityType::Informational,
+            __FILE__, __FUNCTION__, 0,
+            "Invalid type read for memory mirror mode value from DBus. Skip writing to VPD",
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     }
 }
 
@@ -379,10 +387,12 @@ void IbmBiosHandler::saveAmmToBios(const std::string& i_ammVal)
     }
     catch (const std::exception& l_ex)
     {
-        // TODO: Should we log informational PEL here as well?
-        logging::logMessage(
+        EventLogger::createSyncPel(
+            types::ErrorType::DbusFailure, types::SeverityType::Informational,
+            __FILE__, __FUNCTION__, 0,
             "DBus call to update AMM value in pending attribute failed. " +
-            std::string(l_ex.what()));
+                std::string(l_ex.what()),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     }
 }
 
@@ -514,9 +524,12 @@ void IbmBiosHandler::saveCreateDefaultLparToBios(
     }
     catch (const std::exception& l_ex)
     {
-        logging::logMessage(
+        EventLogger::createSyncPel(
+            types::ErrorType::DbusFailure, types::SeverityType::Informational,
+            __FILE__, __FUNCTION__, 0,
             "DBus call to update lpar value in pending attribute failed. " +
-            std::string(l_ex.what()));
+                std::string(l_ex.what()),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     }
 
     return;
@@ -630,9 +643,12 @@ void IbmBiosHandler::saveClearNvramToBios(const std::string& i_clearNvramVal)
     }
     catch (const std::exception& l_ex)
     {
-        logging::logMessage(
+        EventLogger::createSyncPel(
+            types::ErrorType::DbusFailure, types::SeverityType::Informational,
+            __FILE__, __FUNCTION__, 0,
             "DBus call to update NVRAM value in pending attribute failed. " +
-            std::string(l_ex.what()));
+                std::string(l_ex.what()),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     }
 }
 
@@ -741,9 +757,12 @@ void IbmBiosHandler::saveKeepAndClearToBios(
     }
     catch (const std::exception& l_ex)
     {
-        logging::logMessage(
+        EventLogger::createSyncPel(
+            types::ErrorType::DbusFailure, types::SeverityType::Informational,
+            __FILE__, __FUNCTION__, 0,
             "DBus call to update keep and clear value in pending attribute failed. " +
-            std::string(l_ex.what()));
+                std::string(l_ex.what()),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     }
 }
 
