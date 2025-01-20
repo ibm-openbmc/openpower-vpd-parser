@@ -328,10 +328,6 @@ inline int
 
     l_result.read(l_rc);
 
-    if (l_rc > 0)
-    {
-        std::cout << "Data updated successfully " << std::endl;
-    }
     return l_rc;
 }
 
