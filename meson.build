@@ -12,7 +12,7 @@ project(
      meson_version: '>=0.58.0',
 )
 
-add_global_arguments('-Wno-psabi', language : ['c', 'cpp'])
+add_global_arguments('-Wno-psabi', '-Wno-ignored-attributes', language : ['c', 'cpp'])
 
 # Disable FORTIFY_SOURCE when compiling with no optimization
 if(get_option('optimization') == '0')
