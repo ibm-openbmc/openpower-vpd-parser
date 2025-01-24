@@ -272,6 +272,8 @@ void Manager::SetTimerToDetectVpdCollectionStatus()
         {
             // cancel the timer
             l_timer.cancel();
+
+            updatePowerVsVpd();
             m_interface->set_property("CollectionStatus",
                                       std::string("Completed"));
 
@@ -303,6 +305,85 @@ void Manager::SetTimerToDetectVpdCollectionStatus()
             }
         }
     });
+}
+
+void Manager::updatePowerVsVpd()
+{
+    std::vector<std::string> l_failedPathList;
+    try
+    {
+        nlohmann::json l_powerVsJsonObj;
+
+        const auto& l_retValue = dbusUtility::readDbusProperty(
+            constants::pimServiceName, constants::systemInvPath,
+            constants::vsbpInf, constants::kwdIM);
+
+        if (auto l_imValue = std::get_if<types::BinaryVector>(&l_retValue))
+        {
+            if ((*l_imValue).length() != constants::VALUE_4)
+            {
+                throw std::runtime_error("Invalid IM value read from DBus.");
+            }
+
+            if (((*l_imValue).at(0) == constants::HEX_VALUE_50) &&
+                ((*l_imValue).at(2) == constants::HEX_VALUE_30))
+            {
+                l_powerVsJsonObj =
+                    jsonUtility::getParsedJson(constants::power_vs_5003_json);
+            }
+            else
+            {
+                l_powerVsJsonObj =
+                    jsonUtility::getParsedJson(constants::power_vs_5001_json);
+            }
+        }
+
+        for (const auto& [l_path, l_recJson] : l_parsedPwrVsJson.items())
+        {
+            for (const auto& [l_recordName, l_kwdJson] : l_recJson.items())
+            {
+                for (const auto& [l_kwdName, l_kwdValue] : l_kwdJson.items())
+                {
+                    if (l_kwdValue.is_array())
+                    {
+                        types::BinaryVector l_binaryKwdValue =
+                            l_kwdValue.get<types::BinaryVector>();
+
+                        if (updateKeyword(
+                                l_path, std::make_tuple(l_recordName, l_kwdName,
+                                                        l_kwdValue)) ==
+                            constants::FAILURE)
+                        {
+                            l_failedPathList.push_back(l_path);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!l_failedPathList.empty())
+        {
+            throw std::runtime_error(
+                "Part number failed for following paths: ");
+        }
+    }
+    catch (const std::exception& l_ex)
+    {
+        std::string l_errMsg = l_ex.what();
+        if (!l_failedPathList.empty())
+        {
+            for (const auto& l_path = l_failedPathList)
+            {
+                l_errMsg += l_path + "; ";
+            }
+        }
+
+        EventLogger::createSyncPel(types::ErrorType::InternalFailure;
+                                   , types::SeverityType::Critical, __FILE__,
+                                   __FUNCTION__, 0, l_errMsg + l_ex.what(),
+                                   std::nullopt, std::nullopt, std::nullopt,
+                                   std::nullopt);
+    }
 }
 #endif
 
