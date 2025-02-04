@@ -25,8 +25,8 @@
 namespace vpd
 {
 
-Worker::Worker(std::string pathToConfigJson) :
-    m_configJsonPath(pathToConfigJson)
+Worker::Worker(std::string pathToConfigJson, uint8_t i_maxThreadCount) :
+    m_configJsonPath(pathToConfigJson), m_semaphore(i_maxThreadCount)
 {
     // Implies the processing is based on some config JSON
     if (!m_configJsonPath.empty())
@@ -1525,13 +1525,6 @@ void Worker::collectFrusFromJson()
     {
         throw std::runtime_error(
             "A config JSON is required for processing of FRUs");
-    }
-
-    // If chassis is on then readuce the number of threads to reduce CPU
-    // utilitization.
-    if (dbusUtility::isChassisPowerOn())
-    {
-        m_semaphore = constants::VALUE_2;
     }
 
     const nlohmann::json& listOfFrus =
