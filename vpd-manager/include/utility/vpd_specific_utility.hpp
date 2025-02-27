@@ -3,6 +3,7 @@
 #include "config.h"
 
 #include "constants.hpp"
+#include "event_logger.hpp"
 #include "exceptions.hpp"
 #include "logger.hpp"
 #include "types.hpp"
@@ -202,10 +203,12 @@ inline void insertOrMerge(types::InterfaceMap& map,
         }
         catch (const std::exception& l_ex)
         {
-            // ToDo:: Log PEL
-            logging::logMessage(
-                "Inserting properties into interface[" + interface +
-                "] map is failed, reason: " + std::string(l_ex.what()));
+            EventLogger::createSyncPel(
+                types::ErrorType::InvalidVpdMessage,
+                types::SeverityType::Informational, __FILE__, __FUNCTION__, 0,
+                "Inserting properties into interface [" + interface +
+                    "] map is failed, reason: " + std::string(l_ex.what()),
+                std::nullopt, std::nullopt, std::nullopt, std::nullopt);
         }
     }
     else
@@ -335,10 +338,14 @@ inline std::string
             expanded.replace(pos, 3, firstKwdValue + "." + secondKwdValue);
         }
     }
-    catch (const std::exception& ex)
+    catch (const std::exception& l_ex)
     {
-        logging::logMessage("Failed to expand location code with exception: " +
-                            std::string(ex.what()));
+        EventLogger::createSyncPel(
+            types::ErrorType::InvalidVpdMessage,
+            types::SeverityType::Informational, __FILE__, __FUNCTION__, 0,
+            "Failed to expand location code [ " + unexpandedLocationCode +
+                " ] with exception: " + std::string(l_ex.what()),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     }
 
     return expanded;
@@ -548,8 +555,12 @@ inline void resetDataUnderPIM(const std::string& i_objectPath,
     }
     catch (const std::exception& l_ex)
     {
-        logging::logMessage("Failed to remove VPD for FRU: " + i_objectPath +
-                            " with error: " + std::string(l_ex.what()));
+        EventLogger::createSyncPel(
+            types::ErrorType::InvalidVpdMessage,
+            types::SeverityType::Informational, __FILE__, __FUNCTION__, 0,
+            "Failed to remove VPD for FRU: " + i_objectPath +
+                " with error: " + std::string(l_ex.what()),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     }
 }
 } // namespace vpdSpecificUtility
