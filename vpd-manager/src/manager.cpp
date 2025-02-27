@@ -863,7 +863,8 @@ void Manager::hostStateChangeCallBack(sdbusplus::message_t& i_msg)
             if (*l_hostState == "xyz.openbmc_project.State.Host.HostState."
                                 "TransitioningToRunning")
             {
-                // TODO: check for all the essential FRUs in the system.
+                // check for all the essential FRUs in the system.
+                checkEssentialFrus();
 
                 // Perform recollection.
                 performVpdRecollection();
@@ -919,6 +920,47 @@ void Manager::performVpdRecollection()
         // TODO Log PEL
         logging::logMessage("VPD recollection failed with error: " +
                             std::string(l_ex.what()));
+    }
+}
+
+void Manager::checkEssentialFrus()
+{
+    const nlohmann::json& l_sysCfgJsonObj = m_worker->getSysCfgJsonObj();
+
+    types::MapOfObjectsToService l_essentialFruObjects;
+    jsonUtility::getEssentialFruObjects(l_sysCfgJsonObj, l_essentialFruObjects);
+
+    if (l_essentialFruObjects.empty())
+    {
+        logging::logMessage("No essential FRUs found.");
+        return;
+    }
+
+    for (const auto& l_essentialFru : l_essentialFruObjects)
+    {
+        const auto& l_essentialFruObject = l_essentialFru.first;
+
+        // Read Present property to check the physical presence of the FRU
+        const auto l_essentialFruPresence = dbusUtility::readDbusProperty(
+            l_essentialFru.second, l_essentialFruObject,
+            constants::inventoryItemInf, "Present");
+
+        if (const auto l_present = std::get_if<bool>(&l_essentialFruPresence))
+        {
+            if (!*l_present)
+            {
+                logging::logMessage("Essential FRU " + l_essentialFruObject +
+                                    " not present.");
+                // TODO: Remove the log and create PEL
+            }
+        }
+        else
+        {
+            logging::logMessage(
+                "Present property is not found on D-bus for the essential FRU " +
+                l_essentialFruObject);
+            // TODO: Remove the log and create PEL
+        }
     }
 }
 } // namespace vpd

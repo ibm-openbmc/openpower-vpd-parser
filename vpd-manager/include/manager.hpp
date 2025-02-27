@@ -255,6 +255,14 @@ class Manager
      * @param[in] i_msg - The callback message.
      */
     void processAssetTagChangeCallback(sdbusplus::message_t& i_msg);
+
+    /**
+     * @brief API to check the presence of essential FRUs.
+     *
+     * This API is to check if the FRUs' which are essential are present on the
+     * system. If not present, PEL is logged.
+     */
+    void checkEssentialFrus();
 #endif
 
     /**
