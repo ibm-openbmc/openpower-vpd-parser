@@ -11,3 +11,4 @@ option('SYSTEM_VPD_FILE_PATH', type: 'string', value: '/sys/bus/i2c/drivers/at24
 option('VPD_SYMLIMK_PATH', type: 'string', value: '/var/lib/vpd',  description: 'Symlink folder for VPD invnetory JSONs')
 option('PIM_PATH_PREFIX', type: 'string', value: '/xyz/openbmc_project/inventory', description: 'Prefix for PIM inventory paths.')
 option('ibm_system', type: 'feature', value : 'enabled', description: 'Enable code specific to IBM systems.')
+option('POWER_VS_JSON_5000', type: 'string', value : '/usr/share/vpd/5000_power_vs.json', description: 'Json file that contains part number with respect to PowerVS system.')

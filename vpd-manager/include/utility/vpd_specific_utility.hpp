@@ -10,6 +10,7 @@
 #include <nlohmann/json.hpp>
 #include <utility/common_utility.hpp>
 #include <utility/dbus_utility.hpp>
+#include <utility/json_utility.hpp>
 
 #include <filesystem>
 #include <fstream>
@@ -550,6 +551,63 @@ inline void resetDataUnderPIM(const std::string& i_objectPath,
     {
         logging::logMessage("Failed to remove VPD for FRU: " + i_objectPath +
                             " with error: " + std::string(l_ex.what()));
+    }
+}
+
+/**
+ * @brief API to detect of system configuration is that of PowerVS system.
+ *
+ * @param[in] i_sysConfigJson - System config JSON object.
+ * @return True if it is PowerVS configuration, false otherwise.
+ */
+inline bool isPowerVsConfiguration(const nlohmann::json& i_sysConfigJson)
+{
+    try
+    {
+        if (i_sysConfigJson.empty())
+        {
+            throw std::runtime_error("Invalid system config JSON.");
+        }
+
+        const auto& l_inventoryPath = jsonUtility::getInventoryObjPathFromJson(
+            i_sysConfigJson, SYSTEM_VPD_FILE_PATH);
+
+        if (l_inventoryPath.empty())
+        {
+            throw std::runtime_error(
+                "Inventory path not found in Json for system VPD filepath.");
+        }
+
+        const auto& l_retValue = dbusUtility::readDbusProperty(
+            constants::pimServiceName, l_inventoryPath, constants::vsbpInf,
+            constants::kwdIM);
+
+        if (auto l_imValue = std::get_if<types::BinaryVector>(&l_retValue))
+        {
+            if (((*l_imValue).at(0) == constants::HEX_VALUE_50) &&
+                (dbusUtility::getImagePrefix() ==
+                 constants::powerVsImagePrefix))
+            {
+                return true;
+            }
+
+            logging::logMessage("Not a power VS configuration");
+            return false;
+        }
+
+        throw std::runtime_error(
+            "Invalid type recieved while reading system IM.");
+    }
+    catch (const std::exception& l_ex)
+    {
+        EventLogger::createSyncPel(
+            types::ErrorType::InvalidSystem, types::SeverityType::Informational,
+            __FILE__, __FUNCTION__, 0,
+            "Failed to process powerVS configuration with error: " +
+                std::string(l_ex.what()),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
+
+        return false;
     }
 }
 } // namespace vpdSpecificUtility

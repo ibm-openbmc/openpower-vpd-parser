@@ -272,6 +272,11 @@ class Manager
     void registerHostStateChangeCallback();
 
     /**
+     * @brief API to update VPD related to power vs system.
+     */
+    void updatePowerVsVpd();
+
+    /**
      * @brief API to process host state change callback.
      *
      * @param[in] i_msg - Callback message.
