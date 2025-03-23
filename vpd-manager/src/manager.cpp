@@ -42,6 +42,13 @@ Manager::Manager(
             m_worker = std::make_shared<Worker>(INVENTORY_JSON_DEFAULT);
         }
 
+        if (!m_worker->getSysCfgJsonObj().empty() &&
+            jsonUtility::isBackupAndRestoreRequired(l_sysCfgJsonObj))
+        {
+            m_backupAndRestoreObj = std::make_shared<BackupAndRestore>(
+                m_worker->getSysCfgJsonObj());
+        }
+
         // Set up minimal things that is needed before bus name is claimed.
         m_worker->performInitialSetup();
 
@@ -294,12 +301,9 @@ void Manager::SetTimerToDetectVpdCollectionStatus()
             m_interface->set_property("CollectionStatus",
                                       std::string("Completed"));
 
-            const nlohmann::json& l_sysCfgJsonObj =
-                m_worker->getSysCfgJsonObj();
-            if (jsonUtility::isBackupAndRestoreRequired(l_sysCfgJsonObj))
+            if (m_backupAndRestoreObj)
             {
-                BackupAndRestore l_backupAndRestoreObj(l_sysCfgJsonObj);
-                l_backupAndRestoreObj.backupAndRestore();
+                m_backupAndRestoreObj->backupAndRestore();
             }
         }
         else
@@ -540,7 +544,18 @@ int Manager::updateKeyword(const types::Path i_vpdPath,
     {
         std::shared_ptr<Parser> l_parserObj =
             std::make_shared<Parser>(l_fruPath, l_sysCfgJsonObj);
-        return l_parserObj->updateVpdKeyword(i_paramsToWriteData);
+        int l_rc = l_parserObj->updateVpdKeyword(i_paramsToWriteData);
+
+        if (l_rc > constants::VALUE_0 && m_backupRestoreObj)
+        {
+            if (m_backupRestoreObj->perfromIndividualBackupRestore(
+                    l_fruPath, i_paramsToWriteData) < 0)
+            {
+                // write passed but back up and restore failed;
+            }
+        }
+
+        return l_rc;
     }
     catch (const std::exception& l_exception)
     {

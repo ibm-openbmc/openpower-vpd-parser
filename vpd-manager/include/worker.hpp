@@ -568,5 +568,7 @@ class Worker
 
     // List of EEPROM paths for which VPD collection thread creation has failed.
     std::forward_list<std::string> m_failedEepromPaths;
+
+    std::shared_ptr<BackupAndRestore> m_backupAndRestoreObj;
 };
 } // namespace vpd
