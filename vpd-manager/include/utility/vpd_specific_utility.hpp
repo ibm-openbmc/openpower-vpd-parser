@@ -552,5 +552,15 @@ inline void resetDataUnderPIM(const std::string& i_objectPath,
                             " with error: " + std::string(l_ex.what()));
     }
 }
+
+inline std::string toString(const types::DbusVariantType& i_data)
+{
+    if (const auto l_data = std::get_if<types::BinaryVector>(&i_data);
+        l_data && !l_data->empty())
+    {
+        return std::string(l_data->begin(), l_data->end());
+    }
+    return std::string();
+}
 } // namespace vpdSpecificUtility
 } // namespace vpd
