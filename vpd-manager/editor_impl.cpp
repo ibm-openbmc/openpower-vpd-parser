@@ -593,6 +593,7 @@ static void disableRebootGuard()
 void EditorImpl::updateKeyword(const Binary& kwdData, uint32_t offset,
                                const bool& updCache)
 {
+    std::cout<<"test_ editor update keyword called"<<std::endl;
     try
     {
         startOffset = offset;

@@ -84,8 +84,10 @@ class Impl
 #endif
         try
         {
-            vpdFileStream.open(vpdFilePath,
-                               std::ios::in | std::ios::out | std::ios::binary);
+           // executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_beforeOpeningStream_IPZ.txt");
+           /* vpdFileStream.open(vpdFilePath,
+                               std::ios::in | std::ios::out | std::ios::binary);*/
+           // executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_afterOpeningStream_IPZ.txt");        
         }
         catch (const std::fstream::failure& fail)
         {

@@ -76,6 +76,7 @@ RecordOffset Impl::getVtocOffset() const
 #ifdef IPZ_PARSER
 int Impl::vhdrEccCheck()
 {
+    executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_beforeHDRECC_IPZ.txt");
     int rc = eccStatus::SUCCESS;
     auto vpdPtr = vpd.cbegin();
 
@@ -88,6 +89,9 @@ int Impl::vhdrEccCheck()
     {
         try
         {
+            std::cout<<"Correction HDR ERR"<<std::endl;
+            vpdFileStream.open(vpdFilePath,
+                std::ios::in | std::ios::out | std::ios::binary);
             if (vpdFileStream.is_open())
             {
                 vpdFileStream.seekp(vpdStartOffset + offsets::VHDR_RECORD,
@@ -95,6 +99,7 @@ int Impl::vhdrEccCheck()
                 vpdFileStream.write(
                     reinterpret_cast<const char*>(&vpd[offsets::VHDR_RECORD]),
                     lengths::VHDR_RECORD_LENGTH);
+                vpdFileStream.close();
             }
             else
             {
@@ -113,12 +118,14 @@ int Impl::vhdrEccCheck()
     {
         rc = eccStatus::FAILED;
     }
+    executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_afterHRDECC_IPZ.txt");
 
     return rc;
 }
 
 int Impl::vtocEccCheck()
 {
+    executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_beforeTOCECC_IPZ.txt");
     int rc = eccStatus::SUCCESS;
     // Use another pointer to get ECC information from VHDR,
     // actual pointer is pointing to VTOC data
@@ -150,12 +157,17 @@ int Impl::vtocEccCheck()
     {
         try
         {
+            std::cout<<"Correction TOC ERR"<<std::endl;
+            vpdFileStream.open(vpdFilePath,
+                std::ios::in | std::ios::out | std::ios::binary);
+            
             if (vpdFileStream.is_open())
             {
                 vpdFileStream.seekp(vpdStartOffset + vtocOffset, std::ios::beg);
                 vpdFileStream.write(
                     reinterpret_cast<const char*>(&vpdPtr[vtocOffset]),
                     vtocLength);
+                    vpdFileStream.close();
             }
             else
             {
@@ -174,7 +186,7 @@ int Impl::vtocEccCheck()
     {
         rc = eccStatus::FAILED;
     }
-
+    executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_afterTOCECC_IPZ.txt");
     return rc;
 }
 
@@ -193,18 +205,27 @@ int Impl::recordEccCheck(Binary::const_iterator iterator)
     std::advance(iterator, sizeof(ECCOffset));
     auto eccLength = readUInt16LE(iterator);
 
+    std::cout<<"recordOffset"<<(int)recordOffset<<std::endl;
+    std::cout<<"recordLength"<<(int)recordLength<<std::endl;
+    std::cout<<"eccOffset"<<(int)eccOffset<<std::endl;
+    std::cout<<"eccLength"<<(int)eccLength<<std::endl;
+    
+
     if (eccLength == 0 || eccOffset == 0)
     {
+        std::cout<<"ECC Exception thrown"<<std::endl;
         throw(VpdEccException(
             "Could not find ECC's offset or Length for Record:"));
     }
 
     if (recordOffset == 0 || recordLength == 0)
     {
+        std::cout<<"Data Exception thrown"<<std::endl;
         throw(VpdDataException("Could not find VPD record offset or VPD record "
                                "length for Record:"));
     }
 
+    
     auto vpdPtr = vpd.cbegin();
 
     auto l_status = vpdecc_check_data(
@@ -214,6 +235,10 @@ int Impl::recordEccCheck(Binary::const_iterator iterator)
     {
         try
         {
+            std::cout<<"Correction REC ERR"<<std::endl;
+            vpdFileStream.open(vpdFilePath,
+                std::ios::in | std::ios::out | std::ios::binary);
+            
             if (vpdFileStream.is_open())
             {
                 vpdFileStream.seekp(vpdStartOffset + recordOffset,
@@ -221,6 +246,8 @@ int Impl::recordEccCheck(Binary::const_iterator iterator)
                 vpdFileStream.write(
                     reinterpret_cast<const char*>(&vpdPtr[recordOffset]),
                     recordLength);
+
+                    vpdFileStream.close();
             }
             else
             {
@@ -237,6 +264,7 @@ int Impl::recordEccCheck(Binary::const_iterator iterator)
     }
     else if (l_status != VPD_ECC_OK)
     {
+        std::cout<<"Ecc check failed"<<std::endl;
         rc = eccStatus::FAILED;
     }
 
@@ -246,6 +274,7 @@ int Impl::recordEccCheck(Binary::const_iterator iterator)
 
 void Impl::checkHeader()
 {
+    executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_beforeCheckHeader_IPZ.txt");            
     if (vpd.empty() || (lengths::RECORD_MIN > vpd.size()))
     {
         throw(VpdDataException("Malformed VPD"));
@@ -271,10 +300,12 @@ void Impl::checkHeader()
         }
 #endif
     }
+    executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_afterCheckHeader_IPZ.txt");
 }
 
 std::size_t Impl::readTOC(Binary::const_iterator& iterator)
 {
+    executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_beforeReadTOC_IPZ.txt");
     // The offset to VTOC could be 1 or 2 bytes long
     RecordOffset vtocOffset = getVtocOffset();
 
@@ -310,6 +341,7 @@ std::size_t Impl::readTOC(Binary::const_iterator& iterator)
     std::size_t ptLen = *iterator;
     // Skip past PT size
     std::advance(iterator, sizeof(KwSize));
+    executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_afterReadTOC_IPZ.txt");
 
     // length of PT keyword
     return ptLen;
@@ -318,6 +350,7 @@ std::size_t Impl::readTOC(Binary::const_iterator& iterator)
 internal::OffsetList Impl::readPT(Binary::const_iterator iterator,
                                   std::size_t ptLength)
 {
+    executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_beforeReadPT_IPZ.txt");
     internal::OffsetList offsets{};
 
     auto end = iterator;
@@ -343,9 +376,10 @@ internal::OffsetList Impl::readPT(Binary::const_iterator iterator,
 
         try
         {
+            executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_beforeRecordEccCheck_IPZ.txt");
             // Verify the ECC for this Record
             int rc = recordEccCheck(iterator);
-
+            executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_afterRecordEccCheck_IPZ.txt");
             if (rc != eccStatus::SUCCESS)
             {
                 std::string errorMsg = std::string(
@@ -380,11 +414,13 @@ internal::OffsetList Impl::readPT(Binary::const_iterator iterator,
                                    sizeof(ECCOffset) + sizeof(ECCLength));
     }
 
+    executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_afterReadPT_IPZ.txt");
     return offsets;
 }
 
 void Impl::processRecord(std::size_t recordOffset)
 {
+    executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_beforeProcessRecord_IPZ.txt");
     // Jump to record name
     auto nameOffset = recordOffset + sizeof(RecordId) + sizeof(RecordSize) +
                       // Skip past the RT keyword, which contains
@@ -414,6 +450,8 @@ void Impl::processRecord(std::size_t recordOffset)
         // Add entry for this record (and contained keyword:value pairs)
         // to the parsed vpd output.
         out.emplace(std::move(name), std::move(kwMap));
+
+        executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_afterProcessRecord_IPZ.txt");
 
 #ifndef IPZ_PARSER
     }
@@ -518,6 +556,7 @@ std::string Impl::readKwData(const internal::KeywordInfo& keyword,
 
 internal::KeywordMap Impl::readKeywords(Binary::const_iterator iterator)
 {
+    executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_beforeReadKWD_IPZ.txt");
     internal::KeywordMap map{};
     while (true)
     {
@@ -576,6 +615,8 @@ internal::KeywordMap Impl::readKeywords(Binary::const_iterator iterator)
         std::advance(iterator, length);
     }
 
+    executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_afterReadKWD_IPZ.txt");
+
     return map;
 }
 
@@ -596,6 +637,8 @@ Store Impl::run()
     {
         processRecord(offset);
     }
+
+    
     // Return a Store object, which has interfaces to
     // access parsed VPD by record:keyword
     return Store(std::move(out));

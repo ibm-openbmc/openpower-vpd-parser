@@ -27,6 +27,7 @@
 #include <iterator>
 #include <regex>
 #include <thread>
+#include <chrono> 
 
 using namespace std;
 using namespace openpower::vpd;
@@ -932,8 +933,9 @@ std::variant<KeywordVpdMap, openpower::vpd::Store>
             break;
         }
     }
-
+    executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_beforeGetDataInVector.txt");
     Binary vpdVector = getVpdDataInVector(js, vpdFilePath);
+    executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_afterGetDataInVector.txt");
 
     ParserInterface* parser = ParserFactory::getParser(
         vpdVector,
@@ -998,6 +1000,7 @@ void updateVpdDataOnHw(const std::string& vpdFilePath, nlohmann::json& js,
                        const std::string& recName, const std::string& kwName,
                        const Binary& kwdData)
 {
+    std::cout<<"test_ updateVpdDataOnHw called "<<std::endl;
     const std::string& fruInvPath =
         js["frus"][vpdFilePath][0]["inventoryPath"]
             .get_ref<const nlohmann::json::string_t&>();
@@ -1034,6 +1037,7 @@ void updateVpdDataOnHw(const std::string& vpdFilePath, nlohmann::json& js,
 void restoreSystemVPD(Parsed& vpdMap, const string& objectPath,
                       nlohmann::json& js, bool isBackupOnCache = true)
 {
+    std::cout<<"Restore system VPD called"<<std::endl;
     std::string systemVpdBackupPath{};
     std::string backupVpdInvPath{};
     Parsed backupVpdMap{};
@@ -1207,6 +1211,7 @@ void restoreSystemVPD(Parsed& vpdMap, const string& objectPath,
                         // to the cache & hardware in the same code path.
                         if (!isBackupOnCache)
                         {
+                            std::cout<<"test_ Back up is not on cache"<<std::endl;
                             // copy backup VPD on to system backplane
                             // EEPROM  file.
                             updateVpdDataOnHw(systemVpdFilePath, js, recordName,
@@ -1235,6 +1240,7 @@ void restoreSystemVPD(Parsed& vpdMap, const string& objectPath,
                     else if ((kwdDataInBinary != defaultValue) &&
                              (!isBackupOnCache))
                     {
+                        std::cout<<"test_ BAck up and restore 2"<<std::endl;
                         // update primary VPD on to backup VPD file
                         updateVpdDataOnHw(systemVpdBackupPath, js,
                                           backupVpdRecName, backupVpdKwName,
@@ -1739,6 +1745,8 @@ int main(int argc, char** argv)
             isSystemVpd = true;
         }
 
+        std::cout<<"test_ file path being processed is ="<<file<<std::endl;
+
         // Check if input file is not empty.
         if ((file.empty()) || (driver.empty()))
         {
@@ -1866,13 +1874,19 @@ int main(int argc, char** argv)
         if (!needsRecollection(js, file))
         {
             std::cout << "Skip VPD recollection for: " << file << std::endl;
-            return 0;
+        //    return 0;
         }
 
         try
         {
+            executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_beforeParse.txt");
             variant<KeywordVpdMap, Store> parseResult;
             parseResult = parseVpdFile(file, js);
+
+            std::cout<<"test_ parsing done, sleeping for 10s to check file content"<<std::endl;
+            executeCmd("hexdump -C -s 196608 -n 1024 /sys/bus/spi/drivers/at25/spi42.0/eeprom > /tmp/spi42_afterParse.txt");
+            using namespace std::chrono_literals;
+            std::this_thread::sleep_for(10s);
 
             if (isSystemVpd)
             {
