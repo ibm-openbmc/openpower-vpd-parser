@@ -216,10 +216,14 @@ auto EditorImpl::getValue(offsets::Offsets offset)
 
 void EditorImpl::checkRecordData()
 {
-    auto itrToRecordData = vpdFile.cbegin();
+    // To avoid corruption of VPD, a copy is created to send to
+    // vpdecc_check_data.
+    auto vpdCorrected = vpdFile;
+
+    auto itrToRecordData = vpdCorrected.cbegin();
     std::advance(itrToRecordData, thisRecord.recOffset);
 
-    auto itrToRecordECC = vpdFile.cbegin();
+    auto itrToRecordECC = vpdCorrected.cbegin();
     std::advance(itrToRecordECC, thisRecord.recECCoffset);
 
     checkECC(itrToRecordData, itrToRecordECC, thisRecord.recSize,
@@ -236,31 +240,19 @@ void EditorImpl::checkECC(Binary::const_iterator& itrToRecData,
 
     if (l_status == VPD_ECC_CORRECTABLE_DATA)
     {
-        try
+        inventory::PelAdditionalData additionalData{};
+        additionalData.emplace("DESCRIPTION",
+                               "One bit correction has been performed.");
+        if (!objPath.empty())
         {
-            if (vpdFileStream.is_open())
-            {
-                vpdFileStream.seekp(startOffset + thisRecord.recOffset,
-                                    std::ios::beg);
-                auto end = itrToRecData;
-                std::advance(end, recLength);
-                std::copy(itrToRecData, end,
-                          std::ostreambuf_iterator<char>(vpdFileStream));
-            }
-            else
-            {
-                throw std::runtime_error("Ecc correction failed");
-            }
+            additionalData.emplace("CALLOUT_INVENTORY_PATH", objPath);
         }
-        catch (const std::fstream::failure& e)
-        {
-            std::cout << "Error while operating on file with exception";
-            throw std::runtime_error("Ecc correction failed");
-        }
+        createPEL(additionalData, PelSeverity::INFORMATIONAL,
+                  errIntfForEccCheckFail, nullptr);
     }
     else if (l_status != VPD_ECC_OK)
     {
-        throw std::runtime_error("Ecc check failed");
+        throw std::runtime_error("Ecc check failed for record");
     }
 }
 
@@ -284,8 +276,30 @@ void EditorImpl::readVTOC()
     auto iteratorToECC = vpdFile.cbegin();
     std::advance(iteratorToECC, tocECCOffset);
 
-    // validate ecc for the record
-    checkECC(itrToRecord, iteratorToECC, tocLength, tocECCLength);
+    // To avoid corruption of VPD, a copy is created to send to
+    // vpdecc_check_data.
+    auto vpdCorrected = vpdFile;
+    auto vpdPtr = vpdCorrected.cbegin();
+
+    auto l_status = vpdecc_check_data(
+        const_cast<uint8_t*>(&vpdPtr[tocOffset]), tocLength,
+        const_cast<uint8_t*>(&vpdPtr[tocECCOffset]), tocECCLength);
+    if (l_status == VPD_ECC_CORRECTABLE_DATA)
+    {
+        inventory::PelAdditionalData additionalData{};
+        additionalData.emplace(
+            "DESCRIPTION", "One bit correction has been performed in VTOC.");
+        if (!objPath.empty())
+        {
+            additionalData.emplace("CALLOUT_INVENTORY_PATH", objPath);
+        }
+        createPEL(additionalData, PelSeverity::INFORMATIONAL,
+                  errIntfForEccCheckFail, nullptr);
+    }
+    else if (l_status != VPD_ECC_OK)
+    {
+        throw std::runtime_error("VTOC Ecc check failed");
+    }
 
     // to get to the record name.
     std::advance(itrToRecord, sizeof(RecordId) + sizeof(RecordSize) +
