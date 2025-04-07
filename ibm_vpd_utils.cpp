@@ -675,7 +675,7 @@ const std::string getKwVal(const Parsed& vpdMap, const std::string& rec,
         }
         else
         {
-            std::cout << "Keyword not found" << std::endl;
+            std::cout << "utils: Keyword not found" << std::endl;
         }
     }
     else

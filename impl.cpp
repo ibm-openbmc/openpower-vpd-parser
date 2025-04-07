@@ -77,7 +77,11 @@ RecordOffset Impl::getVtocOffset() const
 int Impl::vhdrEccCheck()
 {
     int rc = eccStatus::SUCCESS;
-    auto vpdPtr = vpd.cbegin();
+
+    // To avoid corruption of VPD, a copy is created to send to
+    // vpdecc_check_data.
+    auto vpdCorrected = vpd;
+    auto vpdPtr = vpdCorrected.cbegin();
 
     auto l_status =
         vpdecc_check_data(const_cast<uint8_t*>(&vpdPtr[offsets::VHDR_RECORD]),
@@ -86,28 +90,12 @@ int Impl::vhdrEccCheck()
                           lengths::VHDR_ECC_LENGTH);
     if (l_status == VPD_ECC_CORRECTABLE_DATA)
     {
-        try
-        {
-            if (vpdFileStream.is_open())
-            {
-                vpdFileStream.seekp(vpdStartOffset + offsets::VHDR_RECORD,
-                                    std::ios::beg);
-                vpdFileStream.write(
-                    reinterpret_cast<const char*>(&vpd[offsets::VHDR_RECORD]),
-                    lengths::VHDR_RECORD_LENGTH);
-            }
-            else
-            {
-                std::cerr << "File not open";
-                rc = eccStatus::FAILED;
-            }
-        }
-        catch (const std::fstream::failure& e)
-        {
-            std::cout << "Error while operating on file with exception:"
-                      << e.what();
-            rc = eccStatus::FAILED;
-        }
+        inventory::PelAdditionalData additionalData{};
+        additionalData.emplace("DESCRIPTION",
+                               "One bit correction for VHDR performed");
+        additionalData.emplace("CALLOUT_INVENTORY_PATH", inventoryPath);
+        createPEL(additionalData, PelSeverity::INFORMATIONAL,
+                  errIntfForEccCheckFail, nullptr);
     }
     else if (l_status != VPD_ECC_OK)
     {
@@ -123,7 +111,10 @@ int Impl::vtocEccCheck()
     // Use another pointer to get ECC information from VHDR,
     // actual pointer is pointing to VTOC data
 
-    auto vpdPtr = vpd.cbegin();
+    // To avoid corruption of VPD, a copy is created to send to
+    // vpdecc_check_data.
+    auto vpdCorrected = vpd;
+    auto vpdPtr = vpdCorrected.cbegin();
 
     // Get VTOC Offset
     auto vtocOffset = getVtocOffset();
@@ -142,33 +133,19 @@ int Impl::vtocEccCheck()
 
     // Reset pointer to start of the vpd,
     // so that Offset will point to correct address
-    vpdPtr = vpd.cbegin();
+    vpdPtr = vpdCorrected.cbegin();
+
     auto l_status = vpdecc_check_data(
         const_cast<uint8_t*>(&vpdPtr[vtocOffset]), vtocLength,
         const_cast<uint8_t*>(&vpdPtr[vtocECCOffset]), vtocECCLength);
     if (l_status == VPD_ECC_CORRECTABLE_DATA)
     {
-        try
-        {
-            if (vpdFileStream.is_open())
-            {
-                vpdFileStream.seekp(vpdStartOffset + vtocOffset, std::ios::beg);
-                vpdFileStream.write(
-                    reinterpret_cast<const char*>(&vpdPtr[vtocOffset]),
-                    vtocLength);
-            }
-            else
-            {
-                std::cerr << "File not open";
-                rc = eccStatus::FAILED;
-            }
-        }
-        catch (const std::fstream::failure& e)
-        {
-            std::cout << "Error while operating on file with exception "
-                      << e.what();
-            rc = eccStatus::FAILED;
-        }
+        inventory::PelAdditionalData additionalData{};
+        additionalData.emplace("DESCRIPTION",
+                               "One bit correction for VTOC performed");
+        additionalData.emplace("CALLOUT_INVENTORY_PATH", inventoryPath);
+        createPEL(additionalData, PelSeverity::INFORMATIONAL,
+                  errIntfForEccCheckFail, nullptr);
     }
     else if (l_status != VPD_ECC_OK)
     {
@@ -205,35 +182,23 @@ int Impl::recordEccCheck(Binary::const_iterator iterator)
                                "length for Record:"));
     }
 
-    auto vpdPtr = vpd.cbegin();
+    // To avoid corruption of VPD, a copy is created to send to
+    // vpdecc_check_data.
+    auto vpdCorrected = vpd;
+    auto vpdPtr = vpdCorrected.cbegin();
 
     auto l_status = vpdecc_check_data(
         const_cast<uint8_t*>(&vpdPtr[recordOffset]), recordLength,
         const_cast<uint8_t*>(&vpdPtr[eccOffset]), eccLength);
     if (l_status == VPD_ECC_CORRECTABLE_DATA)
     {
-        try
-        {
-            if (vpdFileStream.is_open())
-            {
-                vpdFileStream.seekp(vpdStartOffset + recordOffset,
-                                    std::ios::beg);
-                vpdFileStream.write(
-                    reinterpret_cast<const char*>(&vpdPtr[recordOffset]),
-                    recordLength);
-            }
-            else
-            {
-                std::cerr << "File not open";
-                rc = eccStatus::FAILED;
-            }
-        }
-        catch (const std::fstream::failure& e)
-        {
-            std::cout << "Error while operating on file with exception "
-                      << e.what();
-            rc = eccStatus::FAILED;
-        }
+        inventory::PelAdditionalData additionalData{};
+        additionalData.emplace(
+            "DESCRIPTION",
+            "One bit ECC correction for a record has been performed");
+        additionalData.emplace("CALLOUT_INVENTORY_PATH", inventoryPath);
+        createPEL(additionalData, PelSeverity::INFORMATIONAL,
+                  errIntfForEccCheckFail, nullptr);
     }
     else if (l_status != VPD_ECC_OK)
     {
