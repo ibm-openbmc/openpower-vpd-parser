@@ -507,10 +507,16 @@ std::string getSystemsJson(const Parsed& vpdMap)
 
         if (js["system"].find(imKeyword) == js["system"].end())
         {
-            throw std::runtime_error(
-                "Invalid system. This system type is not present "
-                "in the systemsJson. IM: " +
-                imKeyword);
+            std::string err =
+                "Invalid system. This system type is not present in the systems Json. IM value: " +
+                imKeyword;
+
+            PelAdditionalData additionalData{};
+            additionalData.emplace("DESCRIPTION", err);
+            createPEL(additionalData, PelSeverity::CRITICAL,
+                      errIntfForInvalidSystemType, nullptr);
+
+            throw std::runtime_error(err);
         }
 
         if ((js["system"][imKeyword].find("constraint") !=
