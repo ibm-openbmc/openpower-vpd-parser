@@ -8,7 +8,7 @@
 
 namespace vpd
 {
-
+//test
 // Backup and restore operation status.
 enum class BackupAndRestoreStatus : uint8_t
 {
