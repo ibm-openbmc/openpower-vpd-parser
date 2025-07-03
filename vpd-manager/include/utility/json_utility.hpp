@@ -1157,5 +1157,91 @@ inline nlohmann::json getPowerVsJson(const types::BinaryVector& i_imValue)
         return nlohmann::json{};
     }
 }
+
+/**
+ * @brief API to get list of FRUs for which "monitorPresence" is true.
+ *
+ * @param[in] i_sysCfgJsonObj - System config JSON object.
+ *
+ * @return On success, returns list of FRUs for which "monitorPresence" is true,
+ * empty list on error.
+ */
+inline std::vector<types::Path> getFrusWithPresenceMonitoring(
+    const nlohmann::json& i_sysCfgJsonObj) noexcept
+{
+    std::vector<types::Path> l_frusWithPresenceMonitoring;
+    try
+    {
+        if (!i_sysCfgJsonObj.contains("frus"))
+        {
+            throw JsonException("Missing frus tag in system config JSON.");
+        }
+
+        const nlohmann::json& l_listOfFrus =
+            i_sysCfgJsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
+
+        for (const auto& l_aFru : l_listOfFrus)
+        {
+            if (l_aFru.at(0).value("monitorPresence", false))
+            {
+                l_frusWithPresenceMonitoring.emplace_back(
+                    l_aFru.at(0).value("inventoryPath", ""));
+            }
+        }
+    }
+    catch (const std::exception& l_ex)
+    {
+        logging::logMessage(
+            "Failed to get list of FRUs with presence monitoring, error: " +
+            std::string(l_ex.what()));
+    }
+    return l_frusWithPresenceMonitoring;
+}
+
+/**
+ * @brief API which tells if the FRU's presence is handled
+ *
+ * For a given FRU, this API checks if it's presence is handled by vpd-manager
+ * by checking the "handlePresence" tag.
+ *
+ * @param[in] i_sysCfgJsonObj - System config JSON object.
+ * @param[in] i_vpdFruPath - EEPROM path.
+ *
+ * @return true if FRU presence is handled, false otherwise.
+ */
+inline bool isFruPresenceHandled(const nlohmann::json& i_sysCfgJsonObj,
+                                 const std::string& i_vpdFruPath)
+{
+    try
+    {
+        if (i_vpdFruPath.empty())
+        {
+            throw std::runtime_error("Given FRU path is empty.");
+        }
+
+        if (!i_sysCfgJsonObj.contains("frus"))
+        {
+            throw JsonException("Invalid system config JSON object.");
+        }
+
+        if (!i_sysCfgJsonObj["frus"].contains(i_vpdFruPath))
+        {
+            logging::logMessage("JSON object does not contain EEPROM path \'" +
+                                i_vpdFruPath + "\'");
+            return false;
+        }
+
+        return i_sysCfgJsonObj["frus"][i_vpdFruPath].at(0).value(
+            "handlePresence", true);
+    }
+    catch (const std::exception& l_ex)
+    {
+        logging::logMessage(
+            "Failed to check if FRU's presence is handled, reason:" +
+            std::string(l_ex.what()));
+    }
+
+    return false;
+}
 } // namespace jsonUtility
 } // namespace vpd

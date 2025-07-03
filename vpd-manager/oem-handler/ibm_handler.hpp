@@ -2,6 +2,7 @@
 
 #include "backup_restore.hpp"
 #include "gpio_monitor.hpp"
+#include "types.hpp"
 #include "worker.hpp"
 
 #include <sdbusplus/asio/object_server.hpp>
@@ -145,6 +146,22 @@ class IbmHandler
      */
     void enableMuxChips();
 
+    /**
+     * @brief API to register "Present" property change callback
+     *
+     * This API registers "Present" property change callback for FRUs for
+     * which "monitorPresence" is true in system config JSON.
+     */
+    void registerPresenceChangeCallback() noexcept;
+
+    /**
+     * @brief Callback API to be triggered on "Present" property change.
+     *
+     * @param[in] i_msg - Callback message.
+     */
+    void presentPropertyChangeCallback(
+        sdbusplus::message_t& i_msg) const noexcept;
+
     // Parsed system config json object.
     nlohmann::json m_sysCfgJsonObj{};
 
@@ -165,5 +182,8 @@ class IbmHandler
 
     // Shared pointer to bus connection.
     const std::shared_ptr<sdbusplus::asio::connection>& m_asioConnection;
+
+    // Map of inventory path to Present property match object
+    types::FruPresenceMatchObjectMap m_fruPresenceMatchObjectMap;
 };
 } // namespace vpd
