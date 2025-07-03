@@ -638,7 +638,7 @@ void IbmHandler::registerPresenceChangeCallback() noexcept
     catch (const std::exception& l_ex)
     {
         EventLogger::createSyncPel(
-            EventLogger::getErrorType(l_ex), types::SeverityType::Warning,
+            EventLogger::getErrorType(l_ex), types::SeverityType::Informational,
             __FILE__, __FUNCTION__, 0,
             "Register presence change callback failed, reason: " +
                 std::string(l_ex.what()),
