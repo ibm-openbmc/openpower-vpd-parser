@@ -63,6 +63,9 @@ IbmHandler::IbmHandler(
     // set callback to detect any asset tag change
     registerAssetTagChangeCallback();
 
+    // register callback for all FRUs for which presence needs to be monitored
+    registerPresenceChangeCallback();
+
     // set async timer to detect if system VPD is published on D-Bus.
     SetTimerToDetectSVPDOnDbus();
 
@@ -605,6 +608,86 @@ void IbmHandler::performInitialSetup()
         EventLogger::createSyncPel(
             EventLogger::getErrorType(l_ex), types::SeverityType::Critical,
             __FILE__, __FUNCTION__, 0, EventLogger::getErrorMsg(l_ex),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
+    }
+}
+
+void IbmHandler::registerPresenceChangeCallback() noexcept
+{
+    try
+    {
+        // get list of FRUs for which presence monitoring is required
+        const auto& l_listOfFrus = jsonUtility::getFrusWithPresenceMonitoring(
+            m_worker->getSysCfgJsonObj());
+
+        for (const auto& l_inventoryPath : l_listOfFrus)
+        {
+            std::shared_ptr<sdbusplus::bus::match_t> l_fruPresenceMatch =
+                std::make_shared<sdbusplus::bus::match_t>(
+                    *m_asioConnection,
+                    sdbusplus::bus::match::rules::propertiesChanged(
+                        l_inventoryPath, constants::inventoryItemInf),
+                    [this](sdbusplus::message_t& i_msg) {
+                        presentPropertyChangeCallback(i_msg);
+                    });
+
+            // save the match object to map
+            m_fruPresenceMatchObjectMap[l_inventoryPath] = l_fruPresenceMatch;
+        }
+    }
+    catch (const std::exception& l_ex)
+    {
+        EventLogger::createSyncPel(
+            EventLogger::getErrorType(l_ex), types::SeverityType::Warning,
+            __FILE__, __FUNCTION__, 0,
+            "Register presence change callback failed, reason: " +
+                std::string(l_ex.what()),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
+    }
+}
+
+void IbmHandler::presentPropertyChangeCallback(
+    sdbusplus::message_t& i_msg) const noexcept
+{
+    try
+    {
+        if (i_msg.is_method_error())
+        {
+            throw DbusException(
+                "Error reading callback message for Present property change");
+        }
+
+        std::string l_interface;
+        types::PropertyMap l_propMap;
+        i_msg.read(l_interface, l_propMap);
+
+        const std::string l_objectPath{i_msg.get_path()};
+
+        const auto l_itr = l_propMap.find("Present");
+        if (l_itr == l_propMap.end())
+        {
+            // Present is not found in the callback message
+            return;
+        }
+
+        if (auto l_present = std::get_if<bool>(&(l_itr->second)))
+        {
+            *l_present ? m_worker->collectSingleFruVpd(l_objectPath)
+                       : m_worker->deleteFruVpd(l_objectPath);
+        }
+        else
+        {
+            throw DbusException(
+                "Invalid type recieved in variant for present property");
+        }
+    }
+    catch (const std::exception& l_ex)
+    {
+        EventLogger::createSyncPel(
+            EventLogger::getErrorType(l_ex), types::SeverityType::Informational,
+            __FILE__, __FUNCTION__, 0,
+            "Process presence change callback failed, reason: " +
+                std::string(l_ex.what()),
             std::nullopt, std::nullopt, std::nullopt, std::nullopt);
     }
 }
