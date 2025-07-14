@@ -1,0 +1,11 @@
+[Unit]
+Description=Service which setups up mock EEPROMs for randomized testing of vpd-manager
+Wants=vpd-manager.service
+Before=vpd-manager.service
+
+[Service]
+ExecStart=/usr/bin/random-eeprom-setup.py 50001001_v2
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target

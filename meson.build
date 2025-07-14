@@ -63,7 +63,15 @@ services = ['service_files/vpd-manager.service']
 
 if get_option('ibm_system').allowed()
     subdir('vpd-tool')
-    scripts = ['scripts/wait-vpd-status.sh']
+    scripts = [
+        'scripts/wait-vpd-status.sh',
+        'scripts/random-eeprom-setup.py',
+        'scripts/generate.py',
+        'scripts/generate_valid_eeproms.py',
+        'scripts/generate_corrupted_eeproms.py',
+        'scripts/verify.py',
+        'scripts/constants.py'
+    ]
 
     install_data(
         scripts,
@@ -74,6 +82,7 @@ if get_option('ibm_system').allowed()
     services += [
         'service_files/system-vpd.service',
         'service_files/wait-vpd-parsers.service',
+        'service_files/random-vpd-eeprom-setup.service',
     ]
 
     package_datadir = join_paths('share', 'vpd')

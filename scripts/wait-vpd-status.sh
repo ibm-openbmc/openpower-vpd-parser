@@ -8,6 +8,10 @@ do
 
     if echo "$output" | grep -q "Completed" ; then
         echo "VPD collection is completed"
+
+        echo "Verify VPD collection status !"
+        python3 /usr/bin/verify.py
+
         exit 0
     fi
 

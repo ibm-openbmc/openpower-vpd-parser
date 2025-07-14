@@ -1,30 +1,70 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
+
+import json
+import random
 import shutil
+import sys
 
-from generate_valid_eeproms import *
 from generate_corrupted_eeproms import *
+from generate_valid_eeproms import *
 
-VERIFY_FILE_PATH = "/tmp/verify_report.txt"
 
-def upadate_verify_info(verify_data):
+def update_verify_info(verify_data):
     with open(VERIFY_FILE_PATH, "w") as f:
-            json.dump(verify_data, f, indent=4)
+        json.dump(verify_data, f, indent=4)
+
+
+def add_frus_to_json(fru_details, file_path):
+    with open(file_path, "r") as file:
+        file_data = json.load(file)
+
+        file_data["frus"].update(fru_details)
+
+        file.seek(0)
+        with open(file_path, "w") as f:
+            json.dump(file_data, f, indent=4)
+
 
 def main():
     fru_data = {}
 
-    shutil.copy(SYSTEM_CONFIG_JSON_PATH, SYSTEM_CONFIG_JSON_PATH+"_bkp")
-    #create_sym_link(SYSTEM_CONFIG_JSON_PATH, SYM_LINK)
+    # default IM value
+    im_value = "50001000_v2"
 
-    valid_frus_map, valid_verify_data = create_valid_eeproms()
+    if len(sys.argv) > 1:
+        print("IM value is set to: ", sys.argv[1])
+        im_value = sys.argv[1]
+
+    system_config_json_path = (
+        f"{SYSTEM_CONFIG_JSON_PATH_BASE}{"/"}{im_value}{".json"}"
+    )
+
+    print("System Config JSON path: ", system_config_json_path)
+
+    # cleanup: remove old traces
+    shutil.rmtree(EEPROM_BASE_PATH, ignore_errors=True)
+    try:
+        os.remove(PEL_DUMP_PATH)
+    except OSError:
+        pass
+
+    # Take a backup of config file
+    if os.path.exists(system_config_json_path + "_bkp"):
+        shutil.copy(system_config_json_path + "_bkp", system_config_json_path)
+    else:
+        shutil.copy(system_config_json_path, system_config_json_path + "_bkp")
+
+    valid_frus_map, valid_verify_data = create_valid_eeproms(
+        random.randrange(50)
+    )
     invalid_frus_map, invalid_verify_data = createInvalidEeproms()
 
     fru_data.update(valid_frus_map)
     fru_data.update(invalid_frus_map)
 
-    add_frus_to_json(fru_data, SYSTEM_CONFIG_JSON_PATH)
-    upadate_verify_info(valid_verify_data + invalid_verify_data )
+    add_frus_to_json(fru_data, system_config_json_path)
+    update_verify_info(valid_verify_data + invalid_verify_data)
+
 
 if __name__ == "__main__":
     main()
-
