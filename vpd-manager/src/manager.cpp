@@ -283,8 +283,6 @@ types::DbusVariantType Manager::readKeyword(
                 "Given file path " + i_fruPath + " not found.");
         }
 
-        logging::logMessage("Performing VPD read on " + i_fruPath);
-
         std::shared_ptr<vpd::Parser> l_parserObj =
             std::make_shared<vpd::Parser>(i_fruPath, l_jsonObj);
 
