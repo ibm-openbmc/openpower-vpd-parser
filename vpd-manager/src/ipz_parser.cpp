@@ -16,6 +16,8 @@
 namespace vpd
 {
 
+#define SANITY_CHECK 1
+
 // Offset of different entries in VPD data.
 enum Offset
 {
@@ -518,6 +520,7 @@ types::RecordData IpzVpdParser::getRecordDetailsFromVTOC(
 
             l_recordData = std::make_tuple(l_recordOffset, l_recordLength,
                                            l_eccOffset, l_eccLength);
+
             break;
         }
 
@@ -722,6 +725,128 @@ int IpzVpdParser::setKeywordValueInRecord(
         "Keyword " + i_keywordName + " not found in record " + i_recordName));
 }
 
+void IpzVpdParser::dumpDatatoFile(const std::string& i_fileName,
+                                  const types::BinaryVector& i_data)
+{
+    // Write record to file
+    std::ofstream l_file(i_fileName, std::ios::binary | std::ios::out);
+
+    if (l_file.is_open())
+    {
+        l_file.write(reinterpret_cast<const char*>(i_data.data()),
+                     i_data.size());
+        l_file.close();
+        return;
+    }
+    std::cerr << "Error: Unable to open file to dump [ " + i_fileName + " ]"
+              << std::endl;
+}
+
+void IpzVpdParser::performSanityCheck(const types::RecordData& i_recordDetails,
+                                      bool i_isPreCheck)
+{
+    auto l_spiPos = m_vpdFilePath.rfind("spi");
+    if (l_spiPos == std::string::npos)
+    {
+        // Only check for module VPD
+        return;
+    }
+
+    size_t l_dotPos = m_vpdFilePath.find('/', l_spiPos);
+    auto l_spiNum = m_vpdFilePath.substr(l_spiPos, l_dotPos - l_spiPos);
+
+    // Keep back up only if pre so that it can be dumped in case sanity
+    // fails post update.
+    if (i_isPreCheck)
+    {
+        m_recordData.resize(std::get<1>(i_recordDetails));
+        m_eccData.resize(std::get<3>(i_recordDetails));
+
+        auto l_itrToVpd = m_vpdVector.cbegin();
+        std::advance(l_itrToVpd, std::get<0>(i_recordDetails));
+        std::copy_n(l_itrToVpd, std::get<1>(i_recordDetails),
+                    m_recordData.begin());
+
+        l_itrToVpd = m_vpdVector.cbegin();
+        std::advance(l_itrToVpd, std::get<2>(i_recordDetails));
+        std::copy_n(l_itrToVpd, std::get<3>(i_recordDetails),
+                    m_eccData.begin());
+    }
+
+    auto l_itrToVpd = m_vpdVector.cbegin();
+    types::BinaryVector l_updatedVpdVector;
+    if (!i_isPreCheck)
+    {
+        // re-read the updated data
+        // types::BinaryVector l_tempVpdVector;
+        vpdSpecificUtility::getVpdDataInVector(
+            m_vpdFilePath, l_updatedVpdVector, m_vpdStartOffset);
+
+        l_itrToVpd = l_updatedVpdVector.begin();
+    }
+
+    auto l_status = vpdecc_check_data(
+        const_cast<uint8_t*>(&l_itrToVpd[std::get<0>(i_recordDetails)]),
+        std::get<1>(i_recordDetails),
+        const_cast<uint8_t*>(&l_itrToVpd[std::get<2>(i_recordDetails)]),
+        std::get<3>(i_recordDetails));
+
+    if (l_status != VPD_ECC_OK)
+    {
+        // Implies ECC check is not ok for the record, sanity check failed. Dump
+        // data
+        std::string l_recordFile =
+            "/var/lib/vpd/pre_record" + l_spiNum + ".bin";
+        std::string l_eccFile = "/var/lib/vpd/pre_ecc" + l_spiNum + ".bin";
+
+        if (l_status == VPD_ECC_CORRECTABLE_DATA)
+        {
+            l_recordFile = "/var/lib/vpd/pre_record_onebit" + l_spiNum + ".bin";
+            l_eccFile = "/var/lib/vpd/pre_ecc_onebit" + l_spiNum + ".bin";
+        }
+
+        dumpDatatoFile(l_recordFile, m_recordData);
+        dumpDatatoFile(l_eccFile, m_eccData);
+
+        if (!i_isPreCheck)
+        {
+            types::BinaryVector l_recordData;
+            l_recordData.resize(std::get<1>(i_recordDetails));
+            types::BinaryVector l_eccData;
+            l_eccData.resize(std::get<3>(i_recordDetails));
+
+            auto itrToVpd = l_updatedVpdVector.cbegin();
+            std::advance(itrToVpd, std::get<0>(i_recordDetails));
+            std::copy_n(itrToVpd, std::get<1>(i_recordDetails),
+                        l_recordData.begin());
+
+            itrToVpd = l_updatedVpdVector.cbegin();
+            std::advance(itrToVpd, std::get<2>(i_recordDetails));
+            std::copy_n(itrToVpd, std::get<3>(i_recordDetails),
+                        l_eccData.begin());
+
+            std::string l_recordFile =
+                "/var/lib/vpd/post_record" + l_spiNum + ".bin";
+            std::string l_eccFile = "/var/lib/vpd/post_ecc" + l_spiNum + ".bin";
+
+            if (l_status == VPD_ECC_CORRECTABLE_DATA)
+            {
+                l_recordFile = "/var/lib/vpd/post_record_onebit" + l_spiNum +
+                               ".bin";
+                l_eccFile = "/var/lib/vpd/post_ecc_onebit" + l_spiNum + ".bin";
+            }
+
+            dumpDatatoFile(l_recordFile, l_recordData);
+            dumpDatatoFile(l_eccFile, l_eccData);
+
+            throw std::runtime_error(
+                "Post Sanity check failed for file " + m_vpdFilePath);
+        }
+        throw std::runtime_error(
+            "Pre Sanity check failed for file " + m_vpdFilePath);
+    }
+}
+
 int IpzVpdParser::writeKeywordOnHardware(
     const types::WriteVpdParams i_paramsToWriteData)
 {
@@ -780,9 +905,14 @@ int IpzVpdParser::writeKeywordOnHardware(
             throw(DataException("Record not found in VTOC PT keyword."));
         }
 
-        // Create a local copy of m_vpdVector to perform keyword update and ecc
-        // update on filestream.
+        // Create a local copy of m_vpdVector to perform keyword update and
+        // ecc update on filestream.
         types::BinaryVector l_vpdVector = m_vpdVector;
+
+#if SANITY_CHECK == 1
+        // before writing do a sanity check
+        performSanityCheck(l_inputRecordDetails);
+#endif
 
         // write keyword's value on hardware
         l_sizeWritten =
@@ -803,6 +933,11 @@ int IpzVpdParser::writeKeywordOnHardware(
         logging::logMessage(std::to_string(l_sizeWritten) +
                             " bytes updated successfully on hardware for " +
                             l_recordName + ":" + l_keywordName);
+
+#if SANITY_CHECK == 1
+        // before exiting do a sanity check
+        performSanityCheck(l_inputRecordDetails, false);
+#endif
     }
     catch (const std::exception& l_exception)
     {
