@@ -270,6 +270,26 @@ class IpzVpdParser : public ParserInterface
     bool processInvalidRecords(
         const types::InvalidRecordList& i_invalidRecordList) const noexcept;
 
+    /**
+     * @brief API to check perform sanity check while writing EEPROM.
+     *
+     * @param[in] i_recordDetails - Details of record being updated.
+     * @param[in] i_isPreCheck -  To detect if the check is pre or post write.
+     *
+     * @throw std::runtime_error in case of failure.
+     */
+    void performSanityCheck(const types::RecordData& i_recordDetails,
+                            bool i_isPreCheck = true);
+
+    /**
+     * @brief API to dump given data with given file name at "/tmp" location.
+     *
+     * @param[in] i_fileName - Name of the file.
+     * @param[in] i_data - Data to be dumped.
+     */
+    void dumpDatatoFile(const std::string& i_fileName,
+                        const types::BinaryVector& i_data);
+
     // Holds VPD data.
     const types::BinaryVector& m_vpdVector;
 
@@ -284,5 +304,11 @@ class IpzVpdParser : public ParserInterface
 
     // VPD start offset. Required for ECC correction.
     size_t m_vpdStartOffset = 0;
+
+    // Record data only for sanity check.
+    types::BinaryVector m_recordData;
+
+    // Ecc data only for sanity check.
+    types::BinaryVector m_eccData;
 };
 } // namespace vpd
