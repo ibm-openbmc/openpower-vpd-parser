@@ -1427,6 +1427,63 @@ void doEnableAllMuxChips(const nlohmann::json& js)
 }
 
 /**
+ * @brief An API to override IM value.
+ *
+ * This API reads the IM value from planar. If the IM value is of P11 series,
+ * updates the IM value to P10 series.
+ *
+ * @param[in] parsedVpdMap - parsed system VPD map.
+ * @param[in] js - Inventory json object.
+ */
+void singleFabImOverride(Parsed& parsedVpdMap, nlohmann::json& js)
+{
+    try
+    {
+        std::string imKwdValue = getIM(parsedVpdMap);
+
+        // Checks if the system is of P11 series.
+        if (imKwdValue.compare(VALUE_0, VALUE_4, "6000") != 0)
+        {
+            return;
+        }
+
+        imKwdValue.replace(VALUE_0, VALUE_1, std::to_string(VALUE_5));
+
+        // Checks if the system is P11 Fuji system.
+        if (imKwdValue.compare(VALUE_4, VALUE_1, std::to_string(VALUE_2)) == 0)
+        {
+            imKwdValue.replace(VALUE_4, VALUE_1, std::to_string(VALUE_3));
+        }
+
+        Binary imValue;
+
+        // Convert string to vector of bytes
+        for (auto value : imKwdValue | std::views::chunk(2))
+        {
+            std::string byteString(value.begin(), value.end());
+            imValue.push_back(
+                static_cast<uint8_t>(std::stoi(byteString, nullptr, 16)));
+        }
+
+        updateVpdDataOnHw(systemVpdFilePath, js, "VSBP", "IM", imValue);
+
+        // update map with new IM keyword value.
+        if (auto it = parsedVpdMap.find("VSBP"); it != parsedVpdMap.end())
+        {
+            if (auto imIt = it->second.find("IM"); imIt != it->second.end())
+            {
+                imIt->second = std::string(imValue.begin(), imValue.end());
+            }
+        }
+    }
+    catch (const exception& ex)
+    {
+        std::cout << "Error while updating IM value : " << ex.what()
+                  << std::endl;
+    }
+}
+
+/**
  * @brief Populate Dbus.
  * This method invokes all the populateInterface functions
  * and notifies PIM about dbus object.
@@ -1453,6 +1510,11 @@ static void populateDbus(T& vpdMap, nlohmann::json& js, const string& filePath)
 
         if (isSystemVpd)
         {
+            // If IM value found on the motherboard is of P11 series, update
+            // it to P10 series. Added this to support single fabrication
+            // for P10 and P11 systems.
+            singleFabImOverride(vpdMap, js);
+
             string mboardPath =
                 js["frus"][filePath].at(0).value("inventoryPath", "");
 
