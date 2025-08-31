@@ -121,6 +121,11 @@ Manager::Manager(
             this->performVpdRecollection();
         });
 
+        iFace->register_method(
+            "performVpdSanityCheck", [this](const types::Path i_vpdPath) {
+                return this->performVpdSanityCheck(i_vpdPath);
+            });
+
         // Indicates FRU VPD collection for the system has not started.
         iFace->register_property_rw<std::string>(
             "CollectionStatus", sdbusplus::vtable::property_::emits_change,
@@ -640,4 +645,40 @@ void Manager::performVpdRecollection()
         m_worker->performVpdRecollection();
     }
 }
+
+int Manager::performVpdSanityCheck(const types::Path i_vpdPath)
+{
+    try
+    {
+        if (i_vpdPath.empty())
+        {
+            throw std::runtime_error("Given FRU path is empty");
+        }
+
+        nlohmann::json l_sysCfgJsonObj{};
+
+        if (m_worker.get() != nullptr)
+        {
+            l_sysCfgJsonObj = m_worker->getSysCfgJsonObj();
+        }
+
+        std::shared_ptr<Parser> l_parserObj =
+            std::make_shared<Parser>(i_vpdPath, l_sysCfgJsonObj);
+
+        l_parserObj->vpdSanityCheck();
+        return constants::SUCCESS;
+    }
+    catch (const std::exception& l_exception)
+    {
+        EventLogger::createAsyncPel(
+            types::ErrorType::InvalidEeprom, types::SeverityType::Informational,
+            __FILE__, __FUNCTION__, 0,
+            "Sanity check failed for file[" + i_vpdPath +
+                "], reason: " + std::string(l_exception.what()),
+            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
+
+        return constants::FAILURE;
+    }
+}
+
 } // namespace vpd

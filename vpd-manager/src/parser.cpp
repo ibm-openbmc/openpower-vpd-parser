@@ -346,4 +346,45 @@ int Parser::updateVpdKeywordOnHardware(
     return l_bytesUpdatedOnHardware;
 }
 
+void Parser::vpdSanityCheck()
+{
+    // get all the redundant paths from json
+    std::vector<types::Path> redundantPaths{m_vpdFilePath};
+
+    // find redundant FRU path
+    const nlohmann::json& l_fruList =
+        m_parsedJson["frus"].get_ref<const nlohmann::json::object_t&>();
+
+    for (const auto& l_fru : l_fruList.items())
+    {
+        const auto l_fruPath = l_fru.key();
+
+        if (l_fruPath == m_vpdFilePath)
+        {
+            redundantPaths.push_back(
+                m_parsedJson["frus"][l_fruPath].at(0).value("redundantEeprom",
+                                                            ""));
+        }
+    }
+
+    // process each path
+    for (auto& eachPath : redundantPaths)
+    {
+        // Read the VPD data into a vector.
+        vpdSpecificUtility::getVpdDataInVector(eachPath, m_vpdVector,
+                                               m_vpdStartOffset);
+
+        // This will detect the type of parser required.
+        std::shared_ptr<vpd::ParserInterface> l_parser =
+            ParserFactory::getParser(m_vpdVector, eachPath, m_vpdStartOffset);
+
+        auto rc = l_parser->sanityChecker();
+        if (rc == constants::FAILURE)
+        {
+            logging::logMessage("Sanity checker failed for " + eachPath);
+        }
+        logging::logMessage("Sanity checker Passed for " + eachPath);
+    }
+}
+
 } // namespace vpd
