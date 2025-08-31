@@ -997,4 +997,41 @@ bool IpzVpdParser::processInvalidRecords(
     }
     return l_rc;
 }
+
+int IpzVpdParser::performSanityCheck()
+{
+    try
+    {
+        logging::logMessage(
+            "Performing sanity check for file path: " + m_vpdFilePath);
+        auto l_itrToVpd = m_vpdVector.cbegin();
+
+        // Check vaidity of VHDR record
+        checkHeader(l_itrToVpd);
+
+        // Read the table of contents
+        const auto l_ptLen = readTOC(l_itrToVpd);
+
+        // Read the table of contents record, to get offsets to other records.
+        auto l_result = readPT(l_itrToVpd, l_ptLen);
+
+        if (!(l_result.second).empty())
+        {
+            if (!processInvalidRecords(l_result.second))
+            {
+                throw("Failed to process invalid records");
+            }
+            return constants::FAILURE;
+        }
+        return constants::SUCCESS;
+    }
+    catch (const std::exception& l_ex)
+    {
+        logging::logMessage("Sanity Check failed for EEPROM [" + m_vpdFilePath +
+                            "], reason: " + std::string(l_ex.what()));
+
+        return constants::FAILURE;
+    }
+}
+
 } // namespace vpd

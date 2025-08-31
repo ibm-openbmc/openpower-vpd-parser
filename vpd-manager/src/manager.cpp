@@ -121,6 +121,11 @@ Manager::Manager(
             this->performVpdRecollection();
         });
 
+        iFace->register_method("performSanityCheck",
+                               [this](const types::Path& i_fruPath) {
+                                   return this->performSanityCheck(i_fruPath);
+                               });
+
         // Indicates FRU VPD collection for the system has not started.
         iFace->register_property_rw<std::string>(
             "CollectionStatus", sdbusplus::vtable::property_::emits_change,
@@ -648,4 +653,34 @@ void Manager::performVpdRecollection()
         m_worker->performVpdRecollection();
     }
 }
+
+int Manager::performSanityCheck(const types::Path& i_fruPath) noexcept
+{
+    try
+    {
+        if (i_fruPath.empty())
+        {
+            throw std::runtime_error("Given FRU path is empty");
+        }
+
+        if (m_worker.get() == nullptr)
+        {
+            throw std::runtime_error(
+                "Worker object not found. Can't perform VPD Sanity check.");
+        }
+
+        std::shared_ptr<Parser> l_parserObj =
+            std::make_shared<Parser>(i_fruPath, m_worker->getSysCfgJsonObj());
+
+        return l_parserObj->performSanityCheck();
+    }
+    catch (const std::exception& l_exception)
+    {
+        logging::logMessage("Sanity check failed for file[" + i_fruPath +
+                            "], reason: " + std::string(l_exception.what()));
+
+        return constants::FAILURE;
+    }
+}
+
 } // namespace vpd

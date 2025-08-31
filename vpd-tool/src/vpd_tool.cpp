@@ -1558,4 +1558,48 @@ void VpdTool::clearVpdDumpDir() const noexcept
     }
 }
 
+int VpdTool::performSanityCheck(const std::string& i_fruPath) noexcept
+{
+    try
+    {
+        if (i_fruPath.empty())
+        {
+            std::cerr << "Empty input received" << std::endl;
+            return vpd::constants::FAILURE;
+        }
+
+        int l_returnValue;
+        auto l_bus = sdbusplus::bus::new_default();
+
+        auto l_method = l_bus.new_method_call(
+            constants::vpdManagerService, constants::vpdManagerObjectPath,
+            constants::vpdManagerInfName, "performSanityCheck");
+
+        l_method.append(i_fruPath);
+        auto l_result = l_bus.call(l_method);
+        l_result.read(l_returnValue);
+
+        if (l_returnValue == vpd::constants::FAILURE)
+        {
+            std::cerr << "Sanity check failed." << std::endl;
+            return vpd::constants::FAILURE;
+        }
+        else if (l_returnValue == vpd::constants::NOT_APPLICABLE)
+        {
+            std::cerr << "Sanity check not applicable." << std::endl;
+            return vpd::constants::NOT_APPLICABLE;
+        }
+
+        std::cout << "Sanity checking is Successful." << std::endl;
+        return vpd::constants::SUCCESS;
+    }
+    catch (const std::exception& l_ex)
+    {
+        std::cerr << "Sanity check failed, reason: " << l_ex.what()
+                  << std::endl;
+
+        return vpd::constants::FAILURE;
+    }
+}
+
 } // namespace vpd

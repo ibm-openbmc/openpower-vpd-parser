@@ -279,7 +279,9 @@ void updateFooter(CLI::App& i_app)
         "   From DBus to console in Table format: "
         "vpd-tool -i -t\n"
         "Force Reset:\n"
-        "   vpd-tool --forceReset\n");
+        "   vpd-tool --forceReset\n"
+        "Vpd sanity check:\n"
+        "   vpd-tool --sanityCheck -O  <EEPROM Path>\n");
 }
 
 int main(int argc, char** argv)
@@ -359,6 +361,13 @@ int main(int argc, char** argv)
         "--forceReset, -f, -F",
         "Force collect for hardware. CAUTION: Developer only option.");
 
+    auto l_sanityCheckFlag =
+        l_app
+            .add_flag(
+                "--sanityCheck",
+                "Perform Sanity check, \nNote: In case given EEPROM has any redundant path, sanity check on redundant EEPROM will also be performed.")
+            ->needs(l_objectOption);
+
     CLI11_PARSE(l_app, argc, argv);
 
     if (checkOptionValuePair(l_objectOption, l_vpdPath, l_recordOption,
@@ -432,6 +441,11 @@ int main(int argc, char** argv)
         return forceReset();
     }
 
+    if (!l_sanityCheckFlag->empty())
+    {
+        vpd::VpdTool l_vpdToolObj;
+        return l_vpdToolObj.performSanityCheck(l_vpdPath);
+    }
     std::cout << l_app.help() << std::endl;
     return vpd::constants::FAILURE;
 }

@@ -371,5 +371,19 @@ class VpdTool
      * the directory from the filesystem
      */
     void clearVpdDumpDir() const noexcept;
+
+    /**
+     * @brief API validates record against the ECC for that record.
+     *
+     * This API calls performVpdSanityCheck dbus API to verify the record and
+     * ECC of user provided EEPROM path. This performVpdSanityCheck dbus API
+     * internally checks for redundant EEPROM for this FRU. If found , it
+     * verifies the  same for redundant one also.
+     *
+     * @param[in] i_vpdFilePath - EEPROM path to perform sanity check
+     *
+     * @return  0 on Success, -1 on Failure, 1 if not applicable.
+     */
+    int performSanityCheck(const std::string& i_vpdFilePath) noexcept;
 };
 } // namespace vpd

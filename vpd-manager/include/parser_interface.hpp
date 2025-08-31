@@ -1,5 +1,6 @@
 #pragma once
 
+#include "constants.hpp"
 #include "types.hpp"
 
 #include <variant>
@@ -59,6 +60,17 @@ class ParserInterface
     {
         (void)i_paramsToWriteData;
         return -1;
+    }
+
+    /**
+     * @brief Virtual API to perform sanity check on EEPROM passed via
+     * constructor of parser class.
+     *
+     * @return 0 on Success, -1 on Failure, 1 if not applicable.
+     */
+    virtual int performSanityCheck()
+    {
+        return constants::NOT_APPLICABLE;
     }
 
     /**

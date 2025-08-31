@@ -371,4 +371,84 @@ int Parser::updateVpdKeywordOnHardware(
     return l_bytesUpdatedOnHardware;
 }
 
+int Parser::performSanityCheck() noexcept
+{
+    try
+    {
+        int l_rcPrimary = constants::SUCCESS;
+        std::shared_ptr<vpd::ParserInterface> l_parser = getVpdParserInstance();
+
+        l_rcPrimary = l_parser->performSanityCheck();
+        if (l_rcPrimary == constants::FAILURE)
+        {
+            logging::logMessage("Sanity checker failed for " + m_vpdFilePath);
+        }
+        else if (l_rcPrimary == constants::NOT_APPLICABLE)
+        {
+            logging::logMessage(
+                "Sanity checker not applicable for " + m_vpdFilePath);
+            return l_rcPrimary;
+        }
+        else
+        {
+            logging::logMessage("Sanity checker Passed for " + m_vpdFilePath);
+        }
+
+        uint16_t l_errCode = 0;
+
+        // Collect redundant FRU path
+        const auto l_redundantPath =
+            jsonUtility::getRedundantEepromPathFromJson(
+                m_parsedJson, m_vpdFilePath, l_errCode);
+
+        if (l_errCode)
+        {
+            logging::logMessage(
+                "Failed to get redundant EEPROM path for FRU [" +
+                m_vpdFilePath +
+                "], error : " + vpdSpecificUtility::getErrCodeMsg(l_errCode));
+            return l_rcPrimary;
+        }
+
+        if (l_redundantPath.empty())
+        {
+            return l_rcPrimary;
+        }
+
+        // Read the VPD data into a vector.
+        vpdSpecificUtility::getVpdDataInVector(l_redundantPath, m_vpdVector,
+                                               m_vpdStartOffset);
+
+        // This will detect the type of parser required.
+        std::shared_ptr<vpd::ParserInterface> l_redundantParser =
+            ParserFactory::getParser(m_vpdVector, l_redundantPath,
+                                     m_vpdStartOffset);
+
+        auto l_rcRedundant = l_redundantParser->performSanityCheck();
+
+        if (l_rcRedundant == constants::FAILURE)
+        {
+            logging::logMessage("Sanity checker failed for " + l_redundantPath);
+            return l_rcRedundant;
+        }
+        else if (l_rcRedundant == constants::NOT_APPLICABLE)
+        {
+            logging::logMessage(
+                "Sanity checker not applicable for " + l_redundantPath);
+            // If redundant path is NA, return the result of primary path.
+            return l_rcPrimary;
+        }
+
+        logging::logMessage("Sanity checker Passed for " + l_redundantPath);
+        // If redundant path passed, return the result of primary path.
+        return l_rcPrimary;
+    }
+    catch (const std::exception& l_exception)
+    {
+        logging::logMessage("Sanity Check failed for EEPROM [" + m_vpdFilePath +
+                            "], reason: " + std::string(l_exception.what()));
+        return constants::FAILURE;
+    }
+}
+
 } // namespace vpd

@@ -111,6 +111,14 @@ class Parser
     int updateVpdKeywordOnHardware(
         const types::WriteVpdParams& i_paramsToWriteData);
 
+    /*
+     * @brief API to perform sanity check on EEPROM passed via constructor of
+     * parser class.
+     *
+     * @return 0 on Success, -1 on Failure, 1 if not applicable.
+     */
+    int performSanityCheck() noexcept;
+
   private:
     /**
      * @brief Update keyword value on redundant path.
