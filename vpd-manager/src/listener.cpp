@@ -6,6 +6,7 @@
 #include "logger.hpp"
 #include "utility/dbus_utility.hpp"
 #include "utility/json_utility.hpp"
+#include "utility/vpd_specific_utility.hpp"
 
 namespace vpd
 {
@@ -171,9 +172,18 @@ void Listener::registerPresenceChangeCallback() noexcept
 {
     try
     {
+        uint16_t l_errCode = 0;
         // get list of FRUs for which presence monitoring is required
         const auto& l_listOfFrus = jsonUtility::getFrusWithPresenceMonitoring(
-            m_worker->getSysCfgJsonObj());
+            m_worker->getSysCfgJsonObj(), l_errCode);
+
+        if (l_errCode)
+        {
+            logging::logMessage(
+                "Failed to get list of FRUs with presence monitoring, error: " +
+                vpdSpecificUtility::getErrCodeMsg(l_errCode));
+            return;
+        }
 
         for (const auto& l_inventoryPath : l_listOfFrus)
         {
