@@ -1408,24 +1408,38 @@ std::tuple<bool, std::string> Worker::parseAndPublishVPD(
         l_inventoryPath = jsonUtility::getInventoryObjPathFromJson(
             m_parsedJson, i_vpdFilePath, l_errCode);
 
-        if (!l_inventoryPath.empty())
-        {
-            if (!dbusUtility::writeDbusProperty(
-                    jsonUtility::getServiceName(m_parsedJson, l_inventoryPath),
-                    l_inventoryPath, constants::vpdCollectionInterface,
-                    "CollectionStatus",
-                    types::DbusVariantType{constants::vpdCollectionInProgress}))
-            {
-                logging::logMessage(
-                    "Unable to set CollectionStatus as InProgress for " +
-                    i_vpdFilePath + ". Error : " + "DBus write failed");
-            }
-        }
-        else if (l_errCode)
+        if (l_errCode)
         {
             logging::logMessage(
                 "Failed to get inventory path for FRU [" + i_vpdFilePath +
                 "], error : " + vpdSpecificUtility::getErrCodeMsg(l_errCode));
+            return std::make_tuple(false, i_vpdFilePath);
+        }
+        else if (!l_inventoryPath.empty())
+        {
+            std::string l_serviceName = jsonUtility::getServiceName(
+                m_parsedJson, l_inventoryPath, l_errCode);
+
+            if (l_errCode)
+            {
+                logging::logMessage(
+                    "Failed to get service name for path [" + l_inventoryPath +
+                    "], error : " +
+                    vpdSpecificUtility::getErrCodeMsg(l_errCode));
+            }
+            else
+            {
+                if (!dbusUtility::writeDbusProperty(
+                        l_serviceName, l_inventoryPath,
+                        constants::vpdCollectionInterface, "Status",
+                        types::DbusVariantType{
+                            constants::vpdCollectionInProgress}))
+                {
+                    logging::logMessage(
+                        "Unable to set collection Status as InProgress for " +
+                        i_vpdFilePath + ". Error : " + "DBus write failed");
+                }
+            }
         }
 
         const types::VPDMapVariant& parsedVpdMap = parseVpdFile(i_vpdFilePath);
@@ -1991,17 +2005,27 @@ void Worker::collectSingleFruVpd(
         // D-bus set-property call is good enough to update the status.
         const std::string& l_collStatusProp = "CollectionStatus";
 
-        if (!dbusUtility::writeDbusProperty(
-                jsonUtility::getServiceName(m_parsedJson,
-                                            std::string(i_dbusObjPath)),
-                std::string(i_dbusObjPath), constants::vpdCollectionInterface,
-                l_collStatusProp,
-                types::DbusVariantType{constants::vpdCollectionInProgress}))
+        std::string l_serviceName = jsonUtility::getServiceName(
+            m_parsedJson, std::string(i_dbusObjPath), l_errCode);
+
+        if (l_errCode)
         {
-            logging::logMessage(
-                "Unable to set CollectionStatus as InProgress for " +
-                std::string(i_dbusObjPath) +
-                ". Continue single FRU VPD collection.");
+            logging::logMessage("Failed to get service name for path [" +
+                                std::string(i_dbusObjPath) + "], error : " +
+                                vpdSpecificUtility::getErrCodeMsg(l_errCode));
+        }
+        else
+        {
+            if (!dbusUtility::writeDbusProperty(
+                    l_serviceName, std::string(i_dbusObjPath),
+                    constants::vpdCollectionInterface, l_collStatusProp,
+                    types::DbusVariantType{constants::vpdCollectionInProgress}))
+            {
+                logging::logMessage(
+                    "Unable to set collection Status as InProgress for " +
+                    std::string(i_dbusObjPath) +
+                    ". Continue single FRU VPD collection.");
+            }
         }
 
         // Parse VPD
