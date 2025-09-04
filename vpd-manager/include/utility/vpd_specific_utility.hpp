@@ -1068,51 +1068,6 @@ inline void updateCiPropertyOfInheritedFrus(
             i_fruPath + "]. Error: " + std::string(l_ex.what()));
     }
 }
-<<<<<<< HEAD
-=======
-
-/**
- * @brief API to save current time stamp in PIM.
- *
- * This API will capture current time stamp and save it in progress interface
- * for the given inventory path.
- *
- * @param[in] i_inventoryPath - Inventory path of FRU.
- * @param[in] i_property - Property to save the time.
- */
-inline void saveTimeStampInPim(const std::string& i_inventoryPath,
-                               const std::string& i_property) noexcept
-{
-    if (i_inventoryPath.empty() || i_property.empty())
-    {
-        logging::logMessage("Invalid input parameter. Can't save time in PIM.");
-        return;
-    }
-
-    try
-    {
-        types::ObjectMap l_ObjMap = {std::make_pair(
-            i_inventoryPath,
-            types::InterfaceMap{std::make_pair(
-                constants::vpdCollectionInterface,
-                types::PropertyMap{std::make_pair(
-                    i_property,
-                    types::DbusVariantType{
-                        commonUtility::getCurrentTimeSinceEpoch()})})})};
-
-        if (!dbusUtility::callPIM(move(l_ObjMap)))
-        {
-            logging::logMessage(
-                "Call to PIM failed while saving time for path " +
-                i_inventoryPath);
-        }
-    }
-    catch (const std::exception& l_ex)
-    {
-        logging::logMessage("Failed to save time stamp under PIM for reason: " +
-                            std::string(l_ex.what()));
-    }
-}
 
 /**
  * @brief API to get error code message.
@@ -1132,6 +1087,5 @@ inline std::string getErrCodeMsg(const uint16_t& i_errCode)
 
     return std::string{};
 }
->>>>>>> a5be722 (API to get error code message)
 } // namespace vpdSpecificUtility
 } // namespace vpd
