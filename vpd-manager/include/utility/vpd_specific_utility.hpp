@@ -1079,10 +1079,9 @@ inline void updateCiPropertyOfInheritedFrus(
  */
 inline std::string getErrCodeMsg(const uint16_t& i_errCode)
 {
-    if (error_code::errorCodeMap.find(i_errCode) !=
-        error_code::errorCodeMap.end())
+    if (errorCodeMap.find(i_errCode) != errorCodeMap.end())
     {
-        return error_code::errorCodeMap.at(i_errCode);
+        return errorCodeMap.at(i_errCode);
     }
 
     return std::string{};
