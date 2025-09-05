@@ -42,7 +42,17 @@ Worker::Worker(std::string pathToConfigJson, uint8_t i_maxThreadCount) :
 
         try
         {
-            m_parsedJson = jsonUtility::getParsedJson(m_configJsonPath);
+            uint16_t l_errCode = 0;
+            m_parsedJson =
+                jsonUtility::getParsedJson(m_configJsonPath, l_errCode);
+
+            if (l_errCode)
+            {
+                throw std::runtime_error(
+                    "JSON parsing failed for file [ " + m_configJsonPath +
+                    " ], error : " +
+                    vpdSpecificUtility::getErrCodeMsg(l_errCode));
+            }
 
             // check for mandatory fields at this point itself.
             if (!m_parsedJson.contains("frus"))
@@ -373,12 +383,17 @@ void Worker::setDeviceTreeAndJson()
             "No system JSON found corresponding to IM read from VPD.");
     }
 
-    // re-parse the JSON once appropriate JSON has been selected.
-    m_parsedJson = jsonUtility::getParsedJson(systemJson);
+    uint16_t l_errCode = 0;
 
-    if (m_parsedJson.empty())
+    // re-parse the JSON once appropriate JSON has been selected.
+    m_parsedJson = jsonUtility::getParsedJson(systemJson, l_errCode);
+
+    if (l_errCode)
     {
-        throw(JsonException("Json parsing failed", systemJson));
+        throw(JsonException(
+            "JSON parsing failed for file [ " + systemJson +
+                " ], error : " + vpdSpecificUtility::getErrCodeMsg(l_errCode),
+            systemJson));
     }
 
     std::string devTreeFromJson;
@@ -1369,10 +1384,12 @@ std::tuple<bool, std::string> Worker::parseAndPublishVPD(
         m_activeCollectionThreadCount++;
         m_mutex.unlock();
 
+        uint16_t l_errCode = 0;
+
         // Set CollectionStatus as InProgress. Since it's an intermediate state
         // D-bus set-property call is good enough to update the status.
         l_inventoryPath = jsonUtility::getInventoryObjPathFromJson(
-            m_parsedJson, i_vpdFilePath);
+            m_parsedJson, i_vpdFilePath, l_errCode);
 
         if (!l_inventoryPath.empty())
         {
@@ -1386,6 +1403,12 @@ std::tuple<bool, std::string> Worker::parseAndPublishVPD(
                     "Unable to set CollectionStatus as InProgress for " +
                     i_vpdFilePath + ". Error : " + "DBus write failed");
             }
+        }
+        else if (l_errCode)
+        {
+            logging::logMessage(
+                "Failed to get inventory path for FRU [" + i_vpdFilePath +
+                "], error : " + vpdSpecificUtility::getErrCodeMsg(l_errCode));
         }
 
         const types::VPDMapVariant& parsedVpdMap = parseVpdFile(i_vpdFilePath);
@@ -1417,15 +1440,25 @@ std::tuple<bool, std::string> Worker::parseAndPublishVPD(
         // based on status of execution.
         if (typeid(ex) == std::type_index(typeid(DataException)))
         {
+            uint16_t l_errCode = 0;
             // In case of pass1 planar, VPD can be corrupted on PCIe cards. Skip
             // logging error for these cases.
             if (vpdSpecificUtility::isPass1Planar())
             {
+                std::string l_invPath =
+                    jsonUtility::getInventoryObjPathFromJson(
+                        m_parsedJson, i_vpdFilePath, l_errCode);
+
+                if (l_errCode != 0)
+                {
+                    logging::logMessage(
+                        "Failed to get inventory object path from JSON for FRU [" +
+                        i_vpdFilePath + "], error: " +
+                        vpdSpecificUtility::getErrCodeMsg(l_errCode));
+                }
+
                 const std::string& l_invPathLeafValue =
-                    sdbusplus::message::object_path(
-                        jsonUtility::getInventoryObjPathFromJson(m_parsedJson,
-                                                                 i_vpdFilePath))
-                        .filename();
+                    sdbusplus::message::object_path(l_invPath).filename();
 
                 if ((l_invPathLeafValue.find("pcie_card", 0) !=
                      std::string::npos))
@@ -1487,11 +1520,22 @@ bool Worker::skipPathForCollection(const std::string& i_vpdFilePath)
             return true;
         }
 
+        uint16_t l_errCode = 0;
+        std::string l_invPath = jsonUtility::getInventoryObjPathFromJson(
+            m_parsedJson, i_vpdFilePath, l_errCode);
+
+        if (l_errCode)
+        {
+            logging::logMessage(
+                "Failed to get inventory path from JSON for FRU [" +
+                i_vpdFilePath +
+                "], error : " + vpdSpecificUtility::getErrCodeMsg(l_errCode));
+
+            return false;
+        }
+
         const std::string& l_invPathLeafValue =
-            sdbusplus::message::object_path(
-                jsonUtility::getInventoryObjPathFromJson(m_parsedJson,
-                                                         i_vpdFilePath))
-                .filename();
+            sdbusplus::message::object_path(l_invPath).filename();
 
         if ((l_invPathLeafValue.find("pcie_card", 0) != std::string::npos))
         {
@@ -1553,16 +1597,21 @@ void Worker::performBackupAndRestore(types::VPDMapVariant& io_srcVpdMap)
 {
     try
     {
+        uint16_t l_errCode = 0;
         std::string l_backupAndRestoreCfgFilePath =
             m_parsedJson.value("backupRestoreConfigPath", "");
 
         nlohmann::json l_backupAndRestoreCfgJsonObj =
-            jsonUtility::getParsedJson(l_backupAndRestoreCfgFilePath);
+            jsonUtility::getParsedJson(l_backupAndRestoreCfgFilePath,
+                                       l_errCode);
 
-        if (l_backupAndRestoreCfgJsonObj.empty())
+        if (l_errCode)
         {
-            throw JsonException("JSON parsing failed",
-                                l_backupAndRestoreCfgFilePath);
+            throw JsonException(
+                "JSON parsing failed for file [ " +
+                    l_backupAndRestoreCfgFilePath + " ], error : " +
+                    vpdSpecificUtility::getErrCodeMsg(l_errCode),
+                l_backupAndRestoreCfgFilePath);
         }
 
         // check if either of "source" or "destination" has inventory path.
@@ -1619,9 +1668,18 @@ void Worker::deleteFruVpd(const std::string& i_dbusObjPath)
 
         if (auto l_value = std::get_if<bool>(&l_presentPropValue))
         {
+            uint16_t l_errCode = 0;
             // check if FRU's Present property is handled by vpd-manager
             const auto& l_isFruPresenceHandled =
-                jsonUtility::isFruPresenceHandled(m_parsedJson, l_fruPath);
+                jsonUtility::isFruPresenceHandled(m_parsedJson, l_fruPath,
+                                                  l_errCode);
+
+            if (l_errCode)
+            {
+                throw std::runtime_error(
+                    "Failed to check if FRU's presence is handled, reason: " +
+                    vpdSpecificUtility::getErrCodeMsg(l_errCode));
+            }
 
             if (!(*l_value) && l_isFruPresenceHandled)
             {
@@ -1857,8 +1915,20 @@ void Worker::collectSingleFruVpd(
         }
         else if (dbusUtility::isBMCReady())
         {
-            if (!jsonUtility::isFruReplaceableAtStandby(m_parsedJson,
-                                                        l_fruPath) &&
+            uint16_t l_errCode = 0;
+            bool isFruReplaceableAtStandby =
+                jsonUtility::isFruReplaceableAtStandby(m_parsedJson, l_fruPath,
+                                                       l_errCode);
+
+            if (l_errCode)
+            {
+                logging::logMessage(
+                    "Error while checking if FRU is replaceable at standby for FRU [" +
+                    std::string(i_dbusObjPath) + "], error : " +
+                    vpdSpecificUtility::getErrCodeMsg(l_errCode));
+            }
+
+            if (!isFruReplaceableAtStandby &&
                 (!jsonUtility::isFruReplaceableAtRuntime(m_parsedJson,
                                                          l_fruPath)))
             {
