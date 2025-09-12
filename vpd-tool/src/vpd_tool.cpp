@@ -12,6 +12,7 @@
 #include <tuple>
 namespace vpd
 {
+
 // {Record, Keyword} -> {attribute name, number of bits in keyword, starting bit
 // position, enabled value, disabled value}
 // Note: we do not care about min/max value for the BIOS attribute here.
@@ -1555,6 +1556,65 @@ void VpdTool::clearVpdDumpDir() const noexcept
         std::cerr << "Failed to clear VPD dump path:[" +
                          std::string(constants::badVpdPath) + "]. Error: "
                   << l_ex.what() << std::endl;
+    }
+}
+
+int VpdTool::vpdSanityCheck(const std::string i_eepromPath)
+{
+    if (i_eepromPath.empty())
+    {
+        throw std::runtime_error("Empty EEPROM path");
+    }
+
+    try
+    {
+        int l_returnValue;
+        auto l_bus = sdbusplus::bus::new_default();
+
+        auto l_method = l_bus.new_method_call(
+            constants::vpdManagerService, constants::vpdManagerObjectPath,
+            constants::vpdManagerInfName, "performVpdSanityCheck");
+
+        l_method.append(i_eepromPath);
+        auto l_result = l_bus.call(l_method);
+
+        l_result.read(l_returnValue);
+
+        return l_returnValue;
+    }
+    catch (const sdbusplus::exception::SdBusError& l_error)
+    {
+        std::runtime_error("Exception caught " + std::string(l_error.what()));
+        throw;
+    }
+}
+
+int VpdTool::performSanityCheck(const std::string i_vpdFilePath)
+{
+    try
+    {
+        nlohmann::json l_parsedJson;
+        if (i_vpdFilePath.empty())
+        {
+            std::cerr
+                << "Provided empty path,please provide valid eeprom path\n";
+            return vpd::constants::FAILURE;
+        }
+
+        if (vpdSanityCheck(i_vpdFilePath) == vpd::constants::FAILURE)
+        {
+            std::cerr << "VPD validation has failed. Check PELs for details\n";
+            return vpd::constants::FAILURE;
+        }
+
+        std::cout << "VPD validation Successful.\n";
+        return vpd::constants::SUCCESS;
+    }
+    catch (const std::exception& e)
+    {
+        std::cout << "FAILED:Exception caught for" << e.what() << "\n";
+
+        return vpd::constants::FAILURE;
     }
 }
 

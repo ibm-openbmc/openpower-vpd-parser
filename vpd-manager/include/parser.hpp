@@ -111,6 +111,14 @@ class Parser
     int updateVpdKeywordOnHardware(
         const types::WriteVpdParams& i_paramsToWriteData);
 
+    /*
+     * @brief Perform vpd sanity check on given eeprom
+     *
+     * @throw Data Exception
+     * @throw ECC Exception
+     */
+    void vpdSanityCheck();
+
   private:
     /**
      * @brief Update keyword value on redundant path.

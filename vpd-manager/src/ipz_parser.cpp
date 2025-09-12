@@ -272,6 +272,8 @@ std::pair<types::RecordOffsetList, types::InvalidRecordList>
             // Verify the ECC for this Record
             if (!recordEccCheck(itrToPT))
             {
+                logging::logMessage(
+                    "ERROR: ECC check failed for [" + recordName + "]");
                 throw(EccException("ERROR: ECC check failed"));
             }
         }
@@ -997,4 +999,33 @@ bool IpzVpdParser::processInvalidRecords(
     }
     return l_rc;
 }
+
+int IpzVpdParser::sanityChecker()
+{
+    try
+    {
+        logging::logMessage(
+            "Performing sanity check for file path: " + m_vpdFilePath);
+        auto itrToVPD = m_vpdVector.cbegin();
+
+        // Check vaidity of VHDR record
+        checkHeader(itrToVPD);
+
+        // Read the table of contents
+        auto ptLen = readTOC(itrToVPD);
+
+        // Read the table of contents record, to get offsets to other records.
+        auto l_result = readPT(itrToVPD, ptLen);
+
+        logging::logMessage("SUCCESS");
+        return constants::SUCCESS;
+    }
+    catch (const std::exception& e)
+    {
+        logging::logMessage(
+            "FAILED: Exception caught [" + std::string(e.what()) + "]");
+        return constants::FAILURE;
+    }
+}
+
 } // namespace vpd

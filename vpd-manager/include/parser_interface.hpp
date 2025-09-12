@@ -62,6 +62,16 @@ class ParserInterface
     }
 
     /**
+     * @brief Virtual API to perform sanity check on EEPROM.
+     *
+     * @return Success/Failure
+     */
+    virtual int sanityChecker()
+    {
+        return -1;
+    }
+
+    /**
      * @brief Virtual destructor.
      */
     virtual ~ParserInterface() {}

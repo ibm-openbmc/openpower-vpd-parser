@@ -279,7 +279,9 @@ void updateFooter(CLI::App& i_app)
         "   From DBus to console in Table format: "
         "vpd-tool -i -t\n"
         "Force Reset:\n"
-        "   vpd-tool --forceReset\n");
+        "   vpd-tool --forceReset\n"
+        "Vpd sanity check:\n"
+        "    vpd-tool --sanityCheck -P  <EEPROM Path> \n");
 }
 
 int main(int argc, char** argv)
@@ -291,6 +293,7 @@ int main(int argc, char** argv)
     std::string l_keywordName{};
     std::string l_filePath{};
     std::string l_keywordValue{};
+    std::string l_eepromPath{};
 
     updateFooter(l_app);
 
@@ -358,6 +361,15 @@ int main(int argc, char** argv)
     auto l_forceResetFlag = l_app.add_flag(
         "--forceReset, -f, -F",
         "Force collect for hardware. CAUTION: Developer only option.");
+
+    auto l_eepromPathOption =
+        l_app.add_option("--eepromPath, -P", l_eepromPath, "eeprom path");
+    auto l_sanityCheckFlag =
+        l_app
+            .add_flag(
+                "--sanityCheck",
+                "It performs sanity check for given eeprom path. If any redundant eeprom is found for that FRU in system config json, it will validate that as well.")
+            ->needs(l_eepromPathOption);
 
     CLI11_PARSE(l_app, argc, argv);
 
@@ -432,6 +444,19 @@ int main(int argc, char** argv)
         return forceReset();
     }
 
+    if (!l_sanityCheckFlag->empty())
+    {
+        if (l_eepromPathOption->empty())
+        {
+            std::cerr << "Please provide eeprom paths.\nUse --eepromPath/-P "
+                         "to give eeprom path. Refer --help."
+                      << std::endl;
+            return vpd::constants::FAILURE;
+        }
+
+        vpd::VpdTool l_vpdToolObj;
+        return l_vpdToolObj.performSanityCheck(l_eepromPath);
+    }
     std::cout << l_app.help() << std::endl;
     return vpd::constants::FAILURE;
 }
