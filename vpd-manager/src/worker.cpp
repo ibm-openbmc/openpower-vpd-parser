@@ -1175,17 +1175,18 @@ void Worker::publishSystemVPD(const types::VPDMapVariant& parsedVpdMap)
 }
 
 bool Worker::processPreAction(const std::string& i_vpdFilePath,
-                              const std::string& i_flagToProcess)
+                              const std::string& i_flagToProcess,
+                              uint16_t& i_errCode)
 {
     if (i_vpdFilePath.empty() || i_flagToProcess.empty())
     {
-        logging::logMessage(
-            "Invalid input parameter. Abort processing pre action");
+        i_errCode = error_code::INVALID_INPUT_PARAMETER;
         return false;
     }
 
     if ((!jsonUtility::executeBaseAction(m_parsedJson, "preAction",
-                                         i_vpdFilePath, i_flagToProcess)) &&
+                                         i_vpdFilePath, i_flagToProcess,
+                                         i_errCode)) &&
         (i_flagToProcess.compare("collection") == constants::STR_CMP_SUCCESS))
     {
         // TODO: Need a way to delete inventory object from Dbus and persisted
@@ -1265,11 +1266,14 @@ bool Worker::processPostAction(
         }
     }
 
+    uint16_t l_errCode = 0;
     if (!jsonUtility::executeBaseAction(m_parsedJson, "postAction",
-                                        i_vpdFruPath, i_flagToProcess))
+                                        i_vpdFruPath, i_flagToProcess,
+                                        l_errCode))
     {
         logging::logMessage(
-            "Execution of post action failed for path: " + i_vpdFruPath);
+            "Execution of post action failed for path: " + i_vpdFruPath +
+            " . Reason: " + vpdSpecificUtility::getErrCodeMsg(l_errCode));
 
         // If post action was required and failed only in that case return
         // false. In all other case post action is considered passed.
@@ -1295,10 +1299,23 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
                                           "preAction", "collection"))
         {
             isPreActionRequired = true;
-            if (!processPreAction(i_vpdFilePath, "collection"))
+            uint16_t l_errCode = 0;
+            if (!processPreAction(i_vpdFilePath, "collection", l_errCode))
             {
+                if (l_errCode == error_code::DEVICE_NOT_PRESENT)
+                {
+                    logging::logMessage(
+                        vpdSpecificUtility::getErrCodeMsg(l_errCode) +
+                        i_vpdFilePath);
+                    // Presence pin has been read successfully and has been read
+                    // as false, so this is not a failure case, hence returning
+                    // empty variant so that pre action is not marked as failed.
+                    return types::VPDMapVariant{};
+                }
                 throw std::runtime_error(
-                    std::string(__FUNCTION__) + " Pre-Action failed");
+                    std::string(__FUNCTION__) +
+                    " Pre-Action failed with error: " +
+                    vpdSpecificUtility::getErrCodeMsg(l_errCode));
             }
         }
 
@@ -1391,24 +1408,38 @@ std::tuple<bool, std::string> Worker::parseAndPublishVPD(
         l_inventoryPath = jsonUtility::getInventoryObjPathFromJson(
             m_parsedJson, i_vpdFilePath, l_errCode);
 
-        if (!l_inventoryPath.empty())
-        {
-            if (!dbusUtility::writeDbusProperty(
-                    jsonUtility::getServiceName(m_parsedJson, l_inventoryPath),
-                    l_inventoryPath, constants::vpdCollectionInterface,
-                    "CollectionStatus",
-                    types::DbusVariantType{constants::vpdCollectionInProgress}))
-            {
-                logging::logMessage(
-                    "Unable to set CollectionStatus as InProgress for " +
-                    i_vpdFilePath + ". Error : " + "DBus write failed");
-            }
-        }
-        else if (l_errCode)
+        if (l_errCode)
         {
             logging::logMessage(
                 "Failed to get inventory path for FRU [" + i_vpdFilePath +
                 "], error : " + vpdSpecificUtility::getErrCodeMsg(l_errCode));
+            return std::make_tuple(false, i_vpdFilePath);
+        }
+        else if (!l_inventoryPath.empty())
+        {
+            std::string l_serviceName = jsonUtility::getServiceName(
+                m_parsedJson, l_inventoryPath, l_errCode);
+
+            if (l_errCode)
+            {
+                logging::logMessage(
+                    "Failed to get service name for path [" + l_inventoryPath +
+                    "], error : " +
+                    vpdSpecificUtility::getErrCodeMsg(l_errCode));
+            }
+            else
+            {
+                if (!dbusUtility::writeDbusProperty(
+                        l_serviceName, l_inventoryPath,
+                        constants::vpdCollectionInterface, "Status",
+                        types::DbusVariantType{
+                            constants::vpdCollectionInProgress}))
+                {
+                    logging::logMessage(
+                        "Unable to set collection Status as InProgress for " +
+                        i_vpdFilePath + ". Error : " + "DBus write failed");
+                }
+            }
         }
 
         const types::VPDMapVariant& parsedVpdMap = parseVpdFile(i_vpdFilePath);
@@ -1657,8 +1688,18 @@ void Worker::deleteFruVpd(const std::string& i_dbusObjPath)
         throw std::runtime_error("Given DBus object path is empty.");
     }
 
+    uint16_t l_errCode = 0;
     const std::string& l_fruPath =
-        jsonUtility::getFruPathFromJson(m_parsedJson, i_dbusObjPath);
+        jsonUtility::getFruPathFromJson(m_parsedJson, i_dbusObjPath, l_errCode);
+
+    if (l_errCode)
+    {
+        logging::logMessage(
+            "Failed to get FRU path for inventory path [" + i_dbusObjPath +
+            "], error : " + vpdSpecificUtility::getErrCodeMsg(l_errCode) +
+            " Aborting FRU VPD deletion.");
+        return;
+    }
 
     try
     {
@@ -1695,9 +1736,17 @@ void Worker::deleteFruVpd(const std::string& i_dbusObjPath)
                 if (jsonUtility::isActionRequired(m_parsedJson, l_fruPath,
                                                   "preAction", "deletion"))
                 {
-                    if (!processPreAction(l_fruPath, "deletion"))
+                    uint16_t l_errCode = 0;
+                    if (!processPreAction(l_fruPath, "deletion", l_errCode))
                     {
-                        throw std::runtime_error("Pre action failed");
+                        std::string l_msg = "Pre action failed";
+                        if (l_errCode)
+                        {
+                            l_msg +=
+                                " Reason: " +
+                                vpdSpecificUtility::getErrCodeMsg(l_errCode);
+                        }
+                        throw std::runtime_error(l_msg);
                     }
                 }
 
@@ -1878,6 +1927,9 @@ void Worker::performVpdRecollection()
 void Worker::collectSingleFruVpd(
     const sdbusplus::message::object_path& i_dbusObjPath)
 {
+    std::string l_fruPath{};
+    uint16_t l_errCode = 0;
+
     try
     {
         // Check if system config JSON is present
@@ -1890,11 +1942,21 @@ void Worker::collectSingleFruVpd(
         }
 
         // Get FRU path for the given D-bus object path from JSON
-        const std::string& l_fruPath =
-            jsonUtility::getFruPathFromJson(m_parsedJson, i_dbusObjPath);
+        l_fruPath = jsonUtility::getFruPathFromJson(m_parsedJson, i_dbusObjPath,
+                                                    l_errCode);
 
         if (l_fruPath.empty())
         {
+            if (l_errCode)
+            {
+                logging::logMessage(
+                    "Failed to get FRU path for [" +
+                    std::string(i_dbusObjPath) + "], error : " +
+                    vpdSpecificUtility::getErrCodeMsg(l_errCode) +
+                    " Aborting single FRU VPD collection.");
+                return;
+            }
+
             logging::logMessage(
                 "D-bus object path not present in JSON. Single FRU VPD collection is not performed for " +
                 std::string(i_dbusObjPath));
@@ -1943,17 +2005,27 @@ void Worker::collectSingleFruVpd(
         // D-bus set-property call is good enough to update the status.
         const std::string& l_collStatusProp = "CollectionStatus";
 
-        if (!dbusUtility::writeDbusProperty(
-                jsonUtility::getServiceName(m_parsedJson,
-                                            std::string(i_dbusObjPath)),
-                std::string(i_dbusObjPath), constants::vpdCollectionInterface,
-                l_collStatusProp,
-                types::DbusVariantType{constants::vpdCollectionInProgress}))
+        std::string l_serviceName = jsonUtility::getServiceName(
+            m_parsedJson, std::string(i_dbusObjPath), l_errCode);
+
+        if (l_errCode)
         {
-            logging::logMessage(
-                "Unable to set CollectionStatus as InProgress for " +
-                std::string(i_dbusObjPath) +
-                ". Continue single FRU VPD collection.");
+            logging::logMessage("Failed to get service name for path [" +
+                                std::string(i_dbusObjPath) + "], error : " +
+                                vpdSpecificUtility::getErrCodeMsg(l_errCode));
+        }
+        else
+        {
+            if (!dbusUtility::writeDbusProperty(
+                    l_serviceName, std::string(i_dbusObjPath),
+                    constants::vpdCollectionInterface, l_collStatusProp,
+                    types::DbusVariantType{constants::vpdCollectionInProgress}))
+            {
+                logging::logMessage(
+                    "Unable to set collection Status as InProgress for " +
+                    std::string(i_dbusObjPath) +
+                    ". Continue single FRU VPD collection.");
+            }
         }
 
         // Parse VPD

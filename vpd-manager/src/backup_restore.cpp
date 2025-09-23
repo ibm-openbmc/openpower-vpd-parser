@@ -154,10 +154,30 @@ void BackupAndRestore::backupAndRestoreIpzVpd(
         return;
     }
 
+    uint16_t l_errCode = 0;
+
     const std::string l_srcFruPath =
-        jsonUtility::getFruPathFromJson(m_sysCfgJsonObj, i_srcPath);
+        jsonUtility::getFruPathFromJson(m_sysCfgJsonObj, i_srcPath, l_errCode);
+
+    if (l_errCode)
+    {
+        logging::logMessage(
+            "Failed to get source FRU path for [" + i_srcPath +
+            "], error : " + vpdSpecificUtility::getErrCodeMsg(l_errCode));
+        return;
+    }
+
     const std::string l_dstFruPath =
-        jsonUtility::getFruPathFromJson(m_sysCfgJsonObj, i_dstPath);
+        jsonUtility::getFruPathFromJson(m_sysCfgJsonObj, i_dstPath, l_errCode);
+
+    if (l_errCode)
+    {
+        logging::logMessage(
+            "Failed to get destination FRU path for [" + i_dstPath +
+            "], error : " + vpdSpecificUtility::getErrCodeMsg(l_errCode));
+        return;
+    }
+
     if (l_srcFruPath.empty() || l_dstFruPath.empty())
     {
         logging::logMessage(
@@ -165,7 +185,6 @@ void BackupAndRestore::backupAndRestoreIpzVpd(
         return;
     }
 
-    uint16_t l_errCode = 0;
     const std::string l_srcInvPath = jsonUtility::getInventoryObjPathFromJson(
         m_sysCfgJsonObj, i_srcPath, l_errCode);
 
@@ -201,13 +220,24 @@ void BackupAndRestore::backupAndRestoreIpzVpd(
     }
 
     const std::string l_srcServiceName =
-        jsonUtility::getServiceName(m_sysCfgJsonObj, l_srcInvPath);
-    const std::string l_dstServiceName =
-        jsonUtility::getServiceName(m_sysCfgJsonObj, l_dstInvPath);
-    if (l_srcServiceName.empty() || l_dstServiceName.empty())
+        jsonUtility::getServiceName(m_sysCfgJsonObj, l_srcInvPath, l_errCode);
+
+    if (l_errCode)
     {
         logging::logMessage(
-            "Couldn't find either source or destination DBus service name.");
+            "Failed to get service name for source FRU [" + l_srcInvPath +
+            "], error : " + vpdSpecificUtility::getErrCodeMsg(l_errCode));
+        return;
+    }
+
+    const std::string l_dstServiceName =
+        jsonUtility::getServiceName(m_sysCfgJsonObj, l_dstInvPath, l_errCode);
+
+    if (l_errCode)
+    {
+        logging::logMessage(
+            "Failed to get service name for destination FRU [" + l_dstInvPath +
+            "], error : " + vpdSpecificUtility::getErrCodeMsg(l_errCode));
         return;
     }
 

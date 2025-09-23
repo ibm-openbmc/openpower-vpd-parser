@@ -530,49 +530,35 @@ inline bool procesSetGpioTag(
  * @param[in] i_vpdFilePath - EEPROM file path
  * @param[in] i_flagToProcess - To identify which flag(s) needs to be processed
  * under PreAction tag of config JSON.
+ * @param[out] o_errCode - To set error code in case of error.
  * @return - success or failure
  */
 inline bool executeBaseAction(
     const nlohmann::json& i_parsedConfigJson, const std::string& i_action,
-    const std::string& i_vpdFilePath, const std::string& i_flagToProcess)
+    const std::string& i_vpdFilePath, const std::string& i_flagToProcess,
+    uint16_t& o_errCode)
 {
-    try
+    if (i_flagToProcess.empty() || i_action.empty() || i_vpdFilePath.empty() ||
+        !i_parsedConfigJson.contains("frus"))
     {
-        if (i_flagToProcess.empty() || i_action.empty() ||
-            i_vpdFilePath.empty() || !i_parsedConfigJson.contains("frus"))
-        {
-            throw std::runtime_error(
-                std::string(__FUNCTION__) + " Invalid parameter");
-        }
-
-        if (!i_parsedConfigJson["frus"].contains(i_vpdFilePath))
-        {
-            throw JsonException(std::string(__FUNCTION__) + " File path: " +
-                                i_vpdFilePath + " not found in JSON");
-        }
-
-        if (!i_parsedConfigJson["frus"][i_vpdFilePath].at(0).contains(i_action))
-        {
-            throw JsonException(
-                std::string(__FUNCTION__) + " Action [" + i_action +
-                "] not defined for file path:" + i_vpdFilePath);
-        }
-
-        if (!(i_parsedConfigJson["frus"][i_vpdFilePath].at(0))[i_action]
-                 .contains(i_flagToProcess))
-        {
-            throw JsonException(
-                std::string(__FUNCTION__) + "Config JSON missing flag [" +
-                i_flagToProcess +
-                "] to execute action for path = " + i_vpdFilePath);
-        }
+        o_errCode = error_code::INVALID_INPUT_PARAMETER;
+        return false;
     }
-    catch (const std::exception& l_ex)
+    if (!i_parsedConfigJson["frus"].contains(i_vpdFilePath))
     {
-        EventLogger::createSyncPel(
-            EventLogger::getErrorType(l_ex), types::SeverityType::Informational,
-            __FILE__, __FUNCTION__, 0, EventLogger::getErrorMsg(l_ex),
-            std::nullopt, std::nullopt, std::nullopt, std::nullopt);
+        o_errCode = error_code::FILE_NOT_FOUND;
+        return false;
+    }
+    if (!i_parsedConfigJson["frus"][i_vpdFilePath].at(0).contains(i_action))
+    {
+        o_errCode = error_code::MISSING_ACTION_TAG;
+        return false;
+    }
+
+    if (!(i_parsedConfigJson["frus"][i_vpdFilePath].at(0))[i_action].contains(
+            i_flagToProcess))
+    {
+        o_errCode = error_code::MISSING_FLAG;
         return false;
     }
 
@@ -607,55 +593,50 @@ inline bool executeBaseAction(
  *
  * @param[in] i_sysCfgJsonObj - System config JSON object.
  * @param[in] i_vpdPath - Path to where VPD is stored.
+ * @param[out] o_errCode - To set error code in case of error.
  *
  * @return On success return valid path, on failure return empty string.
  */
 inline std::string getRedundantEepromPathFromJson(
-    const nlohmann::json& i_sysCfgJsonObj,
-    const std::string& i_vpdPath) noexcept
+    const nlohmann::json& i_sysCfgJsonObj, const std::string& i_vpdPath,
+    uint16_t& o_errCode)
 {
-    try
+    if (i_vpdPath.empty())
     {
-        if (i_vpdPath.empty())
-        {
-            throw std::runtime_error("Path parameter is empty.");
-        }
-
-        if (!i_sysCfgJsonObj.contains("frus"))
-        {
-            throw std::runtime_error("Missing frus tag in system config JSON.");
-        }
-
-        // check if given path is FRU path
-        if (i_sysCfgJsonObj["frus"].contains(i_vpdPath))
-        {
-            return i_sysCfgJsonObj["frus"][i_vpdPath].at(0).value(
-                "redundantEeprom", "");
-        }
-
-        const nlohmann::json& l_fruList =
-            i_sysCfgJsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
-
-        for (const auto& l_fru : l_fruList.items())
-        {
-            const std::string& l_fruPath = l_fru.key();
-            const std::string& l_redundantFruPath =
-                i_sysCfgJsonObj["frus"][l_fruPath].at(0).value(
-                    "redundantEeprom", "");
-
-            // check if given path is inventory path or redundant FRU path
-            if ((i_sysCfgJsonObj["frus"][l_fruPath].at(0).value(
-                     "inventoryPath", "") == i_vpdPath) ||
-                (l_redundantFruPath == i_vpdPath))
-            {
-                return l_redundantFruPath;
-            }
-        }
+        o_errCode = error_code::INVALID_INPUT_PARAMETER;
+        return std::string{};
     }
-    catch (const std::exception& l_ex)
+
+    if (!i_sysCfgJsonObj.contains("frus"))
     {
-        logging::logMessage("Failed to get redundant EEPROM path, error: " +
-                            std::string(l_ex.what()));
+        o_errCode = error_code::INVALID_JSON;
+        return std::string{};
+    }
+
+    // check if given path is FRU path
+    if (i_sysCfgJsonObj["frus"].contains(i_vpdPath))
+    {
+        return i_sysCfgJsonObj["frus"][i_vpdPath].at(0).value(
+            "redundantEeprom", "");
+    }
+
+    const nlohmann::json& l_fruList =
+        i_sysCfgJsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
+
+    for (const auto& l_fru : l_fruList.items())
+    {
+        const std::string& l_fruPath = l_fru.key();
+        const std::string& l_redundantFruPath =
+            i_sysCfgJsonObj["frus"][l_fruPath].at(0).value("redundantEeprom",
+                                                           "");
+
+        // check if given path is inventory path or redundant FRU path
+        if ((i_sysCfgJsonObj["frus"][l_fruPath].at(0).value("inventoryPath",
+                                                            "") == i_vpdPath) ||
+            (l_redundantFruPath == i_vpdPath))
+        {
+            return l_redundantFruPath;
+        }
     }
 
     return std::string();
@@ -669,51 +650,47 @@ inline std::string getRedundantEepromPathFromJson(
  *
  * @param[in] i_sysCfgJsonObj - System config JSON object
  * @param[in] i_vpdPath - Path to where VPD is stored.
+ * @param[out] o_errCode - To set error code in case of error.
  *
  * @return On success return valid path, on failure return empty string.
  */
 inline std::string getFruPathFromJson(const nlohmann::json& i_sysCfgJsonObj,
-                                      const std::string& i_vpdPath) noexcept
+                                      const std::string& i_vpdPath,
+                                      uint16_t& o_errCode)
 {
-    try
+    if (i_vpdPath.empty())
     {
-        if (i_vpdPath.empty())
-        {
-            throw std::runtime_error("Path parameter is empty.");
-        }
-
-        if (!i_sysCfgJsonObj.contains("frus"))
-        {
-            throw std::runtime_error("Missing frus tag in system config JSON.");
-        }
-
-        // check if given path is FRU path
-        if (i_sysCfgJsonObj["frus"].contains(i_vpdPath))
-        {
-            return i_vpdPath;
-        }
-
-        const nlohmann::json& l_fruList =
-            i_sysCfgJsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
-
-        for (const auto& l_fru : l_fruList.items())
-        {
-            const auto l_fruPath = l_fru.key();
-
-            // check if given path is redundant FRU path or inventory path
-            if (i_vpdPath == i_sysCfgJsonObj["frus"][l_fruPath].at(0).value(
-                                 "redundantEeprom", "") ||
-                (i_vpdPath == i_sysCfgJsonObj["frus"][l_fruPath].at(0).value(
-                                  "inventoryPath", "")))
-            {
-                return l_fruPath;
-            }
-        }
+        o_errCode = error_code::INVALID_INPUT_PARAMETER;
+        return std::string{};
     }
-    catch (const std::exception& l_ex)
+
+    if (!i_sysCfgJsonObj.contains("frus"))
     {
-        logging::logMessage("Failed to get FRU path from JSON, error: " +
-                            std::string(l_ex.what()));
+        o_errCode = error_code::INVALID_JSON;
+        return std::string{};
+    }
+
+    // check if given path is FRU path
+    if (i_sysCfgJsonObj["frus"].contains(i_vpdPath))
+    {
+        return i_vpdPath;
+    }
+
+    const nlohmann::json& l_fruList =
+        i_sysCfgJsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
+
+    for (const auto& l_fru : l_fruList.items())
+    {
+        const auto l_fruPath = l_fru.key();
+
+        // check if given path is redundant FRU path or inventory path
+        if (i_vpdPath == i_sysCfgJsonObj["frus"][l_fruPath].at(0).value(
+                             "redundantEeprom", "") ||
+            (i_vpdPath == i_sysCfgJsonObj["frus"][l_fruPath].at(0).value(
+                              "inventoryPath", "")))
+        {
+            return l_fruPath;
+        }
     }
 
     return std::string();
@@ -883,27 +860,56 @@ inline std::tuple<std::string, std::string, std::string>
     types::Path l_redundantFruPath;
     try
     {
+        uint16_t l_errCode = 0;
+
         if (!i_sysCfgJsonObj.empty())
         {
             // Get hardware path from system config JSON.
-            const types::Path l_fruPath =
-                jsonUtility::getFruPathFromJson(i_sysCfgJsonObj, io_vpdPath);
+            const types::Path l_fruPath = jsonUtility::getFruPathFromJson(
+                i_sysCfgJsonObj, io_vpdPath, l_errCode);
 
             if (!l_fruPath.empty())
             {
                 io_vpdPath = l_fruPath;
 
-                uint16_t l_errCode = 0;
-
                 // Get inventory object path from system config JSON
                 l_inventoryObjPath = jsonUtility::getInventoryObjPathFromJson(
                     i_sysCfgJsonObj, l_fruPath, l_errCode);
 
+                if (l_errCode)
+                {
+                    logging::logMessage(
+                        "Failed to get inventory path from JSON for [" +
+                        io_vpdPath + "], error : " +
+                        vpdSpecificUtility::getErrCodeMsg(l_errCode));
+
+                    return std::make_tuple(io_vpdPath, l_inventoryObjPath,
+                                           l_redundantFruPath);
+                }
+
                 // Get redundant hardware path if present in system config JSON
                 l_redundantFruPath =
-                    jsonUtility::getRedundantEepromPathFromJson(i_sysCfgJsonObj,
-                                                                l_fruPath);
+                    jsonUtility::getRedundantEepromPathFromJson(
+                        i_sysCfgJsonObj, l_fruPath, l_errCode);
+
+                if (l_errCode)
+                {
+                    logging::logMessage(
+                        "Failed to get redundant EEPROM path for FRU [" +
+                        l_fruPath + "], error : " +
+                        vpdSpecificUtility::getErrCodeMsg(l_errCode));
+
+                    return std::make_tuple(io_vpdPath, l_inventoryObjPath,
+                                           l_redundantFruPath);
+                }
             }
+
+            logging::logMessage(
+                "Failed to get FRU path from JSON for [" + io_vpdPath +
+                "], error : " + vpdSpecificUtility::getErrCodeMsg(l_errCode));
+
+            return std::make_tuple(io_vpdPath, l_inventoryObjPath,
+                                   l_redundantFruPath);
         }
     }
     catch (const std::exception& l_exception)
@@ -923,6 +929,7 @@ inline std::tuple<std::string, std::string, std::string>
  *
  * @param[in] i_sysCfgJsonObj - System config JSON object.
  * @param[in] l_inventoryPath - DBus inventory path.
+ * @param[out] o_errCode - To set error code in case of error.
  *
  * @return On success returns the service name present in the system config
  * JSON, otherwise empty string.
@@ -930,44 +937,43 @@ inline std::tuple<std::string, std::string, std::string>
  * Note: Caller has to handle in case of empty string received.
  */
 inline std::string getServiceName(const nlohmann::json& i_sysCfgJsonObj,
-                                  const std::string& l_inventoryPath)
+                                  const std::string& l_inventoryPath,
+                                  uint16_t& o_errCode)
 {
-    try
+    if (l_inventoryPath.empty())
     {
-        if (l_inventoryPath.empty())
-        {
-            throw std::runtime_error("Path parameter is empty.");
-        }
+        o_errCode = error_code::INVALID_INPUT_PARAMETER;
+        return std::string{};
+    }
 
-        if (!i_sysCfgJsonObj.contains("frus"))
-        {
-            throw std::runtime_error("Missing frus tag in system config JSON.");
-        }
+    if (!i_sysCfgJsonObj.contains("frus"))
+    {
+        o_errCode = error_code::INVALID_JSON;
+        return std::string{};
+    }
 
-        const nlohmann::json& l_listOfFrus =
-            i_sysCfgJsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
+    const nlohmann::json& l_listOfFrus =
+        i_sysCfgJsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
 
-        for (const auto& l_frus : l_listOfFrus.items())
+    for (const auto& l_frus : l_listOfFrus.items())
+    {
+        for (const auto& l_inventoryItem : l_frus.value())
         {
-            for (const auto& l_inventoryItem : l_frus.value())
+            if (l_inventoryPath.compare(l_inventoryItem["inventoryPath"]) ==
+                constants::STR_CMP_SUCCESS)
             {
-                if (l_inventoryPath.compare(l_inventoryItem["inventoryPath"]) ==
-                    constants::STR_CMP_SUCCESS)
+                if (l_inventoryItem.contains("serviceName"))
                 {
-                    return l_inventoryItem["serviceName"];
+                    return l_inventoryItem.value("serviceName", "");
                 }
+
+                o_errCode = error_code::JSON_MISSING_SERVICE_NAME;
+                return std::string{};
             }
         }
-        throw std::runtime_error(
-            "Inventory path not found in the system config JSON");
     }
-    catch (const std::exception& l_exception)
-    {
-        logging::logMessage(
-            "Error while getting DBus service name for given path " +
-            l_inventoryPath + ", error: " + std::string(l_exception.what()));
-        // TODO:log PEL
-    }
+
+    o_errCode = error_code::FRU_PATH_NOT_FOUND;
     return std::string{};
 }
 
