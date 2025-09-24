@@ -1359,6 +1359,7 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
     }
     catch (std::exception& l_ex)
     {
+        uint16_t l_errCode = 0;
         std::string l_exMsg{
             std::string(__FUNCTION__) + " : VPD parsing failed for " +
             i_vpdFilePath + " due to error: " + l_ex.what()};
@@ -1368,10 +1369,11 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
                                           "postFailAction", "collection"))
         {
             if (!jsonUtility::executePostFailAction(m_parsedJson, i_vpdFilePath,
-                                                    "collection"))
+                                                    "collection", l_errCode))
             {
-                l_exMsg +=
-                    ". Post Fail Action also failed, aborting collection for this FRU";
+                l_exMsg += ". Post fail action also failed. Error : " +
+                           vpdSpecificUtility::getErrCodeMsg(l_errCode) +
+                           " Aborting collection for this FRU.";
             }
         }
 
@@ -1805,19 +1807,23 @@ void Worker::deleteFruVpd(const std::string& i_dbusObjPath)
     }
     catch (const std::exception& l_ex)
     {
+        uint16_t l_errCode = 0;
+        std::string l_errMsg =
+            "Failed to delete VPD for FRU : " + i_dbusObjPath +
+            " error: " + std::string(l_ex.what());
+
         if (jsonUtility::isActionRequired(m_parsedJson, l_fruPath,
                                           "postFailAction", "deletion"))
         {
             if (!jsonUtility::executePostFailAction(m_parsedJson, l_fruPath,
-                                                    "deletion"))
+                                                    "deletion", l_errCode))
             {
-                logging::logMessage(
-                    "Post fail action failed for: " + i_dbusObjPath);
+                l_errMsg += ". Post fail action also failed, error : " +
+                            vpdSpecificUtility::getErrCodeMsg(l_errCode);
             }
         }
 
-        logging::logMessage("Failed to delete VPD for FRU : " + i_dbusObjPath +
-                            " error: " + std::string(l_ex.what()));
+        logging::logMessage(l_errMsg);
     }
 }
 
@@ -1966,8 +1972,21 @@ void Worker::collectSingleFruVpd(
         // Check if host is up and running
         if (dbusUtility::isHostRunning())
         {
-            if (!jsonUtility::isFruReplaceableAtRuntime(m_parsedJson,
-                                                        l_fruPath))
+            uint16_t l_errCode = 0;
+            bool isFruReplaceableAtRuntime =
+                jsonUtility::isFruReplaceableAtRuntime(m_parsedJson, l_fruPath,
+                                                       l_errCode);
+
+            if (l_errCode)
+            {
+                logging::logMessage(
+                    "Failed to check if FRU is replaceable at runtime for FRU : [" +
+                    std::string(i_dbusObjPath) + "], error : " +
+                    vpdSpecificUtility::getErrCodeMsg(l_errCode));
+                return;
+            }
+
+            if (!isFruReplaceableAtRuntime)
             {
                 logging::logMessage(
                     "Given FRU is not replaceable at host runtime. Single FRU VPD collection is not performed for " +
@@ -1990,9 +2009,21 @@ void Worker::collectSingleFruVpd(
                     vpdSpecificUtility::getErrCodeMsg(l_errCode));
             }
 
-            if (!isFruReplaceableAtStandby &&
-                (!jsonUtility::isFruReplaceableAtRuntime(m_parsedJson,
-                                                         l_fruPath)))
+            l_errCode = 0;
+            bool isFruReplaceableAtRuntime =
+                jsonUtility::isFruReplaceableAtRuntime(m_parsedJson, l_fruPath,
+                                                       l_errCode);
+
+            if (l_errCode)
+            {
+                logging::logMessage(
+                    "Failed to check if FRU is replaceable at runtime for FRU : [" +
+                    std::string(i_dbusObjPath) + "], error : " +
+                    vpdSpecificUtility::getErrCodeMsg(l_errCode));
+                return;
+            }
+
+            if (!isFruReplaceableAtStandby && (!isFruReplaceableAtRuntime))
             {
                 logging::logMessage(
                     "Given FRU is neither replaceable at standby nor replaceable at runtime. Single FRU VPD collection is not performed for " +
