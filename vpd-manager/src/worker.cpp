@@ -421,10 +421,20 @@ void Worker::setDeviceTreeAndJson()
 
         setJsonSymbolicLink(systemJson);
 
-        if (isSystemVPDOnDBus() &&
-            jsonUtility::isBackupAndRestoreRequired(m_parsedJson))
+        if (isSystemVPDOnDBus())
         {
-            performBackupAndRestore(parsedVpdMap);
+            uint16_t l_errCode = 0;
+            if (jsonUtility::isBackupAndRestoreRequired(m_parsedJson,
+                                                        l_errCode))
+            {
+                performBackupAndRestore(parsedVpdMap);
+            }
+            else if (l_errCode)
+            {
+                logging::logMessage(
+                    "Failed to check if backup and restore required. Reason : " +
+                    vpdSpecificUtility::getErrCodeMsg(l_errCode));
+            }
         }
 
         // proceed to publish system VPD.
@@ -1287,6 +1297,8 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
 {
     try
     {
+        uint16_t l_errCode = 0;
+
         if (i_vpdFilePath.empty())
         {
             throw std::runtime_error(
@@ -1296,8 +1308,9 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
 
         bool isPreActionRequired = false;
         if (jsonUtility::isActionRequired(m_parsedJson, i_vpdFilePath,
-                                          "preAction", "collection"))
+                                          "preAction", "collection", l_errCode))
         {
+            l_errCode = 0;
             isPreActionRequired = true;
             uint16_t l_errCode = 0;
             if (!processPreAction(i_vpdFilePath, "collection", l_errCode))
@@ -1317,6 +1330,13 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
                     " Pre-Action failed with error: " +
                     vpdSpecificUtility::getErrCodeMsg(l_errCode));
             }
+        }
+        else if (l_errCode)
+        {
+            logging::logMessage(
+                "Failed to check if pre action required for FRU [" +
+                i_vpdFilePath +
+                "], error : " + vpdSpecificUtility::getErrCodeMsg(l_errCode));
         }
 
         if (!std::filesystem::exists(i_vpdFilePath))
@@ -1339,8 +1359,11 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
         // any post action in the flow of collection.
         // Note: Don't change the order, post action needs to be processed only
         // after collection for FRU is successfully done.
+        l_errCode = 0;
+
         if (jsonUtility::isActionRequired(m_parsedJson, i_vpdFilePath,
-                                          "postAction", "collection"))
+                                          "postAction", "collection",
+                                          l_errCode))
         {
             if (!processPostAction(i_vpdFilePath, "collection", l_parsedVpd))
             {
@@ -1354,6 +1377,13 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
                     std::nullopt, std::nullopt, std::nullopt, std::nullopt);
             }
         }
+        else if (l_errCode)
+        {
+            logging::logMessage(
+                "Error while checking if post action required for FRU [" +
+                i_vpdFilePath +
+                "], error : " + vpdSpecificUtility::getErrCodeMsg(l_errCode));
+        }
 
         return l_parsedVpd;
     }
@@ -1366,7 +1396,8 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
 
         // If post fail action is required, execute it.
         if (jsonUtility::isActionRequired(m_parsedJson, i_vpdFilePath,
-                                          "postFailAction", "collection"))
+                                          "postFailAction", "collection",
+                                          l_errCode))
         {
             if (!jsonUtility::executePostFailAction(m_parsedJson, i_vpdFilePath,
                                                     "collection", l_errCode))
@@ -1375,6 +1406,12 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
                            vpdSpecificUtility::getErrCodeMsg(l_errCode) +
                            " Aborting collection for this FRU.";
             }
+        }
+        else if (l_errCode)
+        {
+            l_exMsg +=
+                ". Failed to check if post fail action required, error : " +
+                vpdSpecificUtility::getErrCodeMsg(l_errCode);
         }
 
         if (typeid(l_ex) == typeid(DataException))
@@ -1433,7 +1470,7 @@ std::tuple<bool, std::string> Worker::parseAndPublishVPD(
             {
                 if (!dbusUtility::writeDbusProperty(
                         l_serviceName, l_inventoryPath,
-                        constants::vpdCollectionInterface, "Status",
+                        constants::vpdCollectionInterface, "CollectionStatus",
                         types::DbusVariantType{
                             constants::vpdCollectionInProgress}))
                 {
@@ -1736,9 +1773,9 @@ void Worker::deleteFruVpd(const std::string& i_dbusObjPath)
             else
             {
                 if (jsonUtility::isActionRequired(m_parsedJson, l_fruPath,
-                                                  "preAction", "deletion"))
+                                                  "preAction", "deletion",
+                                                  l_errCode))
                 {
-                    uint16_t l_errCode = 0;
                     if (!processPreAction(l_fruPath, "deletion", l_errCode))
                     {
                         std::string l_msg = "Pre action failed";
@@ -1750,6 +1787,13 @@ void Worker::deleteFruVpd(const std::string& i_dbusObjPath)
                         }
                         throw std::runtime_error(l_msg);
                     }
+                }
+                else if (l_errCode)
+                {
+                    logging::logMessage(
+                        "Failed to check if pre action required for FRU [" +
+                        l_fruPath + "], error : " +
+                        vpdSpecificUtility::getErrCodeMsg(l_errCode));
                 }
 
                 std::vector<std::string> l_interfaceList{
@@ -1784,13 +1828,23 @@ void Worker::deleteFruVpd(const std::string& i_dbusObjPath)
                     throw std::runtime_error("Call to PIM failed.");
                 }
 
+                l_errCode = 0;
+
                 if (jsonUtility::isActionRequired(m_parsedJson, l_fruPath,
-                                                  "postAction", "deletion"))
+                                                  "postAction", "deletion",
+                                                  l_errCode))
                 {
                     if (!processPostAction(l_fruPath, "deletion"))
                     {
                         throw std::runtime_error("Post action failed");
                     }
+                }
+                else if (l_errCode)
+                {
+                    logging::logMessage(
+                        "Failed to check if post action required during deletion for FRU [" +
+                        l_fruPath + "], error : " +
+                        vpdSpecificUtility::getErrCodeMsg(l_errCode));
                 }
             }
         }
@@ -1813,7 +1867,8 @@ void Worker::deleteFruVpd(const std::string& i_dbusObjPath)
             " error: " + std::string(l_ex.what());
 
         if (jsonUtility::isActionRequired(m_parsedJson, l_fruPath,
-                                          "postFailAction", "deletion"))
+                                          "postFailAction", "deletion",
+                                          l_errCode))
         {
             if (!jsonUtility::executePostFailAction(m_parsedJson, l_fruPath,
                                                     "deletion", l_errCode))
@@ -1821,6 +1876,12 @@ void Worker::deleteFruVpd(const std::string& i_dbusObjPath)
                 l_errMsg += ". Post fail action also failed, error : " +
                             vpdSpecificUtility::getErrCodeMsg(l_errCode);
             }
+        }
+        else if (l_errCode)
+        {
+            l_errMsg +=
+                ". Failed to check if post fail action required, error : " +
+                vpdSpecificUtility::getErrCodeMsg(l_errCode);
         }
 
         logging::logMessage(l_errMsg);
@@ -1909,8 +1970,18 @@ void Worker::performVpdRecollection()
                 "System config json object is empty, can't process recollection.");
         }
 
+        uint16_t l_errCode = 0;
         const auto& l_frusReplaceableAtStandby =
-            jsonUtility::getListOfFrusReplaceableAtStandby(m_parsedJson);
+            jsonUtility::getListOfFrusReplaceableAtStandby(m_parsedJson,
+                                                           l_errCode);
+
+        if (l_errCode)
+        {
+            logging::logMessage(
+                "Failed to get list of FRUs replaceable at runtime, error : " +
+                vpdSpecificUtility::getErrCodeMsg(l_errCode));
+            return;
+        }
 
         for (const auto& l_fruInventoryPath : l_frusReplaceableAtStandby)
         {
