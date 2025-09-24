@@ -19,12 +19,16 @@ enum error_code
     JSON_PARSE_ERROR,
     JSON_MISSING_GPIO_INFO,
     JSON_MISSING_SERVICE_NAME,
+    REDUNDANT_PATH_NOT_FOUND,
+    ERROR_GETTING_REDUNDANT_PATH,
+    NO_EEPROM_PATH,
 
     // Generic errors.
     INVALID_INPUT_PARAMETER,
     DEVICE_NOT_PRESENT,
     DEVICE_PRESENCE_UNKNOWN,
-    GPIO_LINE_EXCEPTION
+    GPIO_LINE_EXCEPTION,
+    ERROR_PROCESSING_SYSTEM_CMD
 };
 
 const std::unordered_map<int, std::string> errorCodeMap = {
@@ -44,8 +48,14 @@ const std::unordered_map<int, std::string> errorCodeMap = {
     {error_code::JSON_MISSING_GPIO_INFO, "JSON missing required GPIO info."},
     {error_code::JSON_MISSING_SERVICE_NAME,
      "JSON missing the service name for the FRU"},
+    {error_code::REDUNDANT_PATH_NOT_FOUND, "No redundant path for the FRU."},
+    {error_code::ERROR_GETTING_REDUNDANT_PATH,
+     "Error while trying to get redundant path for the FRU"},
+    {error_code::NO_EEPROM_PATH, "EEPROM path not found."},
     {error_code::DEVICE_NOT_PRESENT,
      "Presence pin read successfully but device was absent."},
     {error_code::DEVICE_PRESENCE_UNKNOWN, "Exception on presence line GPIO."},
-    {error_code::GPIO_LINE_EXCEPTION, "There was an exception in GPIO line."}};
+    {error_code::GPIO_LINE_EXCEPTION, "There was an exception in GPIO line."},
+    {error_code::ERROR_PROCESSING_SYSTEM_CMD,
+     "Error while executing system command tag."}};
 } // namespace vpd

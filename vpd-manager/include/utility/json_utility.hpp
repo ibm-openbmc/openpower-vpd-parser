@@ -225,6 +225,25 @@ inline bool executePostFailAction(
         return false;
     }
 
+    if (!i_parsedConfigJson.contains("frus"))
+    {
+        o_errCode = error_code::INVALID_JSON;
+        return false;
+    }
+
+    if (!i_parsedConfigJson["frus"].contains(i_vpdFilePath))
+    {
+        o_errCode = error_code::FRU_PATH_NOT_FOUND;
+        return false;
+    }
+
+    if (!i_parsedConfigJson["frus"][i_vpdFilePath].at(0).contains(
+            "postFailAction"))
+    {
+        o_errCode = error_code::MISSING_ACTION_TAG;
+        return false;
+    }
+
     if (!(i_parsedConfigJson["frus"][i_vpdFilePath].at(0))["postFailAction"]
              .contains(i_flagToProcess))
     {
@@ -284,19 +303,27 @@ inline bool processSystemCmdTag(
         return false;
     }
 
-    if (!((i_parsedConfigJson["frus"][i_vpdFilePath].at(
-               0)[i_baseAction][i_flagToProcess]["systemCmd"])
-              .contains("cmd")))
+    try
     {
-        o_errCode = error_code::MISSING_FLAG;
+        if (!((i_parsedConfigJson["frus"][i_vpdFilePath].at(
+                   0)[i_baseAction][i_flagToProcess]["systemCmd"])
+                  .contains("cmd")))
+        {
+            o_errCode = error_code::MISSING_FLAG;
+            return false;
+        }
+
+        const std::string& l_systemCommand =
+            i_parsedConfigJson["frus"][i_vpdFilePath].at(
+                0)[i_baseAction][i_flagToProcess]["systemCmd"]["cmd"];
+
+        commonUtility::executeCmd(l_systemCommand);
+    }
+    catch (const std::exception& l_ex)
+    {
+        o_errCode = error_code::ERROR_PROCESSING_SYSTEM_CMD;
         return false;
     }
-
-    const std::string& l_systemCommand =
-        i_parsedConfigJson["frus"][i_vpdFilePath].at(
-            0)[i_baseAction][i_flagToProcess]["systemCmd"]["cmd"];
-
-    commonUtility::executeCmd(l_systemCommand);
     return true;
 }
 
@@ -833,76 +860,91 @@ inline std::vector<std::string> getListOfGpioPollingFrus(
  *
  * @param[in] i_sysCfgJsonObj - System config JSON object.
  * @param[in,out] io_vpdPath - Inventory object path or FRU EEPROM path.
+ * @param[out] o_errCode - To set error code in case of error.
  *
  * @return On success returns tuple of EEPROM path, inventory path & redundant
  * path, on failure returns tuple with given input path alone.
  */
 inline std::tuple<std::string, std::string, std::string>
     getAllPathsToUpdateKeyword(const nlohmann::json& i_sysCfgJsonObj,
-                               std::string io_vpdPath)
+                               std::string io_vpdPath, uint16_t& o_errCode)
 {
     types::Path l_inventoryObjPath;
     types::Path l_redundantFruPath;
-    try
+    o_errCode = 0;
+
+    if (i_sysCfgJsonObj.empty() || io_vpdPath.empty())
     {
-        uint16_t l_errCode = 0;
+        o_errCode = error_code::INVALID_INPUT_PARAMETER;
+        return std::make_tuple(io_vpdPath, l_inventoryObjPath,
+                               l_redundantFruPath);
+    }
 
-        if (!i_sysCfgJsonObj.empty())
+    // Get hardware path from system config JSON.
+    const types::Path l_fruPath =
+        jsonUtility::getFruPathFromJson(i_sysCfgJsonObj, io_vpdPath, o_errCode);
+
+    if (!l_fruPath.empty())
+    {
+        io_vpdPath = l_fruPath;
+
+        // Get inventory object path from system config JSON
+        l_inventoryObjPath = jsonUtility::getInventoryObjPathFromJson(
+            i_sysCfgJsonObj, l_fruPath, o_errCode);
+
+        if (l_inventoryObjPath.empty())
         {
-            // Get hardware path from system config JSON.
-            const types::Path l_fruPath = jsonUtility::getFruPathFromJson(
-                i_sysCfgJsonObj, io_vpdPath, l_errCode);
-
-            if (!l_fruPath.empty())
+            if (o_errCode)
             {
-                io_vpdPath = l_fruPath;
-
-                // Get inventory object path from system config JSON
-                l_inventoryObjPath = jsonUtility::getInventoryObjPathFromJson(
-                    i_sysCfgJsonObj, l_fruPath, l_errCode);
-
-                if (l_errCode)
-                {
-                    logging::logMessage(
-                        "Failed to get inventory path from JSON for [" +
-                        io_vpdPath + "], error : " +
-                        vpdSpecificUtility::getErrCodeMsg(l_errCode));
-
-                    return std::make_tuple(io_vpdPath, l_inventoryObjPath,
-                                           l_redundantFruPath);
-                }
-
-                // Get redundant hardware path if present in system config JSON
-                l_redundantFruPath =
-                    jsonUtility::getRedundantEepromPathFromJson(
-                        i_sysCfgJsonObj, l_fruPath, l_errCode);
-
-                if (l_errCode)
-                {
-                    logging::logMessage(
-                        "Failed to get redundant EEPROM path for FRU [" +
-                        l_fruPath + "], error : " +
-                        vpdSpecificUtility::getErrCodeMsg(l_errCode));
-
-                    return std::make_tuple(io_vpdPath, l_inventoryObjPath,
-                                           l_redundantFruPath);
-                }
+                logging::logMessage(
+                    "Failed to get inventory path from JSON for [" +
+                    io_vpdPath + "], error : " +
+                    vpdSpecificUtility::getErrCodeMsg(o_errCode));
+            }
+            else
+            {
+                o_errCode = error_code::FRU_PATH_NOT_FOUND;
             }
 
-            logging::logMessage(
-                "Failed to get FRU path from JSON for [" + io_vpdPath +
-                "], error : " + vpdSpecificUtility::getErrCodeMsg(l_errCode));
+            return std::make_tuple(io_vpdPath, l_inventoryObjPath,
+                                   l_redundantFruPath);
+        }
+
+        // Get redundant hardware path if present in system config JSON
+        l_redundantFruPath = jsonUtility::getRedundantEepromPathFromJson(
+            i_sysCfgJsonObj, l_fruPath, o_errCode);
+
+        if (l_redundantFruPath.empty())
+        {
+            if (o_errCode)
+            {
+                logging::logMessage(
+                    "Failed to get redundant EEPROM path for FRU [" +
+                    l_fruPath + "], error : " +
+                    vpdSpecificUtility::getErrCodeMsg(o_errCode));
+
+                o_errCode = error_code::ERROR_GETTING_REDUNDANT_PATH;
+            }
+            else
+            {
+                o_errCode = error_code::REDUNDANT_PATH_NOT_FOUND;
+            }
 
             return std::make_tuple(io_vpdPath, l_inventoryObjPath,
                                    l_redundantFruPath);
         }
     }
-    catch (const std::exception& l_exception)
+    else if (o_errCode)
     {
         logging::logMessage(
-            "Failed to get all paths to update keyword value, error " +
-            std::string(l_exception.what()));
+            "Failed to get FRU path from JSON for [" + io_vpdPath +
+            "], error : " + vpdSpecificUtility::getErrCodeMsg(o_errCode));
     }
+    else
+    {
+        o_errCode = error_code::NO_EEPROM_PATH;
+    }
+
     return std::make_tuple(io_vpdPath, l_inventoryObjPath, l_redundantFruPath);
 }
 
@@ -970,28 +1012,29 @@ inline std::string getServiceName(const nlohmann::json& i_sysCfgJsonObj,
  *
  * @param[in] i_sysCfgJsonObj - System config JSON object.
  * @param[in] i_vpdFruPath - EEPROM path.
+ * @param[out] o_errCode - To set error code for the error.
  * @return - True if FRU VPD can be collected at Chassis Power Off state only.
  *           False otherwise
  */
 inline bool isFruPowerOffOnly(const nlohmann::json& i_sysCfgJsonObj,
-                              const std::string& i_vpdFruPath)
+                              const std::string& i_vpdFruPath,
+                              uint16_t& o_errCode)
 {
     if (i_vpdFruPath.empty())
     {
-        logging::logMessage("FRU path is empty.");
+        o_errCode = error_code::INVALID_INPUT_PARAMETER;
         return false;
     }
 
     if (!i_sysCfgJsonObj.contains("frus"))
     {
-        logging::logMessage("Missing frus tag in system config JSON.");
+        o_errCode = error_code::INVALID_JSON;
         return false;
     }
 
     if (!i_sysCfgJsonObj["frus"].contains(i_vpdFruPath))
     {
-        logging::logMessage("JSON object does not contain EEPROM path \'" +
-                            i_vpdFruPath + "\'");
+        o_errCode = error_code::FRU_PATH_NOT_FOUND;
         return false;
     }
 
@@ -1025,6 +1068,12 @@ inline bool isFruReplaceableAtRuntime(const nlohmann::json& i_sysCfgJsonObj,
         return false;
     }
 
+    if (!i_sysCfgJsonObj["frus"].contains(i_vpdFruPath))
+    {
+        o_errCode = error_code::FRU_PATH_NOT_FOUND;
+        return false;
+    }
+
     return (
         (i_sysCfgJsonObj["frus"][i_vpdFruPath].at(0))
             .contains("replaceableAtRuntime") &&
@@ -1055,6 +1104,13 @@ inline bool isFruReplaceableAtStandby(const nlohmann::json& i_sysCfgJsonObj,
     if (i_sysCfgJsonObj.empty() || (!i_sysCfgJsonObj.contains("frus")))
     {
         o_errCode = error_code::INVALID_JSON;
+        return false;
+    }
+
+    if (!i_sysCfgJsonObj["frus"].contains(i_vpdFruPath))
+    {
+        o_errCode = error_code::FRU_PATH_NOT_FOUND;
+        return false;
     }
 
     return (
@@ -1118,55 +1174,54 @@ inline std::vector<std::string> getListOfFrusReplaceableAtStandby(
  * to handle empty value.
  *
  * @param[in] i_imValue - IM value of the system.
+ * @param[out] o_errCode - to set error code in case of error.
  * @return Parsed JSON object, empty JSON otherwise.
  */
-inline nlohmann::json getPowerVsJson(const types::BinaryVector& i_imValue)
+inline nlohmann::json getPowerVsJson(const types::BinaryVector& i_imValue,
+                                     uint16_t& o_errCode)
 {
-    try
+    if (i_imValue.empty() || i_imValue.size() < 4)
     {
-        uint16_t l_errCode = 0;
-        if ((i_imValue.at(0) == constants::HEX_VALUE_50) &&
-            (i_imValue.at(1) == constants::HEX_VALUE_00) &&
-            (i_imValue.at(2) == constants::HEX_VALUE_30))
-        {
-            nlohmann::json l_parsedJson = jsonUtility::getParsedJson(
-                constants::power_vs_50003_json, l_errCode);
-
-            if (l_errCode)
-            {
-                logging::logMessage(
-                    "Failed to parse JSON file [ " +
-                    std::string(constants::power_vs_50003_json) +
-                    " ], error : " +
-                    vpdSpecificUtility::getErrCodeMsg(l_errCode));
-            }
-
-            return l_parsedJson;
-        }
-        else if (i_imValue.at(0) == constants::HEX_VALUE_50 &&
-                 (i_imValue.at(1) == constants::HEX_VALUE_00) &&
-                 (i_imValue.at(2) == constants::HEX_VALUE_10))
-        {
-            nlohmann::json l_parsedJson = jsonUtility::getParsedJson(
-                constants::power_vs_50001_json, l_errCode);
-
-            if (l_errCode)
-            {
-                logging::logMessage(
-                    "Failed to parse JSON file [ " +
-                    std::string(constants::power_vs_50001_json) +
-                    " ], error : " +
-                    vpdSpecificUtility::getErrCodeMsg(l_errCode));
-            }
-
-            return l_parsedJson;
-        }
+        o_errCode = error_code::INVALID_INPUT_PARAMETER;
         return nlohmann::json{};
     }
-    catch (const std::exception& l_ex)
+
+    o_errCode = 0;
+    if ((i_imValue.at(0) == constants::HEX_VALUE_50) &&
+        (i_imValue.at(1) == constants::HEX_VALUE_00) &&
+        (i_imValue.at(2) == constants::HEX_VALUE_30))
     {
-        return nlohmann::json{};
+        nlohmann::json l_parsedJson = jsonUtility::getParsedJson(
+            constants::power_vs_50003_json, o_errCode);
+
+        if (o_errCode)
+        {
+            logging::logMessage(
+                "Failed to parse JSON file [ " +
+                std::string(constants::power_vs_50003_json) +
+                " ], error : " + vpdSpecificUtility::getErrCodeMsg(o_errCode));
+        }
+
+        return l_parsedJson;
     }
+    else if (i_imValue.at(0) == constants::HEX_VALUE_50 &&
+             (i_imValue.at(1) == constants::HEX_VALUE_00) &&
+             (i_imValue.at(2) == constants::HEX_VALUE_10))
+    {
+        nlohmann::json l_parsedJson = jsonUtility::getParsedJson(
+            constants::power_vs_50001_json, o_errCode);
+
+        if (o_errCode)
+        {
+            logging::logMessage(
+                "Failed to parse JSON file [ " +
+                std::string(constants::power_vs_50001_json) +
+                " ], error : " + vpdSpecificUtility::getErrCodeMsg(o_errCode));
+        }
+
+        return l_parsedJson;
+    }
+    return nlohmann::json{};
 }
 
 /**
