@@ -62,7 +62,7 @@ IbmHandler::IbmHandler(
     {
         logging::logMessage(
             "Failed to check if backup & restore required. Error : " +
-            vpdSpecificUtility::getErrCodeMsg(l_errCode));
+            commonUtility::getErrCodeMsg(l_errCode));
     }
 
     // Instantiate Listener object
@@ -230,8 +230,8 @@ void IbmHandler::checkAndUpdatePowerVsVpd(
             {
                 logging::logMessage(
                     "Failed to get inventory object path from JSON for FRU [" +
-                    l_fruPath + "], error : " +
-                    vpdSpecificUtility::getErrCodeMsg(l_errCode));
+                    l_fruPath +
+                    "], error : " + commonUtility::getErrCodeMsg(l_errCode));
             }
 
             o_failedPathList.push_back(l_fruPath);
@@ -370,9 +370,8 @@ void IbmHandler::ConfigurePowerVsSystem()
 
         if (l_powerVsJsonObj.empty())
         {
-            throw std::runtime_error(
-                "PowerVS Json not found. Error : " +
-                vpdSpecificUtility::getErrCodeMsg(l_errCode));
+            throw std::runtime_error("PowerVS Json not found. Error : " +
+                                     commonUtility::getErrCodeMsg(l_errCode));
         }
 
         checkAndUpdatePowerVsVpd(l_powerVsJsonObj, l_failedPathList);
