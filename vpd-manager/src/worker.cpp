@@ -606,6 +606,8 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                 const std::string& encoding =
                     propValuePair.value().value("encoding", "");
 
+                uint16_t l_errCode = 0;
+
                 if (auto ipzVpdMap =
                         std::get_if<types::IPZVpdMap>(&parsedVpdMap))
                 {
@@ -614,7 +616,18 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                         (*ipzVpdMap).at(record).count(keyword))
                     {
                         auto encoded = vpdSpecificUtility::encodeKeyword(
-                            ((*ipzVpdMap).at(record).at(keyword)), encoding);
+                            ((*ipzVpdMap).at(record).at(keyword)), encoding,
+                            l_errCode);
+
+                        if (l_errCode)
+                        {
+                            logging::logMessage(
+                                std::string(
+                                    "Failed to get encoded keyword value for : ") +
+                                keyword + std::string(", error : ") +
+                                commonUtility::getErrCodeMsg(l_errCode));
+                        }
+
                         propertyMap.emplace(property, encoded);
                     }
                 }
@@ -630,7 +643,16 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                                 vpdSpecificUtility::encodeKeyword(
                                     std::string((*kwValue).begin(),
                                                 (*kwValue).end()),
-                                    encoding);
+                                    encoding, l_errCode);
+
+                            if (l_errCode)
+                            {
+                                logging::logMessage(
+                                    std::string(
+                                        "Failed to get encoded keyword value for : ") +
+                                    keyword + std::string(", error : ") +
+                                    commonUtility::getErrCodeMsg(l_errCode));
+                            }
 
                             propertyMap.emplace(property, encodedValue);
                         }
@@ -641,7 +663,15 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                                 vpdSpecificUtility::encodeKeyword(
                                     std::string((*kwValue).begin(),
                                                 (*kwValue).end()),
-                                    encoding);
+                                    encoding, l_errCode);
+
+                            if (l_errCode)
+                            {
+                                logging::logMessage(
+                                    "Failed to get encoded keyword value for : " +
+                                    keyword + ", error : " +
+                                    commonUtility::getErrCodeMsg(l_errCode));
+                            }
 
                             propertyMap.emplace(property, encodedValue);
                         }
