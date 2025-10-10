@@ -13,6 +13,7 @@ static constexpr auto RECORD_SIZE = 4;
 static constexpr auto INDENTATION = 4;
 static constexpr auto SUCCESS = 0;
 static constexpr auto FAILURE = -1;
+static constexpr auto NOT_APPLICABLE = 1;
 
 // To be explicitly used for string comparison.
 static constexpr auto STR_CMP_SUCCESS = 0;

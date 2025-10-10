@@ -204,6 +204,15 @@ class Manager
     void performVpdRecollection();
 
     /**
+     * @brief API to perform sanity check on EEPROM.
+     *
+     * @param[in] i_fruPath - EEPROM path
+     *
+     * @return 0 on Success, -1 on Failure, 1 if not applicable.
+     */
+    int performSanityCheck(const types::Path& i_fruPath) noexcept;
+
+    /**
      * @brief Get unexpanded location code.
      *
      * An API to get unexpanded location code and node number from expanded
