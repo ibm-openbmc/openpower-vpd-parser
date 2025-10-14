@@ -530,8 +530,17 @@ void Worker::populateKwdVPDpropertyMap(const types::KeywordVpdMap& keyordVPDMap,
 
         if (!propertyValueMap.empty())
         {
+            uint16_t l_errCode = 0;
             vpdSpecificUtility::insertOrMerge(
-                interfaceMap, constants::kwdVpdInf, move(propertyValueMap));
+                interfaceMap, constants::kwdVpdInf, move(propertyValueMap),
+                l_errCode);
+
+            if (l_errCode)
+            {
+                logging::logMessage(
+                    "Failed to insert value into map, error : " +
+                    commonUtility::getErrCodeMsg(l_errCode));
+            }
         }
     }
 }
@@ -542,6 +551,7 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
 {
     for (const auto& interfacesPropPair : interfaceJson.items())
     {
+        uint16_t l_errCode = 0;
         const std::string& interface = interfacesPropPair.key();
         types::PropertyMap propertyMap;
 
@@ -569,7 +579,14 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                     vpdSpecificUtility::insertOrMerge(
                         interfaceMap,
                         std::string(constants::xyzLocationCodeInf),
-                        move(l_locCodeProperty));
+                        move(l_locCodeProperty), l_errCode);
+
+                    if (l_errCode)
+                    {
+                        logging::logMessage(
+                            "Failed to insert value into map, error : " +
+                            commonUtility::getErrCodeMsg(l_errCode));
+                    }
                 }
                 else
                 {
@@ -689,8 +706,15 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                 }
             }
         }
+        l_errCode = 0;
         vpdSpecificUtility::insertOrMerge(interfaceMap, interface,
-                                          move(propertyMap));
+                                          move(propertyMap), l_errCode);
+
+        if (l_errCode)
+        {
+            logging::logMessage("Failed to insert value into map, error : " +
+                                commonUtility::getErrCodeMsg(l_errCode));
+        }
     }
 }
 
@@ -791,9 +815,16 @@ bool Worker::primeInventory(const std::string& i_vpdFilePath)
             }*/
         }
 
+        uint16_t l_errCode = 0;
         vpdSpecificUtility::insertOrMerge(l_interfaces,
                                           "xyz.openbmc_project.Inventory.Item",
-                                          move(l_propertyValueMap));
+                                          move(l_propertyValueMap), l_errCode);
+
+        if (l_errCode)
+        {
+            logging::logMessage("Failed to insert value into map, error : " +
+                                vpd::commonUtility::getErrCodeMsg(l_errCode));
+        }
 
         if (l_Fru.value("inherit", true) &&
             m_parsedJson.contains("commonInterfaces"))
@@ -809,9 +840,16 @@ bool Worker::primeInventory(const std::string& i_vpdFilePath)
         types::PropertyMap l_fruCollectionProperty = {
             {"CollectionStatus", constants::vpdCollectionNotStarted}};
 
-        vpdSpecificUtility::insertOrMerge(l_interfaces,
-                                          constants::vpdCollectionInterface,
-                                          std::move(l_fruCollectionProperty));
+        l_errCode = 0;
+        vpdSpecificUtility::insertOrMerge(
+            l_interfaces, constants::vpdCollectionInterface,
+            std::move(l_fruCollectionProperty), l_errCode);
+
+        if (l_errCode)
+        {
+            logging::logMessage("Failed to insert value into map, error : " +
+                                vpd::commonUtility::getErrCodeMsg(l_errCode));
+        }
 
         l_objectInterfaceMap.emplace(std::move(l_fruObjectPath),
                                      std::move(l_interfaces));
@@ -845,10 +883,18 @@ void Worker::processEmbeddedAndSynthesizedFrus(const nlohmann::json& singleFru,
     // Check if its required to handle presence for this FRU.
     if (singleFru.value("handlePresence", true))
     {
+        uint16_t l_errCode = 0;
         types::PropertyMap presProp;
         presProp.emplace("Present", true);
-        vpdSpecificUtility::insertOrMerge(
-            interfaces, "xyz.openbmc_project.Inventory.Item", move(presProp));
+        vpdSpecificUtility::insertOrMerge(interfaces,
+                                          "xyz.openbmc_project.Inventory.Item",
+                                          move(presProp), l_errCode);
+
+        if (l_errCode)
+        {
+            logging::logMessage("Failed to insert value into map, error : " +
+                                commonUtility::getErrCodeMsg(l_errCode));
+        }
     }
 }
 
@@ -1006,11 +1052,19 @@ void Worker::processFunctionalProperty(const std::string& i_inventoryObjPath,
 
         // Implies value is not there in D-Bus. Populate it with default
         // value "true".
+        uint16_t l_errCode = 0;
         types::PropertyMap l_functionalProp;
         l_functionalProp.emplace("Functional", true);
         vpdSpecificUtility::insertOrMerge(io_interfaces,
                                           constants::operationalStatusInf,
-                                          move(l_functionalProp));
+                                          move(l_functionalProp), l_errCode);
+
+        if (l_errCode)
+        {
+            logging::logMessage(
+                "Failed to insert interface into map, error : " +
+                commonUtility::getErrCodeMsg(l_errCode));
+        }
     }
 
     // if chassis is power on. Functional property should be there on D-Bus.
@@ -1044,10 +1098,18 @@ void Worker::processEnabledProperty(const std::string& i_inventoryObjPath,
 
         // Implies value is not there in D-Bus. Populate it with default
         // value "true".
+        uint16_t l_errCode = 0;
         types::PropertyMap l_enabledProp;
         l_enabledProp.emplace("Enabled", true);
         vpdSpecificUtility::insertOrMerge(io_interfaces, constants::enableInf,
-                                          move(l_enabledProp));
+                                          move(l_enabledProp), l_errCode);
+
+        if (l_errCode)
+        {
+            logging::logMessage(
+                "Failed to insert interface into map, error : " +
+                commonUtility::getErrCodeMsg(l_errCode));
+        }
     }
 
     // if chassis is power on. Enabled property should be there on D-Bus.
@@ -1116,9 +1178,17 @@ void Worker::populateDbus(const types::VPDMapVariant& parsedVpdMap,
             types::PropertyMap l_collectionProperty = {
                 {"CollectionStatus", constants::vpdCollectionSuccess}};
 
-            vpdSpecificUtility::insertOrMerge(interfaces,
-                                              constants::vpdCollectionInterface,
-                                              std::move(l_collectionProperty));
+            uint16_t l_errCode = 0;
+            vpdSpecificUtility::insertOrMerge(
+                interfaces, constants::vpdCollectionInterface,
+                std::move(l_collectionProperty), l_errCode);
+
+            if (l_errCode)
+            {
+                logging::logMessage(
+                    "Failed to insert value into map, error : " +
+                    vpd::commonUtility::getErrCodeMsg(l_errCode));
+            }
 
             objectInterfaceMap.emplace(std::move(fruObjectPath),
                                        std::move(interfaces));
@@ -1984,10 +2054,18 @@ void Worker::setPresentProperty(const std::string& i_vpdPath,
                 types::PropertyMap l_propertyValueMap;
                 l_propertyValueMap.emplace("Present", i_value);
 
+                uint16_t l_errCode = 0;
                 types::InterfaceMap l_interfaces;
-                vpdSpecificUtility::insertOrMerge(l_interfaces,
-                                                  constants::inventoryItemInf,
-                                                  move(l_propertyValueMap));
+                vpdSpecificUtility::insertOrMerge(
+                    l_interfaces, constants::inventoryItemInf,
+                    move(l_propertyValueMap), l_errCode);
+
+                if (l_errCode)
+                {
+                    logging::logMessage(
+                        "Failed to insert value into map, error : " +
+                        commonUtility::getErrCodeMsg(l_errCode));
+                }
 
                 l_objectInterfaceMap.emplace(std::move(l_fruObjectPath),
                                              std::move(l_interfaces));
@@ -2005,10 +2083,18 @@ void Worker::setPresentProperty(const std::string& i_vpdPath,
             types::PropertyMap l_propertyValueMap;
             l_propertyValueMap.emplace("Present", i_value);
 
+            uint16_t l_errCode = 0;
             types::InterfaceMap l_interfaces;
-            vpdSpecificUtility::insertOrMerge(l_interfaces,
-                                              constants::inventoryItemInf,
-                                              move(l_propertyValueMap));
+            vpdSpecificUtility::insertOrMerge(
+                l_interfaces, constants::inventoryItemInf,
+                move(l_propertyValueMap), l_errCode);
+
+            if (l_errCode)
+            {
+                logging::logMessage(
+                    "Failed to insert value into map, error : " +
+                    commonUtility::getErrCodeMsg(l_errCode));
+            }
 
             l_objectInterfaceMap.emplace(i_vpdPath, std::move(l_interfaces));
         }
@@ -2270,10 +2356,18 @@ void Worker::setCollectionStatusProperty(
                 types::PropertyMap l_propertyValueMap;
                 l_propertyValueMap.emplace("CollectionStatus", i_value);
 
+                uint16_t l_errCode = 0;
                 types::InterfaceMap l_interfaces;
                 vpdSpecificUtility::insertOrMerge(
                     l_interfaces, constants::vpdCollectionInterface,
-                    move(l_propertyValueMap));
+                    move(l_propertyValueMap), l_errCode);
+
+                if (l_errCode)
+                {
+                    logging::logMessage(
+                        "Failed to insert value into map, error : " +
+                        commonUtility::getErrCodeMsg(l_errCode));
+                }
 
                 l_objectInterfaceMap.emplace(std::move(l_fruObjectPath),
                                              std::move(l_interfaces));
@@ -2292,10 +2386,18 @@ void Worker::setCollectionStatusProperty(
             types::PropertyMap l_propertyValueMap;
             l_propertyValueMap.emplace("CollectionStatus", i_value);
 
+            uint16_t l_errCode = 0;
             types::InterfaceMap l_interfaces;
-            vpdSpecificUtility::insertOrMerge(l_interfaces,
-                                              constants::vpdCollectionInterface,
-                                              move(l_propertyValueMap));
+            vpdSpecificUtility::insertOrMerge(
+                l_interfaces, constants::vpdCollectionInterface,
+                move(l_propertyValueMap), l_errCode);
+
+            if (l_errCode)
+            {
+                logging::logMessage(
+                    "Failed to insert value into map, error : " +
+                    commonUtility::getErrCodeMsg(l_errCode));
+            }
 
             l_objectInterfaceMap.emplace(i_vpdPath, std::move(l_interfaces));
         }
