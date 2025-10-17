@@ -551,9 +551,9 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
 {
     for (const auto& interfacesPropPair : interfaceJson.items())
     {
-        uint16_t l_errCode = 0;
         const std::string& interface = interfacesPropPair.key();
         types::PropertyMap propertyMap;
+        uint16_t l_errCode = 0;
 
         for (const auto& propValuePair : interfacesPropPair.value().items())
         {
@@ -572,7 +572,19 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                     std::string value =
                         vpdSpecificUtility::getExpandedLocationCode(
                             propValuePair.value().get<std::string>(),
-                            parsedVpdMap);
+                            parsedVpdMap, l_errCode);
+
+                    if (l_errCode)
+                    {
+                        logging::logMessage(
+                            "Failed to get expanded location code for location code - " +
+                            propValuePair.value().get<std::string>() +
+                            " ,error : " +
+                            commonUtility::getErrCodeMsg(l_errCode));
+
+                        l_errCode = 0;
+                    }
+
                     propertyMap.emplace(property, value);
 
                     auto l_locCodeProperty = propertyMap;
@@ -586,6 +598,8 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                         logging::logMessage(
                             "Failed to insert value into map, error : " +
                             commonUtility::getErrCodeMsg(l_errCode));
+
+                        l_errCode = 0;
                     }
                 }
                 else
@@ -623,8 +637,6 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                 const std::string& encoding =
                     propValuePair.value().value("encoding", "");
 
-                uint16_t l_errCode = 0;
-
                 if (auto ipzVpdMap =
                         std::get_if<types::IPZVpdMap>(&parsedVpdMap))
                 {
@@ -643,6 +655,8 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                                     "Failed to get encoded keyword value for : ") +
                                 keyword + std::string(", error : ") +
                                 commonUtility::getErrCodeMsg(l_errCode));
+
+                            l_errCode = 0;
                         }
 
                         propertyMap.emplace(property, encoded);
@@ -669,6 +683,8 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                                         "Failed to get encoded keyword value for : ") +
                                     keyword + std::string(", error : ") +
                                     commonUtility::getErrCodeMsg(l_errCode));
+
+                                l_errCode = 0;
                             }
 
                             propertyMap.emplace(property, encodedValue);
@@ -688,6 +704,8 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                                     "Failed to get encoded keyword value for : " +
                                     keyword + ", error : " +
                                     commonUtility::getErrCodeMsg(l_errCode));
+
+                                l_errCode = 0;
                             }
 
                             propertyMap.emplace(property, encodedValue);
@@ -706,7 +724,6 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
                 }
             }
         }
-        l_errCode = 0;
         vpdSpecificUtility::insertOrMerge(interfaceMap, interface,
                                           move(propertyMap), l_errCode);
 
@@ -714,6 +731,8 @@ void Worker::populateInterfaces(const nlohmann::json& interfaceJson,
         {
             logging::logMessage("Failed to insert value into map, error : " +
                                 commonUtility::getErrCodeMsg(l_errCode));
+
+            l_errCode = 0;
         }
     }
 }
