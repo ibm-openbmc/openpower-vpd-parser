@@ -759,6 +759,7 @@ void IpzVpdParser::performSanityCheck(const types::RecordData& i_recordDetails,
     // fails post update.
     if (i_isPreCheck)
     {
+        std::cout << "processing pre check" << std::endl;
         m_recordData.resize(std::get<1>(i_recordDetails));
         m_eccData.resize(std::get<3>(i_recordDetails));
 
@@ -775,14 +776,20 @@ void IpzVpdParser::performSanityCheck(const types::RecordData& i_recordDetails,
 
     auto l_itrToVpd = m_vpdVector.cbegin();
     types::BinaryVector l_updatedVpdVector;
+
+    //Copy so that ECC check algo does not correct the data;
+    types::BinaryVector l_copyUpdatedVpdVector;
     if (!i_isPreCheck)
     {
+        std::cout << "Reading vector data post update" << std::endl;
         // re-read the updated data
         // types::BinaryVector l_tempVpdVector;
         vpdSpecificUtility::getVpdDataInVector(
             m_vpdFilePath, l_updatedVpdVector, m_vpdStartOffset);
-
-        l_itrToVpd = l_updatedVpdVector.begin();
+        
+        l_copyUpdatedVpdVector.resize(l_updatedVpdVector.size());
+        l_copyUpdatedVpdVector = l_updatedVpdVector;
+        l_itrToVpd = l_copyUpdatedVpdVector.begin();
     }
 
     auto l_status = vpdecc_check_data(
@@ -793,6 +800,15 @@ void IpzVpdParser::performSanityCheck(const types::RecordData& i_recordDetails,
 
     if (l_status != VPD_ECC_OK)
     {
+        if (i_isPreCheck)
+        {
+            std::cout << " Check failed pre update" << std::endl;
+        }
+        else
+        {
+            std::cout << " Check failed post update" << std::endl;
+        }
+
         // Implies ECC check is not ok for the record, sanity check failed. Dump
         // data
         std::string l_recordFile =
@@ -810,6 +826,11 @@ void IpzVpdParser::performSanityCheck(const types::RecordData& i_recordDetails,
 
         if (!i_isPreCheck)
         {
+            if (!i_isPreCheck)
+            {
+                std::cout << " Check failed post update" << std::endl;
+            }
+
             types::BinaryVector l_recordData;
             l_recordData.resize(std::get<1>(i_recordDetails));
             types::BinaryVector l_eccData;
@@ -844,6 +865,17 @@ void IpzVpdParser::performSanityCheck(const types::RecordData& i_recordDetails,
         }
         throw std::runtime_error(
             "Pre Sanity check failed for file " + m_vpdFilePath);
+    }
+    else if (l_status == VPD_ECC_OK)
+    {
+        if (i_isPreCheck)
+        {
+            std::cout << "Status returned ok for Pre-check" << std::endl;
+        }
+        else
+        {
+            std::cout << "Status returned ok for Post-check" << std::endl;
+        }
     }
 }
 
@@ -933,6 +965,32 @@ int IpzVpdParser::writeKeywordOnHardware(
         logging::logMessage(std::to_string(l_sizeWritten) +
                             " bytes updated successfully on hardware for " +
                             l_recordName + ":" + l_keywordName);
+
+        std::cout<<"Checking Ecc just after write"<<std::endl;
+        types::BinaryVector l_updatedVpdVector;
+        vpdSpecificUtility::getVpdDataInVector(
+            m_vpdFilePath, l_updatedVpdVector, m_vpdStartOffset);
+
+        auto l_itrToVpd = l_updatedVpdVector.begin();
+
+        auto l_status = vpdecc_check_data(
+            const_cast<uint8_t*>(&l_itrToVpd[std::get<0>(l_inputRecordDetails)]),
+            std::get<1>(l_inputRecordDetails),
+            const_cast<uint8_t*>(&l_itrToVpd[std::get<2>(l_inputRecordDetails)]),
+            std::get<3>(l_inputRecordDetails));
+        
+        if (l_status != VPD_ECC_OK)
+        {
+            if (l_status == VPD_ECC_CORRECTABLE_DATA)
+            {
+                std::cout<<"One bit corruption happened"<<std::endl;
+            }
+            else
+            {
+                std::cout<<"ECC check failed just after update"<<std::endl;
+            }
+        }
+
 
 #if SANITY_CHECK == 1
         // before exiting do a sanity check
