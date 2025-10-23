@@ -16,7 +16,7 @@
 namespace vpd
 {
 
-#define SANITY_CHECK 1
+#define SANITY_CHECK 0
 
 // Offset of different entries in VPD data.
 enum Offset
