@@ -1,7 +1,9 @@
 #pragma once
 
 #include "types.hpp"
+#include "config.h"
 
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <source_location>
@@ -99,6 +101,19 @@ class Logger
                     const std::source_location& i_location =
                         std::source_location::current());
 
+    void enableFileLogging()
+    {
+#ifdef ENABLE_FILE_LOGGING
+        std::string fileName = LOG_FILE_PATH;
+        fileName = fileName + "test.log"; //sync it with upstream
+        m_fileStream.open(fileName.data(), std::ios::app);
+
+        std::cout << "[INFO]Logging to" << fileName << std::endl;
+#else
+	std::cout << "[INFO]Logging to console" << std::endl;
+#endif
+    }
+
   private:
     /**
      * @brief Constructor
@@ -114,6 +129,9 @@ class Logger
 
     // Instance to LogFileHandler class.
     std::shared_ptr<LogFileHandler> m_logFileHandler;
+    
+    // file stream for file operation
+    std::ofstream m_fileStream;
 };
 
 /**

@@ -37,6 +37,7 @@ int main(int, char**)
 
         interface->initialize();
 
+	vpd::Logger::getLoggerInstance()->enableFileLogging();
         vpd::logging::logMessage("Start VPD-Manager event loop");
 
         // Grab the bus name

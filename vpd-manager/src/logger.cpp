@@ -17,8 +17,12 @@ void Logger::logMessage(std::string_view i_message,
 
     if (i_placeHolder == PlaceHolder::COLLECTION)
     {
-        // Log it to a specific place.
+#ifdef ENABLE_FILE_LOGGING
+	    // Log it to a specific place.
         m_logFileHandler->writeLogToFile(i_placeHolder);
+#else
+        std::cout << l_log.str() << std::endl;
+#endif
     }
     else if (i_placeHolder == PlaceHolder::PEL)
     {
