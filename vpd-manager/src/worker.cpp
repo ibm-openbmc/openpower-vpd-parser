@@ -755,8 +755,15 @@ bool Worker::primeInventory(const std::string& i_vpdFilePath)
         if (isPresentPropertyHandlingRequired(l_Fru))
         {
             // Clear data under PIM if already exists.
+            uint16_t l_errCode = 0;
             vpdSpecificUtility::resetDataUnderPIM(
-                std::string(l_Fru["inventoryPath"]), l_interfaces);
+                std::string(l_Fru["inventoryPath"]), l_interfaces, l_errCode);
+
+            if (l_errCode)
+            {
+                logging::logMessage("Failed to reset date under PIM, error : " +
+                                    commonUtility::getErrCodeMsg(l_errCode));
+            }
         }
 
         // Add extra interfaces mentioned in the Json config file
@@ -1857,16 +1864,34 @@ void Worker::deleteFruVpd(const std::string& i_dbusObjPath)
                 for (const auto& [l_objectPath, l_serviceInterfaceMap] :
                      l_subTreeMap)
                 {
+                    l_errCode = 0;
                     types::InterfaceMap l_interfaceMap;
-                    vpdSpecificUtility::resetDataUnderPIM(l_objectPath,
-                                                          l_interfaceMap);
+                    vpdSpecificUtility::resetDataUnderPIM(
+                        l_objectPath, l_interfaceMap, l_errCode);
+
+                    if (l_errCode)
+                    {
+                        throw std::runtime_error(
+                            "Failed to reset data under PIM for sub FRU [" +
+                            l_objectPath + "], error : " +
+                            commonUtility::getErrCodeMsg(l_errCode));
+                    }
+
                     l_objectMap.emplace(l_objectPath,
                                         std::move(l_interfaceMap));
                 }
 
+                l_errCode = 0;
                 types::InterfaceMap l_interfaceMap;
-                vpdSpecificUtility::resetDataUnderPIM(i_dbusObjPath,
-                                                      l_interfaceMap);
+                vpdSpecificUtility::resetDataUnderPIM(
+                    i_dbusObjPath, l_interfaceMap, l_errCode);
+
+                if (l_errCode)
+                {
+                    throw std::runtime_error(
+                        "Failed to reset data under PIM, error : " +
+                        commonUtility::getErrCodeMsg(l_errCode));
+                }
 
                 l_objectMap.emplace(i_dbusObjPath, std::move(l_interfaceMap));
 
