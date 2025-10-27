@@ -16,7 +16,7 @@
 namespace vpd
 {
 
-#define SANITY_CHECK 0
+#define SANITY_CHECK 1
 
 // Offset of different entries in VPD data.
 enum Offset
@@ -625,6 +625,7 @@ void IpzVpdParser::updateRecordECC(
 
     std::copy(l_recordECCBegin, l_recordECCEnd,
               std::ostreambuf_iterator<char>(m_vpdFileStream));
+    m_vpdFileStream.flush();
 }
 
 int IpzVpdParser::setKeywordValueInRecord(
@@ -706,6 +707,7 @@ int IpzVpdParser::setKeywordValueInRecord(
 
             std::copy(i_keywordData.cbegin(), i_keywordDataEnd,
                       std::ostreambuf_iterator<char>(m_vpdFileStream));
+            m_vpdFileStream.flush();
 
             // return no of bytes set
             return l_lengthToUpdate;
