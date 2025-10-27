@@ -257,8 +257,17 @@ int Manager::updateKeyword(const types::Path i_vpdPath,
         // update keyword in inherited FRUs
         if (l_rc != constants::FAILURE)
         {
+            l_errCode = 0;
             vpdSpecificUtility::updateKwdOnInheritedFrus(
-                l_fruPath, l_writeParams, l_sysCfgJsonObj);
+                l_fruPath, l_writeParams, l_sysCfgJsonObj, l_errCode);
+
+            if (l_errCode)
+            {
+                logging::logMessage(
+                    "Failed to update keyword on inherited FRUs for FRU [" +
+                    l_fruPath +
+                    "] , error : " + commonUtility::getErrCodeMsg(l_errCode));
+            }
         }
 
         // update common interface(s) properties
