@@ -568,7 +568,7 @@ inline bool executeBaseAction(
         auto itrToFunction = funcionMap.find(l_tag.key());
         if (itrToFunction != funcionMap.end())
         {
-            uint16_t o_errCode = 0;
+            o_errCode = 0;
             if (!itrToFunction->second(i_parsedConfigJson, i_vpdFilePath,
                                        i_action, i_flagToProcess, o_errCode))
             {

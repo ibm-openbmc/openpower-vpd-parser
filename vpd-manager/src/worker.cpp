@@ -1351,7 +1351,6 @@ types::VPDMapVariant Worker::parseVpdFile(const std::string& i_vpdFilePath)
         {
             l_errCode = 0;
             isPreActionRequired = true;
-            uint16_t l_errCode = 0;
             if (!processPreAction(i_vpdFilePath, "collection", l_errCode))
             {
                 if (l_errCode == error_code::DEVICE_NOT_PRESENT)
