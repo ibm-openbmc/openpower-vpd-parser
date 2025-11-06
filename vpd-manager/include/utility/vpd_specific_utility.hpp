@@ -633,10 +633,18 @@ inline bool findCcinInVpd(const nlohmann::json& i_JsonObject,
  *
  * @param[in] i_objectPath - DBus object path of the FRU.
  * @param[in] io_interfaceMap - Interface and its properties map.
+ * @param[out] o_errCode - To set error code in case of error.
  */
 inline void resetDataUnderPIM(const std::string& i_objectPath,
-                              types::InterfaceMap& io_interfaceMap)
+                              types::InterfaceMap& io_interfaceMap,
+                              uint16_t& o_errCode)
 {
+    if (i_objectPath.empty())
+    {
+        o_errCode = error_code::INVALID_INPUT_PARAMETER;
+        return;
+    }
+
     try
     {
         std::array<const char*, 0> l_interfaces;
@@ -720,8 +728,7 @@ inline void resetDataUnderPIM(const std::string& i_objectPath,
     }
     catch (const std::exception& l_ex)
     {
-        logging::logMessage("Failed to remove VPD for FRU: " + i_objectPath +
-                            " with error: " + std::string(l_ex.what()));
+        o_errCode = error_code::STANDARD_EXCEPTION;
     }
 }
 
