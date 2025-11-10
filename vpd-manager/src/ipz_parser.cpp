@@ -782,8 +782,15 @@ void IpzVpdParser::performSanityCheck(const types::RecordData& i_recordDetails,
     {
         // re-read the updated data
         // types::BinaryVector l_tempVpdVector;
+        uint16_t l_errCode = 0;
         vpdSpecificUtility::getVpdDataInVector(
-            m_vpdFilePath, l_updatedVpdVector, m_vpdStartOffset);
+            m_vpdFilePath, l_updatedVpdVector, m_vpdStartOffset, l_errCode);
+
+        if (l_errCode)
+        {
+            logging::logMessage("Failed to get VPD in vector, error : " +
+                                commonUtility::getErrCodeMsg(l_errCode));
+        }
 
         l_itrToVpd = l_updatedVpdVector.begin();
     }
