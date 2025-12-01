@@ -622,8 +622,19 @@ inline void resetDataUnderPIM(const std::string& i_objectPath,
                         else if (std::holds_alternative<std::string>(
                                      l_propertyValue))
                         {
-                            l_propertyMap.emplace(l_propertyName,
-                                                  std::string{});
+                            if (l_propertyName.compare("PrettyName") ==
+                                constants::STR_CMP_SUCCESS)
+                            {
+                                // The FRU name is constant and independent of
+                                // its presence state. So, it should not get
+                                // reset.
+                                continue;
+                            }
+                            else
+                            {
+                                l_propertyMap.emplace(l_propertyName,
+                                                      std::string{});
+                            }
                         }
                         else if (std::holds_alternative<bool>(l_propertyValue))
                         {
