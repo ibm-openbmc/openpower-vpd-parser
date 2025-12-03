@@ -9,7 +9,6 @@
 #include <gpiod.hpp>
 #include <nlohmann/json.hpp>
 #include <utility/common_utility.hpp>
-#include <utility/vpd_specific_utility.hpp>
 
 #include <fstream>
 #include <type_traits>
@@ -707,6 +706,7 @@ inline std::string getFruPathFromJson(const nlohmann::json& i_sysCfgJsonObj,
         }
     }
 
+    o_errCode = error_code::FRU_PATH_NOT_FOUND;
     return std::string();
 }
 

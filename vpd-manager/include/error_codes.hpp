@@ -41,7 +41,8 @@ enum error_code
     RECEIVED_INVALID_KWD_TYPE_FROM_DBUS,
     INVALID_KEYWORD_LENGTH,
     INVALID_VALUE_READ_FROM_DBUS,
-    RECORD_NOT_FOUND
+    RECORD_NOT_FOUND,
+    FRU_PRESENCE_NOT_HANDLED
 };
 
 const std::unordered_map<int, std::string> errorCodeMap = {
@@ -83,5 +84,7 @@ const std::unordered_map<int, std::string> errorCodeMap = {
      "Failed to detect location code type"},
     {error_code::DBUS_FAILURE, "Dbus call failed"},
     {error_code::RECEIVED_INVALID_KWD_TYPE_FROM_DBUS,
-     "Received invalid keyword data type from DBus."}};
+     "Received invalid keyword data type from DBus."},
+    {error_code::FRU_PRESENCE_NOT_HANDLED,
+     "FRU's presence is not handled by vpd-manager."}};
 } // namespace vpd
