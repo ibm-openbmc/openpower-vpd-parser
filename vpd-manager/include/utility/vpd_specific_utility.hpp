@@ -11,6 +11,7 @@
 #include <nlohmann/json.hpp>
 #include <utility/common_utility.hpp>
 #include <utility/dbus_utility.hpp>
+#include <utility/json_utility.hpp>
 
 #include <filesystem>
 #include <fstream>
@@ -1212,6 +1213,82 @@ inline void updateCiPropertyOfInheritedFrus(
     }
     catch (const std::exception& l_ex)
     {
+        o_errCode = error_code::STANDARD_EXCEPTION;
+    }
+}
+
+/**
+ * @brief API to reset data of a FRU and its sub-FRU populated under PIM.
+ *
+ * The API resets the data for specific interfaces of a FRU and its sub-FRUs
+ * under the PIM.
+ *
+ * Note: i_fruPath should be either the base inventory path or the EEPROM path.
+ *
+ * @param[in] i_rootFruPath - EEPROM/root inventory path of the FRU.
+ * @param[in] i_sysCfgJsonObj - system config JSON.
+ * @param[out] o_errCode - To set error code in case of error.
+ */
+inline void resetObjTreeVpd(const std::string& i_rootFruPath,
+                            const nlohmann::json& i_sysCfgJsonObj,
+                            uint16_t& o_errCode)
+{
+    o_errCode = 0;
+    if (i_rootFruPath.empty())
+    {
+        o_errCode = error_code::INVALID_INPUT_PARAMETER;
+        return;
+    }
+
+    try
+    {
+        std::string l_inventoryPath = jsonUtility::getInventoryObjPathFromJson(
+            i_sysCfgJsonObj, i_rootFruPath, o_errCode);
+
+        if (o_errCode || l_inventoryPath.empty())
+        {
+            return;
+        }
+
+        types::ObjectMap l_objectMap;
+        std::vector<std::string> l_interfaceList{
+            constants::operationalStatusInf};
+
+        // Get sub FRU map
+        types::MapperGetSubTree l_subTreeMap =
+            dbusUtility::getObjectSubTree(l_inventoryPath, 0, l_interfaceList);
+
+        // Add base FRU path to the map.
+        l_subTreeMap[l_inventoryPath].emplace(constants::pimServiceName,
+                                              std::vector<std::string>());
+
+        for (const auto& [l_objectPath, l_serviceInterfaceMap] : l_subTreeMap)
+        {
+            types::InterfaceMap l_interfaceMap;
+            resetDataUnderPIM(l_objectPath, l_interfaceMap, o_errCode);
+
+            if (o_errCode)
+            {
+                logging::logMessage(
+                    "Failed to get data to clear on DBus for path [" +
+                    l_objectPath +
+                    "], error : " + commonUtility::getErrCodeMsg(o_errCode));
+            }
+
+            l_objectMap.emplace(l_objectPath, move(l_interfaceMap));
+        }
+
+        if (!dbusUtility::callPIM(std::move(l_objectMap)))
+        {
+            o_errCode = error_code::DBUS_FAILURE;
+        }
+    }
+    catch (const std::exception& l_ex)
+    {
+        logging::logMessage(
+            "Failed to reset FRU data on DBus for FRU [" + i_rootFruPath +
+            "], error : " + std::string(l_ex.what()));
+
         o_errCode = error_code::STANDARD_EXCEPTION;
     }
 }

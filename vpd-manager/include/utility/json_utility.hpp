@@ -9,7 +9,6 @@
 #include <gpiod.hpp>
 #include <nlohmann/json.hpp>
 #include <utility/common_utility.hpp>
-#include <utility/vpd_specific_utility.hpp>
 
 #include <fstream>
 #include <type_traits>
