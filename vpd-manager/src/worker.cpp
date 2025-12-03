@@ -1390,35 +1390,113 @@ std::tuple<bool, std::string> Worker::parseAndPublishVPD(
             }
         }
 
+        types::ObjectMap objectInterfaceMap;
         const types::VPDMapVariant& parsedVpdMap = parseVpdFile(i_vpdFilePath);
         if (!std::holds_alternative<std::monostate>(parsedVpdMap))
         {
-            types::ObjectMap objectInterfaceMap;
             populateDbus(parsedVpdMap, objectInterfaceMap, i_vpdFilePath);
-
-            // Notify PIM
-            if (!dbusUtility::callPIM(move(objectInterfaceMap)))
-            {
-                throw std::runtime_error(
-                    std::string(__FUNCTION__) +
-                    "Call to PIM failed while publishing VPD.");
-            }
         }
         else
         {
+            types::PropertyMap l_propertyValueMap;
+            l_propertyValueMap.emplace("CollectionStatus",
+                                       constants::vpdCollectionSuccess);
+
+            std::vector<std::string> l_interfaceList{
+                constants::operationalStatusInf};
+
+            types::MapperGetSubTree l_subTreeMap =
+                dbusUtility::getObjectSubTree(l_inventoryPath, 0,
+                                              l_interfaceList);
+
+            // Updates VPD specific interfaces property value under PIM for
+            // sub FRUs.
+            for (const auto& [l_objectPath, l_serviceInterfaceMap] :
+                 l_subTreeMap)
+            {
+                types::InterfaceMap l_interfaceMap;
+                vpdSpecificUtility::resetDataUnderPIM(l_objectPath,
+                                                      l_interfaceMap);
+
+                vpdSpecificUtility::insertOrMerge(
+                    l_interfaceMap, constants::vpdCollectionInterface,
+                    move(l_propertyValueMap));
+
+                objectInterfaceMap.emplace(l_objectPath,
+                                           std::move(l_interfaceMap));
+            }
+
+            types::InterfaceMap l_interfaceMap{};
+            vpdSpecificUtility::resetDataUnderPIM(l_inventoryPath,
+                                                  l_interfaceMap);
+
+            vpdSpecificUtility::insertOrMerge(l_interfaceMap,
+                                              constants::vpdCollectionInterface,
+                                              move(l_propertyValueMap));
+
+            objectInterfaceMap.emplace(l_inventoryPath,
+                                       std::move(l_interfaceMap));
+
+            // As empty parsedVpdMap recieved for some reason, but still
+            // considered VPD collection is completed. Hence FRU collection
+            // Status will be set as completed.
             logging::logMessage("Empty parsedVpdMap recieved for path [" +
                                 i_vpdFilePath + "]. Check PEL for reason.");
+        }
+
+        // Notify PIM
+        if (!dbusUtility::callPIM(move(objectInterfaceMap)))
+        {
+            throw std::runtime_error(
+                std::string(__FUNCTION__) +
+                "Call to PIM failed while publishing VPD.");
         }
     }
     catch (const std::exception& ex)
     {
-        // Notify FRU's VPD CollectionStatus as Failure
-        if (!dbusUtility::notifyFRUCollectionStatus(
-                l_inventoryPath, constants::vpdCollectionFailure))
+        types::ObjectMap l_objectInterfaceMap;
+        types::PropertyMap l_propertyValueMap;
+        l_propertyValueMap.emplace("CollectionStatus",
+                                   constants::vpdCollectionFailure);
+
+        l_inventoryPath = jsonUtility::getInventoryObjPathFromJson(
+            m_parsedJson, i_vpdFilePath);
+
+        std::vector<std::string> l_interfaceList{
+            constants::operationalStatusInf};
+
+        types::MapperGetSubTree l_subTreeMap =
+            dbusUtility::getObjectSubTree(l_inventoryPath, 0, l_interfaceList);
+
+        // Updates VPD specific interfaces property value under PIM for
+        // sub FRUs.
+        for (const auto& [l_objectPath, l_serviceInterfaceMap] : l_subTreeMap)
+        {
+            types::InterfaceMap l_interfaceMap;
+            vpdSpecificUtility::resetDataUnderPIM(l_objectPath, l_interfaceMap);
+
+            vpdSpecificUtility::insertOrMerge(l_interfaceMap,
+                                              constants::vpdCollectionInterface,
+                                              move(l_propertyValueMap));
+
+            l_objectInterfaceMap.emplace(l_objectPath,
+                                         std::move(l_interfaceMap));
+        }
+
+        types::InterfaceMap l_interfaceMap{};
+        vpdSpecificUtility::resetDataUnderPIM(l_inventoryPath, l_interfaceMap);
+
+        vpdSpecificUtility::insertOrMerge(l_interfaceMap,
+                                          constants::vpdCollectionInterface,
+                                          move(l_propertyValueMap));
+
+        l_objectInterfaceMap.emplace(l_inventoryPath,
+                                     std::move(l_interfaceMap));
+
+        if (!dbusUtility::callPIM(move(l_objectInterfaceMap)))
         {
             logging::logMessage(
-                "Call to PIM Notify method failed to update Collection status as Failure for " +
-                i_vpdFilePath);
+                "Call to PIM failed while trying to clean data on DBus.");
         }
 
         // handle all the exceptions internally. Return only true/false
@@ -1430,10 +1508,7 @@ std::tuple<bool, std::string> Worker::parseAndPublishVPD(
             if (vpdSpecificUtility::isPass1Planar())
             {
                 const std::string& l_invPathLeafValue =
-                    sdbusplus::message::object_path(
-                        jsonUtility::getInventoryObjPathFromJson(m_parsedJson,
-                                                                 i_vpdFilePath))
-                        .filename();
+                    sdbusplus::message::object_path(l_inventoryPath).filename();
 
                 if ((l_invPathLeafValue.find("pcie_card", 0) !=
                      std::string::npos))
@@ -1896,23 +1971,63 @@ void Worker::collectSingleFruVpd(
 
         // Parse VPD
         types::VPDMapVariant l_parsedVpd = parseVpdFile(l_fruPath);
+        types::ObjectMap l_dbusObjectMap;
 
         // If l_parsedVpd is pointing to std::monostate
         if (l_parsedVpd.index() == 0)
         {
-            throw std::runtime_error(
-                "VPD parsing failed for " + std::string(i_dbusObjPath));
+            types::PropertyMap l_propertyValueMap;
+            l_propertyValueMap.emplace("CollectionStatus",
+                                       constants::vpdCollectionSuccess);
+
+            std::vector<std::string> l_interfaceList{
+                constants::operationalStatusInf};
+
+            types::MapperGetSubTree l_subTreeMap =
+                dbusUtility::getObjectSubTree(std::string(i_dbusObjPath), 0,
+                                              l_interfaceList);
+
+            // Updates VPD specific interfaces property value under PIM for
+            // sub FRUs.
+            for (const auto& [l_objectPath, l_serviceInterfaceMap] :
+                 l_subTreeMap)
+            {
+                types::InterfaceMap l_interfaceMap;
+                vpdSpecificUtility::resetDataUnderPIM(l_objectPath,
+                                                      l_interfaceMap);
+
+                vpdSpecificUtility::insertOrMerge(
+                    l_interfaceMap, constants::vpdCollectionInterface,
+                    move(l_propertyValueMap));
+
+                l_dbusObjectMap.emplace(l_objectPath,
+                                        std::move(l_interfaceMap));
+            }
+
+            types::InterfaceMap l_interfaceMap{};
+            vpdSpecificUtility::resetDataUnderPIM(std::string(i_dbusObjPath),
+                                                  l_interfaceMap);
+
+            vpdSpecificUtility::insertOrMerge(l_interfaceMap,
+                                              constants::vpdCollectionInterface,
+                                              move(l_propertyValueMap));
+
+            l_dbusObjectMap.emplace(i_dbusObjPath, std::move(l_interfaceMap));
+
+            logging::logMessage("Empty parsed vpd map received for path : " +
+                                std::string(i_dbusObjPath));
         }
-
-        // Get D-bus object map from worker class
-        types::ObjectMap l_dbusObjectMap;
-        populateDbus(l_parsedVpd, l_dbusObjectMap, l_fruPath);
-
-        if (l_dbusObjectMap.empty())
+        else
         {
-            throw std::runtime_error(
-                "Failed to create D-bus object map. Single FRU VPD collection failed for " +
-                std::string(i_dbusObjPath));
+            // Get D-bus object map from worker class
+            populateDbus(l_parsedVpd, l_dbusObjectMap, l_fruPath);
+
+            if (l_dbusObjectMap.empty())
+            {
+                throw std::runtime_error(
+                    "Failed to create D-bus object map. Single FRU VPD collection failed for " +
+                    std::string(i_dbusObjPath));
+            }
         }
 
         // Call PIM's Notify method
@@ -1925,13 +2040,48 @@ void Worker::collectSingleFruVpd(
     }
     catch (const std::exception& l_error)
     {
-        // Notify FRU's VPD CollectionStatus as Failure
-        if (!dbusUtility::notifyFRUCollectionStatus(
-                std::string(i_dbusObjPath), constants::vpdCollectionFailure))
+        types::ObjectMap l_objectInterfaceMap;
+
+        // set collection status as failure.
+        types::PropertyMap l_propertyValueMap;
+        l_propertyValueMap.emplace("CollectionStatus",
+                                   constants::vpdCollectionFailure);
+
+        std::vector<std::string> l_interfaceList{
+            constants::operationalStatusInf};
+
+        types::MapperGetSubTree l_subTreeMap = dbusUtility::getObjectSubTree(
+            std::string(i_dbusObjPath), 0, l_interfaceList);
+
+        // Updates VPD specific interfaces property value under PIM for
+        // sub FRUs.
+        for (const auto& [l_objectPath, l_serviceInterfaceMap] : l_subTreeMap)
+        {
+            types::InterfaceMap l_interfaceMap;
+            vpdSpecificUtility::resetDataUnderPIM(l_objectPath, l_interfaceMap);
+
+            vpdSpecificUtility::insertOrMerge(l_interfaceMap,
+                                              constants::vpdCollectionInterface,
+                                              move(l_propertyValueMap));
+
+            l_objectInterfaceMap.emplace(l_objectPath,
+                                         std::move(l_interfaceMap));
+        }
+
+        types::InterfaceMap l_interfaceMap{};
+        vpdSpecificUtility::resetDataUnderPIM(std::string(i_dbusObjPath),
+                                              l_interfaceMap);
+
+        vpdSpecificUtility::insertOrMerge(l_interfaceMap,
+                                          constants::vpdCollectionInterface,
+                                          move(l_propertyValueMap));
+
+        l_objectInterfaceMap.emplace(i_dbusObjPath, std::move(l_interfaceMap));
+
+        if (!dbusUtility::callPIM(move(l_objectInterfaceMap)))
         {
             logging::logMessage(
-                "Call to PIM Notify method failed to update Collection status as Failure for " +
-                std::string(i_dbusObjPath));
+                "Call to PIM failed while trying to clean data on DBus.");
         }
 
         // TODO: Log PEL
