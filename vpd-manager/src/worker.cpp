@@ -1406,12 +1406,27 @@ std::tuple<bool, std::string> Worker::parseAndPublishVPD(
         }
         else
         {
+            vpdSpecificUtility::resetObjTreeVpd(i_vpdFilePath, m_parsedJson);
+
+            // As empty parsedVpdMap recieved for some reason, but still
+            // considered VPD collection is completed. Hence FRU collection
+            // Status will be set as success.
+            if (!dbusUtility::notifyFRUCollectionStatus(
+                    l_inventoryPath, constants::vpdCollectionSuccess))
+            {
+                logging::logMessage(
+                    "Call to PIM Notify method failed to update Collection status as success for " +
+                    i_vpdFilePath);
+            }
+
             logging::logMessage("Empty parsedVpdMap recieved for path [" +
                                 i_vpdFilePath + "]. Check PEL for reason.");
         }
     }
     catch (const std::exception& ex)
     {
+        vpdSpecificUtility::resetObjTreeVpd(i_vpdFilePath, m_parsedJson);
+
         // Notify FRU's VPD CollectionStatus as Failure
         if (!dbusUtility::notifyFRUCollectionStatus(
                 l_inventoryPath, constants::vpdCollectionFailure))
@@ -1430,10 +1445,7 @@ std::tuple<bool, std::string> Worker::parseAndPublishVPD(
             if (vpdSpecificUtility::isPass1Planar())
             {
                 const std::string& l_invPathLeafValue =
-                    sdbusplus::message::object_path(
-                        jsonUtility::getInventoryObjPathFromJson(m_parsedJson,
-                                                                 i_vpdFilePath))
-                        .filename();
+                    sdbusplus::message::object_path(l_inventoryPath).filename();
 
                 if ((l_invPathLeafValue.find("pcie_card", 0) !=
                      std::string::npos))
@@ -1896,23 +1908,37 @@ void Worker::collectSingleFruVpd(
 
         // Parse VPD
         types::VPDMapVariant l_parsedVpd = parseVpdFile(l_fruPath);
+        types::ObjectMap l_dbusObjectMap;
 
         // If l_parsedVpd is pointing to std::monostate
         if (l_parsedVpd.index() == 0)
         {
-            throw std::runtime_error(
-                "VPD parsing failed for " + std::string(i_dbusObjPath));
+            vpdSpecificUtility::resetObjTreeVpd(std::string(i_dbusObjPath),
+                                                m_parsedJson);
+
+            if (!dbusUtility::notifyFRUCollectionStatus(
+                    std::string(i_dbusObjPath),
+                    constants::vpdCollectionSuccess))
+            {
+                logging::logMessage(
+                    "Call to PIM Notify method failed to update Collection status as success for " +
+                    std::string(i_dbusObjPath));
+            }
+
+            logging::logMessage("Empty parsed vpd map received for path : " +
+                                std::string(i_dbusObjPath));
         }
-
-        // Get D-bus object map from worker class
-        types::ObjectMap l_dbusObjectMap;
-        populateDbus(l_parsedVpd, l_dbusObjectMap, l_fruPath);
-
-        if (l_dbusObjectMap.empty())
+        else
         {
-            throw std::runtime_error(
-                "Failed to create D-bus object map. Single FRU VPD collection failed for " +
-                std::string(i_dbusObjPath));
+            // Get D-bus object map from worker class
+            populateDbus(l_parsedVpd, l_dbusObjectMap, l_fruPath);
+
+            if (l_dbusObjectMap.empty())
+            {
+                throw std::runtime_error(
+                    "Failed to create D-bus object map. Single FRU VPD collection failed for " +
+                    std::string(i_dbusObjPath));
+            }
         }
 
         // Call PIM's Notify method
@@ -1925,7 +1951,9 @@ void Worker::collectSingleFruVpd(
     }
     catch (const std::exception& l_error)
     {
-        // Notify FRU's VPD CollectionStatus as Failure
+        vpdSpecificUtility::resetObjTreeVpd(std::string(i_dbusObjPath),
+                                            m_parsedJson);
+
         if (!dbusUtility::notifyFRUCollectionStatus(
                 std::string(i_dbusObjPath), constants::vpdCollectionFailure))
         {
@@ -1933,7 +1961,6 @@ void Worker::collectSingleFruVpd(
                 "Call to PIM Notify method failed to update Collection status as Failure for " +
                 std::string(i_dbusObjPath));
         }
-
         // TODO: Log PEL
         logging::logMessage(std::string(l_error.what()));
     }

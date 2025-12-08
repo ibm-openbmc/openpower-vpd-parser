@@ -11,6 +11,7 @@
 #include <nlohmann/json.hpp>
 #include <utility/common_utility.hpp>
 #include <utility/dbus_utility.hpp>
+#include <utility/json_utility.hpp>
 
 #include <filesystem>
 #include <fstream>
@@ -1067,6 +1068,79 @@ inline void updateCiPropertyOfInheritedFrus(
         logging::logMessage(
             "Failed to update common interface properties of FRU [" +
             i_fruPath + "]. Error: " + std::string(l_ex.what()));
+    }
+}
+
+/**
+ * @brief API to reset data of a FRU and its sub-FRU populated under PIM.
+ *
+ * The API resets the data for specific interfaces of a FRU and its sub-FRUs
+ * under PIM.
+ *
+ * Note: i_vpdPath should be either the base inventory path or the EEPROM path.
+ *
+ * @param[in] i_vpdPath - EEPROM/root inventory path of the FRU.
+ * @param[in] i_sysCfgJsonObj - system config JSON.
+ */
+inline void resetObjTreeVpd(const std::string& i_vpdPath,
+                            const nlohmann::json& i_sysCfgJsonObj) noexcept
+{
+    if (i_vpdPath.empty() || i_sysCfgJsonObj.empty())
+    {
+        logging::logMessage("Invalid input parameters");
+        return;
+    }
+
+    try
+    {
+        std::string l_fruPath =
+            jsonUtility::getFruPathFromJson(i_sysCfgJsonObj, i_vpdPath);
+
+        if (l_fruPath.empty())
+        {
+            logging::logMessage(
+                "FRU path not found in JSON for path : " + i_vpdPath);
+            return;
+        }
+
+        if (!jsonUtility::isFruPresenceHandled(i_sysCfgJsonObj, l_fruPath))
+        {
+            logging::logMessage(
+                "FRUs presence is not handled by vpd-manager. So, not resetting the VPD for path : " +
+                i_vpdPath);
+            return;
+        }
+
+        types::ObjectMap l_objectMap;
+
+        const auto& l_fru = i_sysCfgJsonObj["frus"][l_fruPath];
+
+        for (const auto& l_inventoryItem : l_fru)
+        {
+            std::string l_objectPath =
+                l_inventoryItem.value("inventoryPath", "");
+
+            if (l_inventoryItem.value("handlePresence", true) &&
+                !l_inventoryItem.value("synthesized", false))
+            {
+                types::InterfaceMap l_interfaceMap;
+                resetDataUnderPIM(l_objectPath, l_interfaceMap);
+
+                l_objectMap.emplace(l_objectPath, l_interfaceMap);
+            }
+        }
+
+        if (!dbusUtility::callPIM(std::move(l_objectMap)))
+        {
+            logging::logMessage(
+                "Failed to call PIM, while clearing data on DBus.");
+        }
+    }
+    catch (const std::exception& l_ex)
+    {
+        logging::logMessage(
+            "Failed to reset FRU data on DBus for FRU [" + i_vpdPath +
+            "], error : " + std::string(l_ex.what()));
     }
 }
 } // namespace vpdSpecificUtility
