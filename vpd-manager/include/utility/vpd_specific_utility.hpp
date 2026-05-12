@@ -14,6 +14,7 @@
 #include <utility/json_utility.hpp>
 
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <regex>
 #include <typeindex>
@@ -1284,6 +1285,112 @@ inline void updatePropertyOnExtraInterfaces(
         logging::logMessage(
             "Failed to update property on extra interfaces, error : " +
             std::string(l_ex.what()));
+    }
+}
+
+/**
+ * @brief Updates the system location code on D-Bus.
+ *
+ * This API updates system location code on D-Bus.
+ */
+inline void updateSystemLocCode() noexcept
+{
+    try
+    {
+        const auto& l_expandedLocCode = getExpandedLocationCode(
+            constants::systemLocationCode, std::monostate{});
+
+        types::ObjectMap l_objectMap = {
+            {sdbusplus::message::object_path(constants::systemInvPath),
+             {{constants::xyzLocationCodeInf,
+               {{"LocationCode", l_expandedLocCode}}},
+              {constants::locationCodeInf,
+               {{"LocationCode", l_expandedLocCode}}}}}};
+
+        if (!dbusUtility::callPIM(std::move(l_objectMap)))
+        {
+            logging::logMessage(
+                "Failed to publish system location code under PIM");
+            return;
+        }
+    }
+    catch (const std::exception& l_ex)
+    {
+        logging::logMessage(std::format(
+            "Failed to update system location code, error : {}.", l_ex.what()));
+    }
+}
+
+/**
+ * @brief API to update location code for FRUs
+ *
+ * This API updates the location code for all FRUs in the system config JSON on
+ * D-Bus.
+ *
+ * @param[in] i_syscfgJsonObj - system configuration JSON.
+ */
+inline void updateLocCodeForAllFrus(
+    const nlohmann::json& i_sysCfgJsonObj) noexcept
+{
+    try
+    {
+        if (!i_sysCfgJsonObj.contains("frus"))
+        {
+            logging::logMessage(
+                "Manadatory tag is missing from system config JSON.");
+            return;
+        }
+
+        types::ObjectMap l_objectMap;
+
+        const nlohmann::json& l_listOfFrus =
+            i_sysCfgJsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
+
+        for (const auto& l_fru : l_listOfFrus.items())
+        {
+            for (const auto& l_inventoryItem : l_fru.value())
+            {
+                if (!l_inventoryItem.contains("inventoryPath") ||
+                    !l_inventoryItem.contains("extraInterfaces") ||
+                    !l_inventoryItem["extraInterfaces"].contains(
+                        constants::locationCodeInf) ||
+                    !l_inventoryItem["extraInterfaces"]
+                                    [constants::locationCodeInf]
+                                        .contains("LocationCode"))
+                {
+                    continue;
+                }
+
+                const auto& l_invPath = l_inventoryItem["inventoryPath"];
+
+                const auto& l_expandedLocCode = getExpandedLocationCode(
+                    std::string(l_inventoryItem["extraInterfaces"]
+                                               [constants::locationCodeInf]
+                                               ["LocationCode"]),
+                    std::monostate{});
+
+                types::InterfaceMap l_interfaceMap;
+                l_interfaceMap[constants::locationCodeInf]["LocationCode"] =
+                    l_expandedLocCode;
+                l_interfaceMap[constants::xyzLocationCodeInf]["LocationCode"] =
+                    l_expandedLocCode;
+
+                l_objectMap.emplace(l_invPath, std::move(l_interfaceMap));
+            }
+        }
+
+        if (!dbusUtility::callPIM(std::move(l_objectMap)))
+        {
+            logging::logMessage(
+                "Failed to publish location code for all FRUs under PIM");
+            return;
+        }
+    }
+    catch (const std::exception& l_ex)
+    {
+        logging::logMessage(std::format(
+            "Failed to update location code for all FRUs, error : {}",
+            l_ex.what()));
     }
 }
 } // namespace vpdSpecificUtility

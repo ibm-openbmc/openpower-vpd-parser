@@ -256,6 +256,34 @@ int Manager::updateKeyword(const types::Path i_vpdPath,
         {
             vpdSpecificUtility::updatePropertyOnExtraInterfaces(
                 l_fruPath, l_writeParams, l_sysCfgJsonObj);
+
+            if (l_fruPath != SYSTEM_VPD_FILE_PATH)
+            {
+                return l_rc;
+            }
+
+            const auto& l_ipzData =
+                std::get_if<types::IpzData>(&i_paramsToWriteData);
+
+            if (!l_ipzData)
+            {
+                return l_rc;
+            }
+
+            const auto l_recName = std::get<0>(*l_ipzData);
+            const auto l_kwName = std::get<1>(*l_ipzData);
+
+            if (l_recName == constants::recVSYS &&
+                (l_kwName == constants::kwdTM || l_kwName == constants::kwdSE))
+            {
+                vpdSpecificUtility::updateSystemLocCode();
+            }
+            else if (l_recName == constants::recVCEN &&
+                     (l_kwName == constants::kwdFC ||
+                      l_kwName == constants::kwdSE))
+            {
+                vpdSpecificUtility::updateLocCodeForAllFrus(l_sysCfgJsonObj);
+            }
         }
 
         return l_rc;
