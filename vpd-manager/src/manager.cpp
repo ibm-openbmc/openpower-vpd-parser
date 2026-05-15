@@ -295,6 +295,46 @@ int Manager::updateKeyword(const types::Path i_vpdPath,
                     "Failed to update extra interface properties, error : " +
                     commonUtility::getErrCodeMsg(l_errCode));
             }
+
+            if (l_fruPath != SYSTEM_VPD_FILE_PATH)
+            {
+                return l_rc;
+            }
+
+            const auto& l_ipzData =
+                std::get_if<types::IpzData>(&i_paramsToWriteData);
+
+            if (!l_ipzData)
+            {
+                return l_rc;
+            }
+
+            const auto l_recName = std::get<0>(*l_ipzData);
+            const auto l_kwName = std::get<1>(*l_ipzData);
+
+            l_errCode = 0;
+
+            if (l_recName == constants::recVSYS &&
+                (l_kwName == constants::kwdTM || l_kwName == constants::kwdSE))
+            {
+                vpdSpecificUtility::updateSystemLocCode(l_errCode);
+            }
+            else if (l_recName == constants::recVCEN &&
+                     (l_kwName == constants::kwdFC ||
+                      l_kwName == constants::kwdSE))
+            {
+                vpdSpecificUtility::updateLocCodeForAllFrus(l_sysCfgJsonObj,
+                                                            l_errCode);
+            }
+
+            // Common error code check for location code updates
+            if (l_errCode)
+            {
+                logging::logMessage(std::format(
+                    "Failed to update location code against record [{}] and keyword [{}] update. Error : {}.",
+                    l_recName, l_kwName,
+                    commonUtility::getErrCodeMsg(l_errCode)));
+            }
         }
 
         return l_rc;

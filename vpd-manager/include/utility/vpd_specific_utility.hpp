@@ -14,6 +14,7 @@
 #include <utility/json_utility.hpp>
 
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <regex>
 #include <typeindex>
@@ -1440,6 +1441,131 @@ inline void updatePropertyOnExtraInterfaces(
         logging::logMessage(
             "Failed to update property on extra interfaces, error : " +
             std::string(l_ex.what()));
+    }
+}
+
+/**
+ * @brief Updates the system location code on D-Bus.
+ *
+ * This API updates system location code on D-Bus.
+ *
+ * @param[in] o_errCode - To set error code incase of exception.
+ */
+inline void updateSystemLocCode(uint16_t& o_errCode) noexcept
+{
+    o_errCode = 0;
+    try
+    {
+        const auto& l_expandedLocCode = getExpandedLocationCode(
+            constants::systemLocationCode, std::monostate{}, o_errCode);
+
+        if (o_errCode)
+        {
+            return;
+        }
+
+        types::ObjectMap l_objectMap = {
+            {sdbusplus::message::object_path(constants::systemInvPath),
+             {{constants::xyzLocationCodeInf,
+               {{"LocationCode", l_expandedLocCode}}},
+              {constants::locationCodeInf,
+               {{"LocationCode", l_expandedLocCode}}}}}};
+
+        if (!dbusUtility::callPIM(std::move(l_objectMap)))
+        {
+            o_errCode = error_code::DBUS_FAILURE;
+            return;
+        }
+    }
+    catch (const std::exception& l_ex)
+    {
+        o_errCode = error_code::STANDARD_EXCEPTION;
+        logging::logMessage(std::format(
+            "Failed to update system location code, error : {}.", l_ex.what()));
+    }
+}
+
+/**
+ * @brief API to update location code for FRUs
+ *
+ * This API updates the location code for all FRUs in the system config JSON on
+ * D-Bus.
+ *
+ * @param[in] i_syscfgJsonObj - system configuration JSON.
+ * @param[in] o_errCode - To set error code incase of exception
+ */
+inline void updateLocCodeForAllFrus(const nlohmann::json& i_sysCfgJsonObj,
+                                    uint16_t& o_errCode) noexcept
+{
+    o_errCode = 0;
+    try
+    {
+        if (!i_sysCfgJsonObj.contains("frus"))
+        {
+            o_errCode = error_code::INVALID_JSON;
+            return;
+        }
+
+        types::ObjectMap l_objectMap;
+
+        const nlohmann::json& l_listOfFrus =
+            i_sysCfgJsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
+
+        for (const auto& l_fru : l_listOfFrus.items())
+        {
+            for (const auto& l_inventoryItem : l_fru.value())
+            {
+                if (!l_inventoryItem.contains("inventoryPath") ||
+                    !l_inventoryItem.contains("extraInterfaces") ||
+                    !l_inventoryItem["extraInterfaces"].contains(
+                        constants::locationCodeInf) ||
+                    !l_inventoryItem["extraInterfaces"]
+                                    [constants::locationCodeInf]
+                                        .contains("LocationCode"))
+                {
+                    continue;
+                }
+
+                const auto& l_invPath = l_inventoryItem["inventoryPath"];
+
+                const auto& l_expandedLocCode = getExpandedLocationCode(
+                    std::string(l_inventoryItem["extraInterfaces"]
+                                               [constants::locationCodeInf]
+                                               ["LocationCode"]),
+                    std::monostate{}, o_errCode);
+
+                if (o_errCode)
+                {
+                    logging::logMessage(std::format(
+                        "Failed to get expanded location code for FRU : {}, error : ",
+                        std::string(l_invPath),
+                        commonUtility::getErrCodeMsg(o_errCode)));
+                    o_errCode = 0;
+                    continue;
+                }
+
+                types::InterfaceMap l_interfaceMap;
+                l_interfaceMap[constants::locationCodeInf]["LocationCode"] =
+                    l_expandedLocCode;
+                l_interfaceMap[constants::xyzLocationCodeInf]["LocationCode"] =
+                    l_expandedLocCode;
+
+                l_objectMap.emplace(l_invPath, std::move(l_interfaceMap));
+            }
+        }
+
+        if (!dbusUtility::callPIM(std::move(l_objectMap)))
+        {
+            o_errCode = error_code::DBUS_FAILURE;
+            return;
+        }
+    }
+    catch (const std::exception& l_ex)
+    {
+        o_errCode = error_code::STANDARD_EXCEPTION;
+        logging::logMessage(std::format(
+            "Failed to update location code for all FRUs, error : {}",
+            l_ex.what()));
     }
 }
 } // namespace vpdSpecificUtility
