@@ -162,6 +162,23 @@ class IbmHandler
     void presentPropertyChangeCallback(
         sdbusplus::message_t& i_msg) const noexcept;
 
+    /**
+     * @brief API to publish PrettyName for replaceable FRUs.
+     *
+     * This API publishes PrettyName on D-Bus for FRUs that are marked as
+     * replaceableAtStandby or replaceableAtRuntime or hotpluggable in the
+     * system config JSON. This should only be called if primeSystemBlueprint
+     * was not executed.
+     *
+     * @note This API is intended only for recovering the PrettyName
+     *       property for systems where the issue has already occurred
+     *       after FRU removal. This API will not be supported in
+     *       P12 or later releases.
+     *
+     * Defect: 783849
+     */
+    void publishPrettyNameForReplaceableFrus() const noexcept;
+
     // Parsed system config json object.
     nlohmann::json m_sysCfgJsonObj{};
 
