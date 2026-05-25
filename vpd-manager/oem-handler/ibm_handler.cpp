@@ -591,6 +591,15 @@ void IbmHandler::performInitialSetup()
 
             primeSystemBlueprint();
         }
+        else
+        {
+            // Publish PrettyName for replaceable FRUs if priming is not
+            // completed. This is a workaround to restore missing PrettyName
+            // properties for systems where they became empty after a Delete FRU
+            // VPD operation. This workaround will not be carried forward to P12
+            // or later releases.
+            publishPrettyNameForReplaceableFrus();
+        }
 
         // Enable all mux which are used for connecting to the i2c on the
         // pcie slots for pcie cards. These are not enabled by kernel due to
@@ -692,4 +701,72 @@ void IbmHandler::presentPropertyChangeCallback(
     }
 }
 
+void IbmHandler::publishPrettyNameForReplaceableFrus() const noexcept
+{
+    try
+    {
+        if (!m_sysCfgJsonObj.contains("frus"))
+        {
+            return;
+        }
+
+        types::ObjectMap l_objectMap;
+
+        const nlohmann::json& l_listOfFrus =
+            m_sysCfgJsonObj["frus"].get_ref<const nlohmann::json::object_t&>();
+
+        for (const auto& l_aFru : l_listOfFrus.items())
+        {
+            // Check if FRU at index 0 is replaceable
+            if (l_aFru.value().empty() ||
+                (!l_aFru.value().at(0).value("replaceableAtStandby", false) &&
+                 !l_aFru.value().at(0).value("replaceableAtRuntime", false) &&
+                 !(l_aFru.value().at(0).contains("pollingRequired") &&
+                   l_aFru.value().at(0)["pollingRequired"].contains(
+                       "hotPlugging"))))
+            {
+                continue;
+            }
+
+            // Collect all PrettyNames for sub-FRUs under this EEPROM path
+            for (const auto& l_inventoryItem : l_aFru.value())
+            {
+                // Check if FRU has PrettyName in extraInterfaces
+                if (l_inventoryItem.contains("inventoryPath") &&
+                    l_inventoryItem.contains("extraInterfaces") &&
+                    l_inventoryItem["extraInterfaces"].contains(
+                        constants::inventoryItemInf) &&
+                    l_inventoryItem["extraInterfaces"]
+                                   [constants::inventoryItemInf]
+                                       .contains("PrettyName"))
+                {
+                    const std::string& l_invPath =
+                        l_inventoryItem["inventoryPath"];
+                    const std::string& l_prettyName =
+                        l_inventoryItem["extraInterfaces"]
+                                       [constants::inventoryItemInf]
+                                       ["PrettyName"];
+
+                    l_objectMap.emplace(
+                        l_invPath,
+                        types::InterfaceMap{{constants::inventoryItemInf,
+                                             {{"PrettyName", l_prettyName}}}});
+                }
+            }
+        }
+
+        if (!l_objectMap.empty() &&
+            !dbusUtility::callPIM(std::move(l_objectMap)))
+        {
+            logging::logMessage(
+                "Failed to publish PrettyName for replaceable FRUs on Dbus.");
+        }
+    }
+    catch (const std::exception& l_ex)
+    {
+        logging::logMessage(std::format(
+            "Exception while publishing PrettyName for replaceable FRUs, error: {}",
+            l_ex.what()));
+    }
+}
 } // namespace vpd
