@@ -174,14 +174,14 @@ void IbmHandler::SetTimerToDetectVpdCollectionStatus()
             m_interface->set_property("CollectionStatus",
                                       std::string("Completed"));
 
-            if (m_backupAndRestoreObj)
-            {
-                m_backupAndRestoreObj->backupAndRestore();
-            }
-
             if (m_eventListener)
             {
                 m_eventListener->registerCorrPropCallBack();
+            }
+
+            if (m_backupAndRestoreObj)
+            {
+                m_backupAndRestoreObj->backupAndRestore();
             }
         }
         else
