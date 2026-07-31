@@ -141,6 +141,29 @@ class Parser
         const std::string& i_fruPath,
         const types::WriteVpdParams& i_paramsToWriteData);
 
+    /**
+     * @brief Propagate a keyword update to sub-FRUs and D-Bus interfaces.
+     *
+     * After a keyword is written to hardware, this API ensures the new value
+     * is reflected consistently across all related D-Bus objects and
+     * interfaces:
+     *   - Sub-FRUs whose records are inherited/copied from this FRU.
+     *   - Common interfaces (CI) properties of those inherited FRUs.
+     *   - Extra interface properties of those inherited FRUs.
+     *   - Location codes (system or all FRUs) when a location-code-relevant
+     *     keyword (TM, SE, FC) in VSYS or VCEN is updated on the system VPD
+     *     path.
+     *
+     * @param[in] i_paramsToWriteData - Write parameters (IPZ or Keyword type)
+     *                                  that were used for the hardware write.
+     * @param[in] i_updatedValue - The actual value written to hardware, used
+     *                             to override the value in i_paramsToWriteData
+     *                             when the hardware normalised it.
+     */
+    void updateKwOnSubFrusAndInterfaces(
+        const types::WriteVpdParams& i_paramsToWriteData,
+        const types::DbusVariantType& i_updatedValue) const noexcept;
+
     // holds offfset to VPD if applicable.
     size_t m_vpdStartOffset = 0;
 

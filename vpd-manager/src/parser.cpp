@@ -7,6 +7,7 @@
 #include <utility/json_utility.hpp>
 #include <utility/vpd_specific_utility.hpp>
 
+#include <format>
 #include <fstream>
 
 namespace vpd
@@ -249,6 +250,8 @@ int Parser::updateVpdKeyword(const types::WriteVpdParams& i_paramsToWriteData,
 
         // TODO: Check if revert is required when any of the writes fails.
         // TODO: Handle error logging
+
+        updateKwOnSubFrusAndInterfaces(i_paramsToWriteData, o_updatedValue);
     }
     catch (const std::exception& l_ex)
     {
@@ -472,4 +475,131 @@ int Parser::performSanityCheck() noexcept
     }
 }
 
+void Parser::updateKwOnSubFrusAndInterfaces(
+    const types::WriteVpdParams& i_paramsToWriteData,
+    const types::DbusVariantType& i_updatedValue) const noexcept
+{
+    std::string l_recName{};
+    std::string l_kwName{};
+
+    try
+    {
+        uint16_t l_errCode = 0;
+        types::WriteVpdParams l_writeParams;
+        types::BinaryVector l_valueToUpdate;
+
+        if (const types::IpzData* l_ipzData =
+                std::get_if<types::IpzData>(&i_paramsToWriteData))
+        {
+            l_recName = std::get<0>(*l_ipzData);
+            l_kwName = std::get<1>(*l_ipzData);
+
+            if (const types::BinaryVector* l_val =
+                    std::get_if<types::BinaryVector>(&i_updatedValue))
+            {
+                l_valueToUpdate = *l_val;
+            }
+            else
+            {
+                l_valueToUpdate = std::get<2>(*l_ipzData);
+            }
+            l_writeParams =
+                std::make_tuple(std::get<0>(*l_ipzData),
+                                std::get<1>(*l_ipzData), l_valueToUpdate);
+        }
+        else if (const types::KwData* l_kwData =
+                     std::get_if<types::KwData>(&i_paramsToWriteData))
+        {
+            l_kwName = std::get<0>(*l_kwData);
+
+            if (const types::BinaryVector* l_val =
+                    std::get_if<types::BinaryVector>(&i_updatedValue))
+            {
+                l_valueToUpdate = *l_val;
+            }
+            else
+            {
+                l_valueToUpdate = std::get<1>(*l_kwData);
+            }
+
+            l_writeParams =
+                std::make_tuple(std::get<0>(*l_kwData), l_valueToUpdate);
+        }
+
+        // update keyword in inherited FRUs
+        vpdSpecificUtility::updateKwdOnSubFrus(m_vpdFilePath, l_writeParams,
+                                               m_parsedJson, l_errCode);
+
+        if (l_errCode)
+        {
+            logging::logMessage(
+                "Failed to update keyword on inherited FRUs for FRU [" +
+                m_vpdFilePath +
+                "] , error : " + commonUtility::getErrCodeMsg(l_errCode));
+        }
+
+        // update common interface(s) properties
+        vpdSpecificUtility::updateCiPropertyOfInheritedFrus(
+            m_vpdFilePath, l_writeParams, m_parsedJson, l_errCode);
+
+        if (l_errCode)
+        {
+            logging::logMessage(
+                "Failed to update Ci property of inherited FRUs, error : " +
+                commonUtility::getErrCodeMsg(l_errCode));
+        }
+
+        // update extra interface(s) properties for FRUs
+        vpdSpecificUtility::updatePropertyOnExtraInterfaces(
+            m_vpdFilePath, l_writeParams, m_parsedJson, l_errCode);
+
+        if (l_errCode)
+        {
+            logging::logMessage(
+                "Failed to update extra interface properties, error : " +
+                commonUtility::getErrCodeMsg(l_errCode));
+        }
+
+        if (m_vpdFilePath != SYSTEM_VPD_FILE_PATH)
+        {
+            return;
+        }
+
+        const auto& l_ipzData =
+            std::get_if<types::IpzData>(&i_paramsToWriteData);
+
+        if (!l_ipzData)
+        {
+            return;
+        }
+
+        l_errCode = 0;
+
+        if (l_recName == constants::recVSYS &&
+            (l_kwName == constants::kwdTM || l_kwName == constants::kwdSE))
+        {
+            vpdSpecificUtility::updateSystemLocCode(l_errCode);
+        }
+        else if (l_recName == constants::recVCEN &&
+                 (l_kwName == constants::kwdFC || l_kwName == constants::kwdSE))
+        {
+            vpdSpecificUtility::updateLocCodeForAllFrus(m_parsedJson,
+                                                        l_errCode);
+        }
+
+        // Common error code check for location code updates
+        if (l_errCode)
+        {
+            logging::logMessage(std::format(
+                "Failed to update location code against record [{}] and keyword [{}] update. Error : {}.",
+                l_recName, l_kwName, commonUtility::getErrCodeMsg(l_errCode)));
+        }
+    }
+    catch (const std::exception& l_ex)
+    {
+        logging::logMessage(std::format(
+            "Error occured while updating keyword value for path [{}], record:{}, keyword:{} to sub FRUs and related interfaces. Reason: {}",
+            m_vpdFilePath, l_recName, l_kwName, l_ex.what()));
+    }
+}
 } // namespace vpd
