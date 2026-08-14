@@ -1324,17 +1324,14 @@ inline std::string getChassisId(const std::string& i_inventoryObjPath,
  * @param[in] i_pos - Position where "fcs" or "mts" prefix was found.
  * @param[in] i_firstKwdValue - First keyword value (FC for FCS, TM for MTS).
  * @param[in] i_secondKwdValue - Second keyword value (SE).
- * @param[in] i_nodeIdentifier - Node identifier to embed in the expanded LC.
- *                               For FCS: "N00", "N01", etc. (derived from
- *                               chassis ID). Empty for MTS.
  *
  * @return Expanded location code string. In case of error, unexpanded is
  *         returned.
  */
-inline std::string buildExpandedLc(
-    const std::string& i_unexpandedLocationCode, bool i_isFcs, size_t i_pos,
-    const std::string& i_firstKwdValue, const std::string& i_secondKwdValue,
-    const std::string& i_nodeIdentifier) noexcept
+inline std::string buildExpandedLc(const std::string& i_unexpandedLocationCode,
+                                   bool i_isFcs, size_t i_pos,
+                                   const std::string& i_firstKwdValue,
+                                   const std::string& i_secondKwdValue) noexcept
 {
     try
     {
@@ -1351,35 +1348,15 @@ inline std::string buildExpandedLc(
                     i_pos, constants::LOCATION_CODE_PREFIX_LENGTH,
                     i_firstKwdValue.substr(constants::FIRST_POSITION,
                                            constants::FC_KEYWORD_FIRST_4_BYTE) +
-                        "." + i_nodeIdentifier + "." + i_secondKwdValue);
+                        "." + i_secondKwdValue);
             }
             else if (l_suffix[constants::FIRST_POSITION] == '-')
             {
-                // TODO: Temp code till Json has NDx, SCx. Remove below code.
-                static const std::regex nScPattern(
-                    R"(^-((ND?\d{1,2}|SC\d{1,2}))(-.*)?)");
-                std::smatch match;
-                if (std::regex_search(l_suffix, match, nScPattern))
-                {
-                    l_expandedLC.replace(
-                        i_pos,
-                        constants::LOCATION_CODE_PREFIX_LENGTH +
-                            l_suffix.length(),
-                        i_firstKwdValue.substr(
-                            constants::FIRST_POSITION,
-                            constants::FC_KEYWORD_FIRST_4_BYTE) +
-                            "." + match[1].str() + "." + i_secondKwdValue +
-                            match[3].str());
-                }
-                else
-                {
-                    l_expandedLC.replace(
-                        i_pos, constants::LOCATION_CODE_PREFIX_LENGTH,
-                        i_firstKwdValue.substr(
-                            constants::FIRST_POSITION,
-                            constants::FC_KEYWORD_FIRST_4_BYTE) +
-                            "." + i_secondKwdValue);
-                }
+                l_expandedLC.replace(
+                    i_pos, constants::LOCATION_CODE_PREFIX_LENGTH,
+                    i_firstKwdValue.substr(constants::FIRST_POSITION,
+                                           constants::FC_KEYWORD_FIRST_4_BYTE) +
+                        "." + i_secondKwdValue);
             }
         }
         else
@@ -1548,29 +1525,8 @@ inline std::expected<std::string, uint16_t> getFcsExpandedLc(
         }
     }
 
-    const std::string l_nodeNumber =
-        l_chassisId.substr(std::string_view{"chassis"}.size());
-
-    std::string l_nodeIdentifier;
-    if (l_nodeNumber.empty())
-    {
-        // Legacy object paths carry no numeric suffix on the chassis segment
-        // (e.g. ".../chassis/..."). Default to "N00" so that location-code
-        // expansion still succeeds for such systems.
-        l_nodeIdentifier = "N00";
-    }
-    else if (l_nodeNumber == "0")
-    {
-        l_nodeIdentifier = "SC0";
-    }
-    else
-    {
-        l_nodeIdentifier = "N" + (l_nodeNumber.size() == 1 ? "0" + l_nodeNumber
-                                                           : l_nodeNumber);
-    }
-
     return buildExpandedLc(i_unexpandedLocationCode, true, i_pos, l_fcKwdValue,
-                           l_seKwdValue, l_nodeIdentifier);
+                           l_seKwdValue);
 }
 
 /**
@@ -1626,7 +1582,7 @@ inline std::expected<std::string, uint16_t> getMtsExpandedLc(
     }
 
     return buildExpandedLc(i_unexpandedLocationCode, false, i_pos, l_tmKwdValue,
-                           l_seKwdValue, {});
+                           l_seKwdValue);
 }
 
 /**
