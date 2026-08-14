@@ -1545,8 +1545,10 @@ inline std::expected<std::string, uint16_t> getFcsExpandedLc(
     }
     else
     {
-        l_nodeIdentifier = "N" + (l_nodeNumber.size() == 1 ? "0" + l_nodeNumber
-                                                           : l_nodeNumber);
+        const int l_nodeNum = std::stoi(l_nodeNumber) - 1;
+        l_nodeIdentifier =
+            "N" + (l_nodeNum < 10 ? "0" + std::to_string(l_nodeNum)
+                                  : std::to_string(l_nodeNum));
     }
 
     return buildExpandedLc(i_unexpandedLocationCode, true, i_pos, l_fcKwdValue,
