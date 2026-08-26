@@ -547,7 +547,8 @@ types::DbusVariantType IpzVpdParser::readKeywordFromHardware(
     else
     {
         logging::logMessage(
-            "Input parameter type provided isn't compatible with the given VPD type.");
+            "Input parameter type provided isn't compatible with "
+            "the given VPD type.");
         throw types::DbusInvalidArgument();
     }
 
@@ -620,13 +621,72 @@ void IpzVpdParser::updateRecordECC(
             "ECC update failed with error " + std::to_string(l_eccStatus)));
     }
 
-    auto l_recordECCEnd = std::next(l_recordECCBegin, i_recordECCLength);
+    // ========== UNBUFFERED I/O (FIX FOR CORRUPTION) ==========
 
-    m_vpdFileStream.seekp(m_vpdStartOffset + i_recordECCOffset, std::ios::beg);
+    // Open file with unbuffered I/O
+    int fd = open(m_vpdFilePath.c_str(), O_RDWR | O_SYNC);
+    if (fd < 0)
+    {
+        throw(EccException("Failed to open VPD file for ECC write: " +
+                           std::string(strerror(errno))));
+    }
+    // Calculate absolute offset for ECC
+    off_t absoluteECCOffset = m_vpdStartOffset + i_recordECCOffset;
+    // Seek to the ECC write position
+    off_t seekResult = lseek(fd, absoluteECCOffset, SEEK_SET);
+    if (seekResult != absoluteECCOffset)
+    {
+        close(fd);
+        throw(EccException("lseek failed for ECC write. Expected: " +
+                           std::to_string(absoluteECCOffset) +
+                           ", Got: " + std::to_string(seekResult) +
+                           ", Error: " + std::string(strerror(errno))));
+    }
+    // Write the ECC data with loop to handle partial writes
+    size_t totalBytesWritten = 0;
+    while (totalBytesWritten < i_recordECCLength)
+    {
+        ssize_t bytesWritten = write(fd, &l_recordECCBegin[totalBytesWritten],
+                                     i_recordECCLength - totalBytesWritten);
 
-    std::copy(l_recordECCBegin, l_recordECCEnd,
-              std::ostreambuf_iterator<char>(m_vpdFileStream));
-    m_vpdFileStream.flush();
+        if (bytesWritten < 0)
+        {
+            if (errno == EINTR)
+            {
+                continue; // Interrupted by signal, retry
+            }
+            close(fd);
+            throw(EccException(
+                "write failed for ECC: " + std::string(strerror(errno))));
+        }
+
+        if (bytesWritten == 0)
+        {
+            close(fd);
+            throw(EccException(
+                "write returned 0 bytes for ECC, no progress possible"));
+        }
+
+        totalBytesWritten += bytesWritten;
+    }
+
+    // Sync ECC data to disk
+    if (fsync(fd) != 0)
+    {
+        close(fd);
+        throw(EccException(
+            "fsync failed for ECC: " + std::string(strerror(errno))));
+    }
+    // Close the file descriptor
+    if (close(fd) != 0)
+    {
+        throw(EccException(
+            "close failed for ECC: " + std::string(strerror(errno))));
+    }
+    std::cout << "[DEBUG updateRecordECC] lseek succeeded to offset 0x"
+              << std::hex << seekResult << std::dec << "  write succeeded: "
+              << totalBytesWritten << " bytes of ECC" << std::endl;
+    // ========== END UNBUFFERED I/O ==========
 }
 
 int IpzVpdParser::setKeywordValueInRecord(
@@ -703,12 +763,82 @@ int IpzVpdParser::setKeywordValueInRecord(
             // Set the keyword's value on hardware
             const auto l_kwdDataOffset =
                 std::distance(io_vpdVector.begin(), l_iterator);
-            m_vpdFileStream.seekp(m_vpdStartOffset + l_kwdDataOffset,
-                                  std::ios::beg);
 
-            std::copy(i_keywordData.cbegin(), i_keywordDataEnd,
-                      std::ostreambuf_iterator<char>(m_vpdFileStream));
-            m_vpdFileStream.flush();
+            // ========== UNBUFFERED I/O (FIX FOR CORRUPTION) ==========
+            // Open file with unbuffered I/O
+            int fd = open(m_vpdFilePath.c_str(), O_RDWR | O_SYNC);
+            if (fd < 0)
+            {
+                throw(DataException(
+                    "Failed to open VPD file for unbuffered write: " +
+                    std::string(strerror(errno))));
+            }
+
+            // Calculate absolute offset
+            off_t absoluteOffset = m_vpdStartOffset + l_kwdDataOffset;
+
+            // Seek to the write position
+            off_t seekResult = lseek(fd, absoluteOffset, SEEK_SET);
+            if (seekResult != absoluteOffset)
+            {
+                close(fd);
+                throw(DataException(
+                    "lseek failed. Expected: " +
+                    std::to_string(absoluteOffset) +
+                    ", Got: " + std::to_string(seekResult) +
+                    ", Error: " + std::string(strerror(errno))));
+            }
+
+            // Write the data with loop to handle partial writes
+            size_t totalBytesWritten = 0;
+            while (totalBytesWritten < l_lengthToUpdate)
+            {
+                ssize_t bytesWritten =
+                    write(fd,
+                          reinterpret_cast<const char*>(i_keywordData.data()) +
+                              totalBytesWritten,
+                          l_lengthToUpdate - totalBytesWritten);
+
+                if (bytesWritten < 0)
+                {
+                    if (errno == EINTR)
+                    {
+                        continue; // Interrupted by signal, retry
+                    }
+                    close(fd);
+                    throw(DataException(
+                        "write failed: " + std::string(strerror(errno))));
+                }
+
+                if (bytesWritten == 0)
+                {
+                    close(fd);
+                    throw(DataException(
+                        "write returned 0 bytes, no progress possible"));
+                }
+
+                totalBytesWritten += bytesWritten;
+            }
+
+            // Sync to disk
+            if (fsync(fd) != 0)
+            {
+                close(fd);
+                throw(DataException(
+                    "fsync failed: " + std::string(strerror(errno))));
+            }
+
+            // Close the file descriptor
+            if (close(fd) != 0)
+            {
+                throw(DataException(
+                    "close failed: " + std::string(strerror(errno))));
+            }
+            std::cout
+                << "[DEBUG setKeywordValueInRecord] lseek succeeded to offset 0x"
+                << std::hex << seekResult << std::dec << "  write succeeded: "
+                << totalBytesWritten << " bytes" << std::endl;
+            // ========== END UNBUFFERED I/O ==========
 
             // return no of bytes set
             return l_lengthToUpdate;
@@ -879,7 +1009,8 @@ int IpzVpdParser::writeKeywordOnHardware(
         else
         {
             logging::logMessage(
-                "Input parameter type provided isn't compatible with the given FRU's VPD type.");
+                "Input parameter type provided isn't compatible with "
+                "the given FRU's VPD type.");
             throw types::DbusInvalidArgument();
         }
 
@@ -894,7 +1025,8 @@ int IpzVpdParser::writeKeywordOnHardware(
         if (l_keywordData.size() == 0)
         {
             logging::logMessage(
-                "Write operation not allowed as the given keyword's data length is 0.");
+                "Write operation not allowed as the given keyword's "
+                "data length is 0.");
             throw types::DbusInvalidArgument();
         }
 
@@ -991,7 +1123,8 @@ bool IpzVpdParser::processInvalidRecords(
             types::ErrorType::VpdParseError, types::SeverityType::Warning,
             __FILE__, __FUNCTION__, constants::VALUE_0,
             std::string(
-                "Check failed for record(s) while parsing VPD. Check user data for reason and list of failed record(s). Re-program VPD."),
+                "Check failed for record(s) while parsing VPD. Check user data for "
+                "reason and list of failed record(s). Re-program VPD."),
             std::vector{
                 std::make_tuple(m_vpdFilePath, types::CalloutPriority::High)},
             l_invalidRecordListString, std::nullopt, std::nullopt,
