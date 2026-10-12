@@ -469,6 +469,21 @@ class Worker
                                 types::InterfaceMap& io_interfaces);
 
     /**
+     * @brief Function to publish Storage Interface
+     *
+     * This function fetches the Model (TN), SerialNumber (SG),
+     * SystemID (ID), NodeID (NN), ManufacturingID (MN) for the
+     * DS8K storage from VSYS record and populates it onto
+     * com.ibm.VPD.StorageSystem interface in objectInterfaceMap.
+     *
+     * @param[in] parsedVpdMap - Parsed VPD map.
+     * @param[in,out] io_objectInterfaceMap - Object and interface map.
+     */
+    void detectAndPublishStorageInterface(
+        const types::VPDMapVariant& parsedVpdMap,
+        types::ObjectMap& io_objectInterfaceMap);
+
+    /**
      * @brief API to form asset tag string for the system.
      *
      * @param[in] i_parsedVpdMap - Parsed VPD map.
