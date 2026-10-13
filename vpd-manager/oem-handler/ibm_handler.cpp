@@ -170,6 +170,8 @@ void IbmHandler::SetTimerToDetectVpdCollectionStatus()
             // update VPD for powerVS system.
             ConfigurePowerVsSystem();
 
+            std::cout<<"hello\n";
+
             std::cout << "m_worker->isSystemVPDOnDBus() completed" << std::endl;
             m_interface->set_property("CollectionStatus",
                                       std::string("Completed"));
