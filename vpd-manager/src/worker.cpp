@@ -1187,6 +1187,83 @@ void Worker::populateDbus(const types::VPDMapVariant& parsedVpdMap,
     }
 }
 
+void Worker::detectAndPublishStorageInterface(
+    const types::VPDMapVariant& parsedVpdMap,
+    types::ObjectMap& io_objectInterfaceMap)
+{
+    try
+    {
+        const auto* l_parsedVpdMap =
+            std::get_if<types::IPZVpdMap>(&parsedVpdMap);
+        if (!l_parsedVpdMap)
+        {
+            logging::logMessage(
+                "Invalid VPD type received, unable to populate storage interface");
+            return;
+        }
+
+        auto l_itrToVsys = l_parsedVpdMap->find(constants::recVSYS);
+        if (l_itrToVsys == l_parsedVpdMap->end())
+        {
+            logging::logMessage(
+                "VSYS record unavailable, unable to populate storage interface");
+            return;
+        }
+
+        const std::array<std::pair<std::string, std::string>, 5>
+            l_kwdToPropList = {{{constants::kwdTN, constants::propTN},
+                                {constants::kwdSG, constants::propSG},
+                                {constants::kwdID, constants::propID},
+                                {constants::kwdNN, constants::propNN},
+                                {constants::kwdMN, constants::propMN}}};
+
+        bool l_publishStorageIface = false;
+        types::PropertyMap l_storageProperties;
+        for (const auto& [l_kwd, l_prop] : l_kwdToPropList)
+        {
+            uint16_t l_errCode = 0;
+            const std::string l_kwdVal = vpdSpecificUtility::getKwVal(
+                l_itrToVsys->second, l_kwd, l_errCode);
+
+            if (!l_errCode && !l_kwdVal.empty())
+            {
+                if (l_kwdVal.find_first_not_of(" \t\n\r\f\v") !=
+                    std::string::npos)
+                {
+                    l_publishStorageIface = true;
+                }
+                l_storageProperties.emplace(l_prop, l_kwdVal);
+            }
+        }
+
+        if (!l_publishStorageIface)
+        {
+            logging::logMessage("No keyword data, storage interface skipped");
+            return;
+        }
+
+        l_storageProperties.emplace("StorageSystemName", "DS8K");
+
+        auto l_itrToSystemPath = io_objectInterfaceMap.find(
+            sdbusplus::message::object_path(constants::systemInvPath));
+
+        if (l_itrToSystemPath == io_objectInterfaceMap.end())
+        {
+            logging::logMessage(
+                "System path unavailable in object map, unable to populate storage interface");
+            return;
+        }
+
+        (l_itrToSystemPath->second)
+            .emplace(constants::storageInf, std::move(l_storageProperties));
+    }
+    catch (const std::exception& l_ex)
+    {
+        logging::logMessage("Exception while populating Storage interface: " +
+                            std::string(l_ex.what()));
+    }
+}
+
 std::string Worker::createAssetTagString(
     const types::VPDMapVariant& i_parsedVpdMap)
 {
@@ -1270,6 +1347,7 @@ void Worker::publishSystemVPD(const types::VPDMapVariant& parsedVpdMap)
                     .emplace(constants::assetTagInf,
                              std::move(l_assetTagProperty));
             }
+            detectAndPublishStorageInterface(parsedVpdMap, objectInterfaceMap);
         }
         catch (const std::exception& l_ex)
         {
